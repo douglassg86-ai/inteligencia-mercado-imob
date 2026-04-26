@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico de Processos & IA — Incorporadora</title>
+<style>
+:root {
+  --navy: #0d1b2a;
+  --navy2: #1b2e45;
+  --gold: #c9963a;
+  --gold-light: #f5c842;
+  --red: #c0392b;
+  --red-bg: #fff0ef;
+  --red-border: #f5c6c2;
+  --green: #1a7a4a;
+  --green-bg: #edfaf3;
+  --green-border: #a3e4c1;
+  --blue: #1a5276;
+  --orange: #e67e22;
+  --gray: #6b7280;
+  --light: #f4f6f9;
+  --white: #ffffff;
+  --shadow: 0 2px 12px rgba(0,0,0,0.10);
+  --shadow-lg: 0 6px 32px rgba(0,0,0,0.14);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--light); color: #1a1a2e; font-size: 13.5px; line-height: 1.55; }
+
+.page-header { background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 60%, #243b55 100%); color: white; padding: 48px 60px 40px; position: relative; overflow: hidden; }
+.page-header::before { content: ''; position: absolute; top: -60px; right: -60px; width: 320px; height: 320px; background: radial-gradient(circle, rgba(201,150,58,0.18) 0%, transparent 70%); border-radius: 50%; }
+.header-badge { display: inline-block; background: rgba(201,150,58,0.25); border: 1px solid var(--gold); color: var(--gold-light); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 5px 14px; border-radius: 20px; margin-bottom: 18px; }
+.page-header h1 { font-size: 32px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; letter-spacing: -0.5px; }
+.page-header h1 span { color: var(--gold-light); }
+.page-header p { font-size: 15px; color: rgba(255,255,255,0.72); max-width: 600px; margin-bottom: 32px; }
+.header-meta { display: flex; gap: 36px; flex-wrap: wrap; }
+.meta-item { display: flex; flex-direction: column; gap: 2px; }
+.meta-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.45); }
+.meta-value { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.9); }
+
+.pain-banner { background: #fff8ed; border-top: 4px solid var(--gold); padding: 24px 60px; display: flex; align-items: flex-start; gap: 16px; }
+.pain-icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
+.pain-banner h2 { font-size: 14px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+.pain-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.pain-tag { background: var(--red-bg); border: 1px solid var(--red-border); color: var(--red); font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+
+.sticky-nav { position: sticky; top: 0; z-index: 100; background: var(--navy); display: flex; gap: 2px; padding: 0 60px; border-bottom: 2px solid var(--gold); overflow-x: auto; }
+.nav-btn { background: none; border: none; color: rgba(255,255,255,0.55); font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 14px 18px; cursor: pointer; white-space: nowrap; transition: color 0.2s; border-bottom: 3px solid transparent; }
+.nav-btn.active, .nav-btn:hover { color: var(--gold-light); border-bottom: 3px solid var(--gold); }
+
+.section { display: none; padding: 40px 60px; }
+.section.active { display: block; }
+.section-title { font-size: 22px; font-weight: 800; color: var(--navy); margin-bottom: 6px; letter-spacing: -0.3px; }
+.section-subtitle { color: var(--gray); font-size: 14px; margin-bottom: 32px; }
+
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+.compare-col { border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+.col-header { padding: 16px 22px; display: flex; align-items: center; gap: 10px; }
+.col-header .col-icon { font-size: 20px; }
+.col-header h3 { font-size: 14px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
+.col-header small { font-size: 11px; font-weight: 400; display: block; opacity: 0.75; text-transform: none; letter-spacing: 0; }
+.col-before .col-header { background: var(--red); color: white; }
+.col-after .col-header { background: var(--green); color: white; }
+.col-before .col-body { background: var(--red-bg); border: 1px solid var(--red-border); border-top: none; }
+.col-after .col-body { background: var(--green-bg); border: 1px solid var(--green-border); border-top: none; }
+.col-body { padding: 22px; }
+
+.flow { display: flex; flex-direction: column; gap: 8px; }
+.step { display: flex; align-items: flex-start; gap: 12px; padding: 11px 14px; border-radius: 8px; position: relative; }
+.step-num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+.col-before .step-num { background: var(--red); color: white; }
+.col-after .step-num { background: var(--green); color: white; }
+.step-content { flex: 1; }
+.step-title { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+.step-desc { font-size: 12px; color: var(--gray); }
+.col-before .step { background: rgba(192,57,43,0.06); }
+.col-after .step { background: rgba(26,122,74,0.07); }
+
+.pain-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--red); color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-top: 5px; }
+.ai-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--green); color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-top: 5px; }
+
+.flow-arrow { text-align: center; color: var(--gray); font-size: 16px; margin: 2px 0; opacity: 0.45; }
+
+.metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 32px; }
+.metric-card { background: white; border-radius: 10px; padding: 18px 18px 14px; box-shadow: var(--shadow); text-align: center; }
+.metric-before { font-size: 11px; color: var(--red); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+.metric-after { font-size: 11px; color: var(--green); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+.metric-value-big { font-size: 28px; font-weight: 900; line-height: 1; margin: 4px 0; }
+.metric-card.red .metric-value-big { color: var(--red); }
+.metric-card.green .metric-value-big { color: var(--green); }
+.metric-label { font-size: 11px; color: var(--gray); }
+
+.overview-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-bottom: 32px; }
+.overview-card { background: white; border-radius: 12px; padding: 22px; box-shadow: var(--shadow); border-left: 4px solid var(--gold); }
+.overview-card h4 { font-size: 14px; font-weight: 800; color: var(--navy); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.overview-card ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.overview-card ul li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; }
+.overview-card ul li::before { content: '⚠'; color: var(--red); font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+.overview-card.green ul li::before { content: '✓'; color: var(--green); }
+
+.comp-table-wrapper { background: white; border-radius: 12px; box-shadow: var(--shadow-lg); overflow: hidden; margin-bottom: 32px; }
+.comp-table { width: 100%; border-collapse: collapse; }
+.comp-table thead tr { background: var(--navy); color: white; }
+.comp-table thead th { padding: 14px 16px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; text-align: left; }
+.comp-table thead th:nth-child(2) { background: rgba(192,57,43,0.35); }
+.comp-table thead th:nth-child(3) { background: rgba(26,122,74,0.35); }
+.comp-table thead th:nth-child(4), .comp-table thead th:nth-child(5) { background: rgba(201,150,58,0.25); text-align: center; }
+.comp-table tbody tr { border-bottom: 1px solid #e9ecef; transition: background 0.15s; }
+.comp-table tbody tr:hover { background: #f8f9ff; }
+.comp-table tbody tr:last-child { border-bottom: none; }
+.comp-table td { padding: 13px 16px; font-size: 13px; vertical-align: top; }
+.comp-table td:first-child { font-weight: 700; color: var(--navy); }
+.comp-table td:nth-child(2) { background: rgba(255,240,239,0.4); color: #7b1e1e; }
+.comp-table td:nth-child(3) { background: rgba(237,250,243,0.5); color: #145032; }
+.comp-table td:nth-child(4) { text-align: center; font-weight: 900; font-size: 15px; color: var(--green); }
+.comp-table td:nth-child(5) { text-align: center; font-size: 18px; }
+.comp-table tbody tr:nth-child(5) { border-top: 3px solid #ddd; }
+.comp-table tbody tr:nth-child(8) { border-top: 3px solid #ddd; }
+.comp-table tbody tr:nth-child(11) { border-top: 3px solid #ddd; }
+.comp-table tbody tr:nth-child(13) { border-top: 3px solid #ddd; }
+
+.impact-summary { background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%); border-radius: 14px; padding: 32px 40px; color: white; display: flex; align-items: center; gap: 48px; margin-bottom: 16px; flex-wrap: wrap; }
+.impact-title { flex: 1; min-width: 200px; }
+.impact-title h3 { font-size: 20px; font-weight: 800; color: var(--gold-light); margin-bottom: 6px; }
+.impact-title p { font-size: 13px; color: rgba(255,255,255,0.65); }
+.impact-stats { display: flex; gap: 32px; flex-wrap: wrap; }
+.impact-stat { text-align: center; }
+.impact-stat .num { font-size: 36px; font-weight: 900; color: var(--gold-light); line-height: 1; }
+.impact-stat .lbl { font-size: 11px; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
+
+.callout { background: #fff8e6; border-left: 4px solid var(--gold); border-radius: 0 8px 8px 0; padding: 14px 18px; font-size: 13px; color: #5a3e00; margin-bottom: 24px; line-height: 1.6; }
+.callout strong { color: var(--navy); }
+
+.section-group-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); background: var(--navy); display: inline-block; padding: 3px 10px; border-radius: 4px; margin-bottom: 6px; }
+
+@media (max-width: 900px) {
+  .compare-grid { grid-template-columns: 1fr; }
+  .metrics-row { grid-template-columns: repeat(2, 1fr); }
+  .overview-grid { grid-template-columns: 1fr; }
+  .page-header, .pain-banner, .section { padding-left: 24px; padding-right: 24px; }
+  .sticky-nav { padding: 0 24px; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="header-badge">Diagnóstico Estratégico · Abril 2026</div>
+  <h1>Processo Atual vs. <span>Processo com IA</span></h1>
+  <p>Mapeamento das dores operacionais identificadas na reunião de 22/04 e visão do processo otimizado com Inteligência Artificial em cada área crítica.</p>
+  <div class="header-meta">
+    <div class="meta-item"><span class="meta-label">Realizado em</span><span class="meta-value">22 de Abril de 2026</span></div>
+    <div class="meta-item"><span class="meta-label">Participantes</span><span class="meta-value">Valéria · Amik · Douglas</span></div>
+    <div class="meta-item"><span class="meta-label">Áreas analisadas</span><span class="meta-value">MKT Digital · CRM · Materiais · Dados</span></div>
+    <div class="meta-item"><span class="meta-label">Diagnóstico</span><span class="meta-value">0% de uso de IA nos processos</span></div>
+  </div>
+</div>
+
+<div class="pain-banner">
+  <div class="pain-icon">🔍</div>
+  <div>
+    <h2>Dores identificadas na reunião — 22/04/2026</h2>
+    <div class="pain-tags">
+      <span class="pain-tag">Falta de dados de digital</span>
+      <span class="pain-tag">Input manual da equipe comercial</span>
+      <span class="pain-tag">Fluxo de leads sem esteira definida</span>
+      <span class="pain-tag">Anúncios sem ajuste de performance</span>
+      <span class="pain-tag">Ausência de padronização de materiais</span>
+      <span class="pain-tag">Tabelas de vendas desatualizadas</span>
+      <span class="pain-tag">Histórico cruzado de ações inexistente</span>
+      <span class="pain-tag">Dependência de input manual do corretor</span>
+      <span class="pain-tag">Revisão jurídica é gargalo</span>
+    </div>
+  </div>
+</div>
+
+<nav class="sticky-nav" id="mainNav">
+  <button class="nav-btn active" onclick="showSection('visao-geral', this)">Visão Geral</button>
+  <button class="nav-btn" onclick="showSection('leads-crm', this)">🎯 Leads &amp; CRM</button>
+  <button class="nav-btn" onclick="showSection('mkt-digital', this)">📣 MKT Digital</button>
+  <button class="nav-btn" onclick="showSection('materiais', this)">📋 Conferência de Materiais</button>
+  <button class="nav-btn" onclick="showSection('dados', this)">📊 Gestão de Dados</button>
+  <button class="nav-btn" onclick="showSection('comparativo', this)">⚖️ Quadro Comparativo</button>
+</nav>
+
+<!-- VISÃO GERAL -->
+<section class="section active" id="visao-geral">
+  <div class="section-title">Visão Geral do Diagnóstico</div>
+  <div class="section-subtitle">Resumo das 4 áreas mapeadas e o impacto esperado com a implementação de IA</div>
+
+  <div class="callout">
+    <strong>Ponto de partida:</strong> A empresa hoje não utiliza Inteligência Artificial em nenhum dos seus processos de Marketing, CRM, Atendimento ou Financeiro. Toda a operação é manual, dependente de pessoas, planilhas e comunicações por e-mail/WhatsApp. Isso gera <strong>inconsistência, retrabalho, dados dispersos e perda de oportunidades</strong> em todas as áreas.
+  </div>
+
+  <div class="overview-grid">
+    <div class="overview-card">
+      <h4>⚠️ Cenário Atual — Principais Problemas</h4>
+      <ul>
+        <li>Leads chegam por múltiplos canais sem centralização alguma</li>
+        <li>Corretores alimentam dados manualmente — e muitas vezes não alimentam</li>
+        <li>Não existe esteira de acompanhamento do lead ao fechamento</li>
+        <li>Campanhas de digital sem análise de performance unificada</li>
+        <li>Conferência de materiais de MKT é manual, lenta e inconsistente</li>
+        <li>Tabelas de vendas atualizadas manualmente chegam desatualizadas</li>
+        <li>Histórico de ações offline nunca cruzado com resultados</li>
+        <li>Decisões tomadas sem dados confiáveis e atualizados</li>
+      </ul>
+    </div>
+    <div class="overview-card green">
+      <h4>✅ Com IA — O Que Muda</h4>
+      <ul>
+        <li>Leads capturados e qualificados automaticamente de todos os canais</li>
+        <li>CRM populado pela IA — corretor apenas confirma</li>
+        <li>Pipeline de vendas atualizado em tempo real com visibilidade total</li>
+        <li>Performance de campanhas monitorada e otimizada automaticamente</li>
+        <li>Materiais de MKT conferidos pela IA em minutos, não dias</li>
+        <li>Tabelas de vendas atualizadas automaticamente em todas as peças</li>
+        <li>Dashboard com histórico cruzado: ação → custo → leads → vendas</li>
+        <li>Decisões baseadas em dados atualizados, confiáveis e cruzados</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="impact-summary">
+    <div class="impact-title">
+      <h3>Impacto estimado com IA</h3>
+      <p>Valores baseados em benchmarks do setor imobiliário e nos processos mapeados na reunião</p>
+    </div>
+    <div class="impact-stats">
+      <div class="impact-stat"><div class="num">~75%</div><div class="lbl">Redução de<br>tempo operacional</div></div>
+      <div class="impact-stat"><div class="num">~0</div><div class="lbl">Input manual<br>do corretor</div></div>
+      <div class="impact-stat"><div class="num">100%</div><div class="lbl">Dados cruzados<br>e rastreáveis</div></div>
+      <div class="impact-stat"><div class="num">+30%</div><div class="lbl">Conversão<br>de leads estimada</div></div>
+    </div>
+  </div>
+
+  <div class="metrics-row">
+    <div class="metric-card red"><div class="metric-before">Hoje</div><div class="metric-value-big">Manual</div><div class="metric-label">100% do input é humano</div></div>
+    <div class="metric-card green"><div class="metric-after">Com IA</div><div class="metric-value-big">Auto</div><div class="metric-label">Dados capturados pela IA</div></div>
+    <div class="metric-card red"><div class="metric-before">Hoje</div><div class="metric-value-big">5+ ilhas</div><div class="metric-label">Fontes sem integração</div></div>
+    <div class="metric-card green"><div class="metric-after">Com IA</div><div class="metric-value-big">1 Hub</div><div class="metric-label">Dashboard centralizado</div></div>
+  </div>
+</section>
+
+<!-- LEADS & CRM -->
+<section class="section" id="leads-crm">
+  <div class="section-title">🎯 Leads &amp; CRM — Esteira de Vendas</div>
+  <div class="section-subtitle">Da chegada do lead ao fechamento: como é hoje vs. como será com IA</div>
+
+  <div class="compare-grid">
+    <div class="compare-col col-before">
+      <div class="col-header"><span class="col-icon">⚠️</span><div><h3>Processo Atual</h3><small>Sem IA — 100% manual e reativo</small></div></div>
+      <div class="col-body">
+        <div class="flow">
+          <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">Lead chega por múltiplos canais</div><div class="step-desc">WhatsApp, portais (Zap, VivaReal), Instagram, Google, indicação, panfletagem — cada um em um lugar diferente, sem centralização.</div><span class="pain-badge">⚠ Fragmentação total</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">Corretor anota manualmente</div><div class="step-desc">Dado vai para caderno, planilha pessoal ou WhatsApp. Sem padrão definido. Informações incompletas são a regra, não a exceção.</div><span class="pain-badge">⚠ Dado perdido ou incompleto</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">Gestor liga para cada corretor</div><div class="step-desc">Para saber o status de cada lead, o gestor precisa perguntar individualmente. Não existe visibilidade do pipeline. Decisões no escuro.</div><span class="pain-badge">⚠ Gestão sem visibilidade</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Follow-up depende da memória do corretor</div><div class="step-desc">Não existe régua de relacionamento. Leads que não compraram hoje são esquecidos. Recontato é exceção, não regra.</div><span class="pain-badge">⚠ Leads perdidos por falta de contato</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">5</div><div class="step-content"><div class="step-title">Visita agendada sem dados do perfil</div><div class="step-desc">Corretor vai para visita sem saber nada sobre o perfil financeiro, interesse real ou histórico de contato do lead.</div><span class="pain-badge">⚠ Baixa qualificação na visita</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">6</div><div class="step-content"><div class="step-title">Fechamento → dados entram no ERP manualmente</div><div class="step-desc">Analista digita todos os dados do cliente no sistema. ~1 hora por contrato. Erros de digitação geram retrabalho ou venda perdida.</div><span class="pain-badge">⚠ ~1h por contrato + risco de erro fatal</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-col col-after">
+      <div class="col-header"><span class="col-icon">🤖</span><div><h3>Com Inteligência Artificial</h3><small>Automatizado, integrado e proativo</small></div></div>
+      <div class="col-body">
+        <div class="flow">
+          <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">Lead capturado automaticamente</div><div class="step-desc">IA integra todos os canais (portais, Meta, Google, WhatsApp) em um único CRM. Nenhum lead entra sem registro. Zero dependência do corretor.</div><span class="ai-badge">✓ Captura automática 100%</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">IA classifica e qualifica o lead</div><div class="step-desc">Em segundos: perfil de renda estimado, produto compatível, urgência de compra e canal de origem — sem o corretor precisar perguntar nada.</div><span class="ai-badge">✓ Score de qualificação automático</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">Pipeline visual em tempo real</div><div class="step-desc">Gestor vê todos os leads, em qual etapa estão, quais estão parados e há quantos dias — sem precisar perguntar para ninguém.</div><span class="ai-badge">✓ Visibilidade total do funil 24/7</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Régua de relacionamento automática</div><div class="step-desc">IA dispara follow-up no tempo certo, pelo canal certo (WhatsApp, e-mail, ligação). Lead frio entra em nutrição: D+7, D+30, D+90.</div><span class="ai-badge">✓ Zero lead perdido por falta de contato</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">5</div><div class="step-content"><div class="step-title">Corretor chega na visita preparado</div><div class="step-desc">Antes da visita, IA gera briefing do lead: histórico de contato, preferências mapeadas, produto mais compatível e sugestão de abordagem.</div><span class="ai-badge">✓ Visita mais eficiente e personalizada</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">6</div><div class="step-content"><div class="step-title">Fechamento → ERP preenchido pela IA</div><div class="step-desc">IA lê os documentos do cliente via OCR, extrai os dados e preenche o ERP automaticamente. Analista só revisa e confirma. 1h vira 5 minutos.</div><span class="ai-badge">✓ 5 min por contrato · zero erro manual</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics-row">
+    <div class="metric-card red"><div class="metric-before">Hoje</div><div class="metric-value-big">~30%</div><div class="metric-label">Leads registrados corretamente</div></div>
+    <div class="metric-card green"><div class="metric-after">Com IA</div><div class="metric-value-big">100%</div><div class="metric-label">Leads capturados e registrados</div></div>
+    <div class="metric-card red"><div class="metric-before">Hoje</div><div class="metric-value-big">~1h</div><div class="metric-label">Por contrato no ERP (manual)</div></div>
+    <div class="metric-card green"><div class="metric-after">Com IA</div><div class="metric-value-big">~5 min</div><div class="metric-label">Preenchimento automático por IA</div></div>
+  </div>
+</section>
+
+<!-- MKT DIGITAL -->
+<section class="section" id="mkt-digital">
+  <div class="section-title">📣 Marketing Digital &amp; Performance de Campanhas</div>
+  <div class="section-subtitle">Da criação de anúncios à análise de resultados: processo atual vs. com IA</div>
+
+  <div class="compare-grid">
+    <div class="compare-col col-before">
+      <div class="col-header"><span class="col-icon">⚠️</span><div><h3>Processo Atual</h3><small>Sem IA — manual e reativo</small></div></div>
+      <div class="col-body">
+        <div class="flow">
+          <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">Briefing enviado para agência</div><div class="step-desc">Processo manual: reunião → e-mail → aprovação. Sem modelo estruturado, o briefing chega incompleto ou com informações desatualizadas.</div><span class="pain-badge">⚠ Briefing inconsistente</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">Agência cria 2–3 variações de anúncio</div><div class="step-desc">Alto custo de produção limita o número de variações. Testes A/B são raros ou inexistentes. A campanha sobe com poucas opções.</div><span class="pain-badge">⚠ Poucas variações · sem teste</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">Campanha sobe e... aguarda</div><div class="step-desc">Após subir o anúncio, não existe acompanhamento sistemático de performance. Ajustes acontecem quando o resultado já é ruim há dias.</div><span class="pain-badge">⚠ Verba desperdiçada sem ajuste</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Relatório de performance manual</div><div class="step-desc">Exportado de Meta Ads + Google + portais em arquivos separados. Consolidação demora horas. Dados chegam com 1-2 semanas de atraso.</div><span class="pain-badge">⚠ Dados desatualizados e dispersos</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">5</div><div class="step-content"><div class="step-title">ROI da campanha é desconhecido</div><div class="step-desc">Impossível saber qual anúncio gerou qual lead, qual lead virou visita, qual visita virou venda. Orçamento de MKT é gasto no escuro.</div><span class="pain-badge">⚠ ROI invisível · decisão sem base</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-col col-after">
+      <div class="col-header"><span class="col-icon">🤖</span><div><h3>Com Inteligência Artificial</h3><small>Automatizado, otimizado e data-driven</small></div></div>
+      <div class="col-body">
+        <div class="flow">
+          <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">IA gera 50–100 variações de anúncio</div><div class="step-desc">A partir do book conceito e dados de performance histórica, IA produz dezenas de variações de peça e copy para diferentes perfis, formatos e fases do funil.</div><span class="ai-badge">✓ Produção em escala com baixo custo</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">Testes A/B automáticos e simultâneos</div><div class="step-desc">IA sobe múltiplas versões ao mesmo tempo e identifica automaticamente qual copy, imagem e segmentação gera mais leads ao menor CPL.</div><span class="ai-badge">✓ Otimização contínua sem intervenção</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">Monitoramento e ajuste em tempo real</div><div class="step-desc">IA monitora campanhas a cada hora. Se um anúncio perde performance, redistribui verba automaticamente para os que entregam melhor resultado.</div><span class="ai-badge">✓ Zero desperdício de verba</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Dashboard unificado atualizado ao vivo</div><div class="step-desc">Meta + Google + portais + WhatsApp num único painel. Impressões, cliques, CPL, leads, visitas e conversões — dados em tempo real.</div><span class="ai-badge">✓ Visão 360° instantânea</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">5</div><div class="step-content"><div class="step-title">Rastreamento anúncio → lead → venda</div><div class="step-desc">Cada lead carrega sua tag de origem. Sistema mapeia: qual anúncio → qual lead → qual visita → qual venda → qual ROI. Completo e automático.</div><span class="ai-badge">✓ ROI por campanha, canal e produto</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics-row">
+    <div class="metric-card red"><div class="metric-before">Hoje</div><div class="metric-value-big">2–3</div><div class="metric-label">Variações por campanha</div></div>
+    <div class="metric-card green"><div class="metric-after">Com IA</div><div class="metric-value-big">50–100</div><div class="metric-label">Variações testadas ao mesmo tempo</div></div>
+    <div class="metric-card red"><div class="metric-before">Hoje</div><div class="metric-value-big">Semanas</div><div class="metric-label">Para consolidar dados de campanhas</div></div>
+    <div class="metric-card green"><div class="metric-after">Com IA</div><div class="metric-value-big">Ao vivo</div><div class="metric-label">Dashboard atualizado em tempo real</div></div>
+  </div>
+</section>
+
+<!-- MATERIAIS -->
+<section class="section" id="materiais">
+  <div class="section-title">📋 Conferência de Materiais de Marketing</div>
+  <div class="section-subtitle">Padronização, compliance jurídico e atualização de dados: hoje vs. com IA</div>
+
+  <div class="compare-grid">
+    <div class="compare-col col-before">
+      <div class="col-header"><span class="col-icon">⚠️</span><div><h3>Processo Atual</h3><small>Sem IA — revisão manual, lenta e subjetiva</small></div></div>
+      <div class="col-body">
+        <div class="flow">
+          <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">Agência entrega material por e-mail</div><div class="step-desc">Peça chega por e-mail ou link. Sem fluxo de aprovação padronizado. Responsabilidade de conferência está dispersa entre pessoas.</div><span class="pain-badge">⚠ Sem fluxo de aprovação definido</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">Conferência manual contra manual de marca</div><div class="step-desc">Responsável abre o manual de marca e confere visualmente: fonte, cor, logo. Processo subjetivo, demorado e sujeito a inconsistência.</div><span class="pain-badge">⚠ Subjetivo · resultado varia por pessoa</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">Revisão do texto jurídico</div><div class="step-desc">Advogado ou responsável lê o texto jurídico de cada peça manualmente para verificar conformidade. Gargalo que atrasa a aprovação inteira.</div><span class="pain-badge">⚠ Gargalo no jurídico — atraso de 1-2 dias</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Verificação manual da tabela de vendas</div><div class="step-desc">Alguém compara manualmente a tabela com o material. Apresentações chegam em eventos com valores desatualizados — causando constrangimento.</div><span class="pain-badge">⚠ Tabelas velhas chegam ao cliente</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">5</div><div class="step-content"><div class="step-title">Correções por e-mail → ciclo longo</div><div class="step-desc">Correções anotadas em texto, por e-mail, volta para agência, espera, chega de volta, confere de novo. Média: 3-5 dias para uma aprovação.</div><span class="pain-badge">⚠ 3-5 dias por aprovação</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-col col-after">
+      <div class="col-header"><span class="col-icon">🤖</span><div><h3>Com Inteligência Artificial</h3><small>Conferência automática em minutos</small></div></div>
+      <div class="col-body">
+        <div class="flow">
+          <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">Agência entrega → IA recebe automaticamente</div><div class="step-desc">Fluxo integrado: agência sobe no sistema e a conferência inicia imediatamente. Sem e-mail, sem espera para começar a análise.</div><span class="ai-badge">✓ Início imediato e automático</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">IA confere contra manual de marca em segundos</div><div class="step-desc">IA analisa fonte, cor, logo, dimensões e espaçamentos automaticamente, comparando com o manual. Relatório gerado em menos de 1 minuto.</div><span class="ai-badge">✓ 100% objetivo e consistente</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">IA verifica compliance jurídico</div><div class="step-desc">IA compara o texto jurídico com templates aprovados. Sinaliza qualquer alteração, texto faltando ou formato irregular. Advogado age apenas nos alertas.</div><span class="ai-badge">✓ Jurídico age por exceção</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Tabela de vendas atualizada automaticamente</div><div class="step-desc">Tabela mantida em fonte única. Qualquer material gerado ou editado já puxa automaticamente os dados mais recentes. Fim das desatualizações.</div><span class="ai-badge">✓ Tabela sempre atual em tudo</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">5</div><div class="step-content"><div class="step-title">Relatório detalhado → aprovação em horas</div><div class="step-desc">IA entrega relatório visual com todos os itens a corrigir marcados na peça. Agência corrige só o necessário. Aprovação em 2-4h, não dias.</div><span class="ai-badge">✓ 2-4h de ciclo vs. 3-5 dias</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics-row">
+    <div class="metric-card red"><div class="metric-before">Hoje</div><div class="metric-value-big">3–5 dias</div><div class="metric-label">Ciclo completo de aprovação</div></div>
+    <div class="metric-card green"><div class="metric-after">Com IA</div><div class="metric-value-big">2–4h</div><div class="metric-label">Conferência + aprovação automática</div></div>
+    <div class="metric-card red"><div class="metric-before">Hoje</div><div class="metric-value-big">Falha</div><div class="metric-label">Tabelas desatualizadas em peças</div></div>
+    <div class="metric-card green"><div class="metric-after">Com IA</div><div class="metric-value-big">100%</div><div class="metric-label">Dados sempre atualizados</div></div>
+  </div>
+</section>
+
+<!-- DADOS -->
+<section class="section" id="dados">
+  <div class="section-title">📊 Gestão de Dados &amp; Histórico de Campanhas</div>
+  <div class="section-subtitle">De planilhas dispersas e decisões no escuro ao hub centralizado de dados com IA</div>
+
+  <div class="compare-grid">
+    <div class="compare-col col-before">
+      <div class="col-header"><span class="col-icon">⚠️</span><div><h3>Processo Atual</h3><small>Sem IA — dados em ilhas sem conexão</small></div></div>
+      <div class="col-body">
+        <div class="flow">
+          <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">Dados de MKT em arquivos separados</div><div class="step-desc">Meta Ads → Excel. Google Ads → outro Excel. Portais → outro sistema. Cada plataforma em um arquivo. Ninguém cruza nada.</div><span class="pain-badge">⚠ Dados em silos isolados</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">Leads desconectados da origem</div><div class="step-desc">Caderno do corretor, WhatsApp, planilha pessoal — sem conexão com as campanhas que geraram esses leads. Origem é desconhecida.</div><span class="pain-badge">⚠ Lead desconectado da campanha</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">Ações offline sem registro estruturado</div><div class="step-desc">Panfletagem, feiras, eventos: sem data, custo, pessoas abordadas ou leads gerados. Investimento sem comprovação de retorno algum.</div><span class="pain-badge">⚠ Investimento sem comprovação de ROI</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Relatório = horas de trabalho manual</div><div class="step-desc">Para cada reunião, alguém passa horas consolidando dados de fontes diferentes. Relatório chega atrasado e às vezes inconsistente.</div><span class="pain-badge">⚠ Decisão baseada em dado velho</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">5</div><div class="step-content"><div class="step-title">CAC e ROI são completamente desconhecidos</div><div class="step-desc">Com dados dispersos, não existe resposta para: "Quanto nos custou essa venda?" ou "Qual canal traz o lead mais qualificado?"</div><span class="pain-badge">⚠ Estratégia sem base de dados</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-col col-after">
+      <div class="col-header"><span class="col-icon">🤖</span><div><h3>Com Inteligência Artificial</h3><small>Dados integrados, cruzados e automáticos</small></div></div>
+      <div class="col-body">
+        <div class="flow">
+          <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">Todas as fontes integradas em 1 hub</div><div class="step-desc">Meta + Google + portais + WhatsApp + ERP → tudo alimenta um único dashboard automaticamente. Zero exportações manuais.</div><span class="ai-badge">✓ Um painel · todas as fontes</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">Lead rastreado da origem à venda</div><div class="step-desc">Cada lead carrega sua tag de origem. Sistema mapeia: qual anúncio → qual lead → qual visita → qual venda → qual valor gerado.</div><span class="ai-badge">✓ Funil 100% rastreado</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">Ações offline registradas e cruzadas</div><div class="step-desc">Panfletagem e eventos registrados via formulário. IA cruza datas, custo e pico de leads. Histórico completo e comparável ano a ano.</div><span class="ai-badge">✓ ROI de cada ação comprovado</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Relatórios gerados automaticamente</div><div class="step-desc">IA gera relatório com a periodicidade definida. Reunião começa com dados frescos na tela — não com planilha montada na véspera.</div><span class="ai-badge">✓ Dados sempre prontos e confiáveis</span></div></div>
+          <div class="flow-arrow">↓</div>
+          <div class="step"><div class="step-num">5</div><div class="step-content"><div class="step-title">CAC e ROI calculados automaticamente</div><div class="step-desc">Com funil rastreado, o sistema calcula: Custo por Lead, Custo por Visita, Custo por Venda e ROI por canal, campanha e produto.</div><span class="ai-badge">✓ Estratégia baseada em dados reais</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics-row">
+    <div class="metric-card red"><div class="metric-before">Hoje</div><div class="metric-value-big">5+ ilhas</div><div class="metric-label">Fontes sem integração</div></div>
+    <div class="metric-card green"><div class="metric-after">Com IA</div><div class="metric-value-big">1 Hub</div><div class="metric-label">Todas as fontes integradas</div></div>
+    <div class="metric-card red"><div class="metric-before">Hoje</div><div class="metric-value-big">?</div><div class="metric-label">CAC e ROI desconhecidos</div></div>
+    <div class="metric-card green"><div class="metric-after">Com IA</div><div class="metric-value-big">Auto</div><div class="metric-label">CAC calculado por canal e campanha</div></div>
+  </div>
+</section>
+
+<!-- COMPARATIVO -->
+<section class="section" id="comparativo">
+  <div class="section-title">⚖️ Quadro Comparativo Completo</div>
+  <div class="section-subtitle">Visão consolidada de todas as áreas: onde está a dor, o que muda com IA e qual o ganho estimado</div>
+
+  <div class="comp-table-wrapper">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th style="width:17%">Área / Processo</th>
+          <th style="width:28%">⚠️ Hoje — Sem IA</th>
+          <th style="width:28%">✅ Com IA</th>
+          <th style="width:13%">Ganho Est.</th>
+          <th style="width:9%">Prioridade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="5" style="background:#f0f4ff;padding:8px 16px;font-size:11px;font-weight:800;color:#1a5276;text-transform:uppercase;letter-spacing:1px;">🎯 Área: Leads &amp; CRM</td></tr>
+        <tr><td>Captura de Leads</td><td>Leads chegam por 5+ canais sem centralização. ~30% são registrados corretamente.</td><td>IA integra todos os canais. 100% dos leads capturados automaticamente com score de perfil.</td><td>+70% cobertura</td><td style="text-align:center">🔴 Alta</td></tr>
+        <tr><td>Qualificação</td><td>Corretor qualifica na intuição. Sem dados objetivos do perfil financeiro do lead.</td><td>IA gera score automático: renda estimada, produto compatível, urgência de compra.</td><td>~80% acurácia</td><td style="text-align:center">🔴 Alta</td></tr>
+        <tr><td>Follow-up / Régua</td><td>Depende da memória do corretor. Sem régua. Leads "frios" são abandonados.</td><td>Régua automática: IA contata no D+1, D+7, D+30 pela mensagem e canal certos.</td><td>~40% conversão</td><td style="text-align:center">🔴 Alta</td></tr>
+        <tr><td>Pipeline de Vendas</td><td>Gestor sem visibilidade. Precisa ligar para cada corretor para saber o status.</td><td>Pipeline visual em tempo real. Gestor vê tudo: etapa, corretor, dias parado.</td><td>100% visibilidade</td><td style="text-align:center">🔴 Alta</td></tr>
+        <tr><td>Input no ERP</td><td>Analista digita tudo manualmente. ~1h por cliente. Erros frequentes.</td><td>IA lê documentos via OCR e preenche o ERP automaticamente. Analista só revisa.</td><td>~83% menos tempo</td><td style="text-align:center">🟠 Alta</td></tr>
+        <tr><td colspan="5" style="background:#f0fff5;padding:8px 16px;font-size:11px;font-weight:800;color:#1a7a4a;text-transform:uppercase;letter-spacing:1px;">📣 Área: Marketing Digital</td></tr>
+        <tr><td>Produção de Anúncios</td><td>2-3 variações por campanha. Custo alto de produção. Sem testes A/B.</td><td>IA produz 50-100 variações a baixo custo. Testes A/B automáticos identificam os melhores.</td><td>~30x variações</td><td style="text-align:center">🟠 Alta</td></tr>
+        <tr><td>Otimização de Campanhas</td><td>Ajustes manuais e reativos, demoram dias. Verba desperdiçada.</td><td>IA monitora de hora em hora e redistribui verba automaticamente para o melhor anúncio.</td><td>~40% menos CPL</td><td style="text-align:center">🟠 Alta</td></tr>
+        <tr><td>Análise de Performance</td><td>Dados em 3+ plataformas, exportação manual, consolidação demora dias.</td><td>Dashboard unificado e em tempo real: Meta + Google + portais + WhatsApp.</td><td>~95% menos tempo</td><td style="text-align:center">🟠 Alta</td></tr>
+        <tr><td colspan="5" style="background:#fffbf0;padding:8px 16px;font-size:11px;font-weight:800;color:#7d5a00;text-transform:uppercase;letter-spacing:1px;">📋 Área: Conferência de Materiais</td></tr>
+        <tr><td>Conferência de Brand</td><td>Revisão visual manual, subjetiva e inconsistente. Sem parâmetros objetivos.</td><td>IA confere fonte, cor, logo e dimensionamento contra manual de marca. Relatório em 1 min.</td><td>~85% menos tempo</td><td style="text-align:center">🟡 Média</td></tr>
+        <tr><td>Revisão Jurídica</td><td>Advogado lê cada peça manualmente. Gargalo de 1-2 dias por material.</td><td>IA compara com templates aprovados. Advogado age por exceção, só nos alertas sinalizados.</td><td>~70% menos horas</td><td style="text-align:center">🟡 Média</td></tr>
+        <tr><td>Tabela de Vendas</td><td>Atualizada manualmente. Apresentações chegam ao cliente com dados errados.</td><td>Fonte única atualizada. Todos os materiais puxam os dados mais recentes automaticamente.</td><td>100% atualizado</td><td style="text-align:center">🟠 Alta</td></tr>
+        <tr><td>Ciclo de Aprovação</td><td>3-5 dias por material. Idas e vindas por e-mail sem rastreamento.</td><td>IA entrega relatório visual de inconsistências. Agência corrige só o necessário.</td><td>~85% menos tempo</td><td style="text-align:center">🟡 Média</td></tr>
+        <tr><td colspan="5" style="background:#f5f0ff;padding:8px 16px;font-size:11px;font-weight:800;color:#4a1a7a;text-transform:uppercase;letter-spacing:1px;">📊 Área: Gestão de Dados</td></tr>
+        <tr><td>Integração de Dados</td><td>5+ fontes sem conexão. Nenhuma visão unificada possível.</td><td>Hub único: MKT + CRM + ERP + campanhas. Todos os dados conectados e cruzáveis.</td><td>100% integração</td><td style="text-align:center">🔴 Alta</td></tr>
+        <tr><td>Histórico de Ações</td><td>Panfletagem e eventos sem registro. Impossível medir retorno.</td><td>IA cruza data + custo + pico de leads. Histórico completo e comparável.</td><td>De 0 a 100%</td><td style="text-align:center">🟠 Alta</td></tr>
+        <tr><td>Relatórios Gerenciais</td><td>Montados manualmente. Horas de trabalho. Dados às vezes inconsistentes.</td><td>Gerados automaticamente com periodicidade definida. Sempre frescos e confiáveis.</td><td>~90% menos tempo</td><td style="text-align:center">🟠 Alta</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="impact-summary">
+    <div class="impact-title">
+      <h3>Resumo do Impacto Total Esperado</h3>
+      <p>Estimativa conservadora baseada nos processos mapeados e benchmarks do setor imobiliário</p>
+    </div>
+    <div class="impact-stats">
+      <div class="impact-stat"><div class="num">~75%</div><div class="lbl">Redução de<br>tempo operacional</div></div>
+      <div class="impact-stat"><div class="num">16</div><div class="lbl">Pontos de dor<br>endereçados</div></div>
+      <div class="impact-stat"><div class="num">4</div><div class="lbl">Áreas<br>transformadas</div></div>
+      <div class="impact-stat"><div class="num">+ROI</div><div class="lbl">Mensurável de cada<br>real investido em MKT</div></div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Próximo passo recomendado — Ordem de implementação sugerida:</strong><br><br>
+    <strong>1ª Etapa — Leads &amp; CRM:</strong> Impacto imediato na taxa de conversão. Resolve a maior dor apontada na reunião: falta de esteira e dados dispersos do corretor.<br><br>
+    <strong>2ª Etapa — Marketing Digital:</strong> Redução de CPL e visibilidade total do ROI. Permite saber exatamente qual real de investimento gerou qual resultado.<br><br>
+    <strong>3ª Etapa — Conferência de Materiais:</strong> Ganho operacional e qualidade. Libera o time jurídico e acelera a velocidade de campanha.<br><br>
+    <strong>4ª Etapa — Hub de Dados:</strong> Base estrutural para todas as decisões estratégicas. Com os dados dos passos anteriores integrados, o poder da análise cresce exponencialmente.<br><br>
+    Essa sequência representa uma <strong>transformação progressiva e de baixo risco</strong> — resultados visíveis em 30 dias na primeira etapa, sem virar a operação de cabeça para baixo.
+  </div>
+</section>
+
+<script>
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({ top: document.getElementById('mainNav').offsetTop - 2, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

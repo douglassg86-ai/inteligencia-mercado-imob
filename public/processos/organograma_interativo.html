@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organograma Interativo — Processos com IA</title>
+<style>
+:root {
+  --navy: #0d1b2a;
+  --navy2: #1b2e45;
+  --gold: #c9963a;
+  --gold-light: #f5c842;
+  --hoje-h: #b03020;
+  --hoje-card: #fff3f2;
+  --hoje-border: #f0b8b3;
+  --hoje-badge: #c0392b;
+  --ia-h: #155a34;
+  --ia-card: #edfaf3;
+  --ia-border: #7ecba1;
+  --ia-badge: #1a7a4a;
+  --connector: #bdc3cb;
+  --gray: #5a6270;
+  --light: #f4f6f9;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var(--light);color:#1a1a2e;}
+
+/* ---- HEADER ---- */
+.hdr{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);padding:22px 48px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;}
+.hdr-left{}
+.hdr-badge{display:inline-block;background:rgba(201,150,58,.22);border:1px solid var(--gold);color:var(--gold-light);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 12px;border-radius:20px;margin-bottom:6px;}
+.hdr h1{font-size:24px;font-weight:800;color:#fff;letter-spacing:-.3px;line-height:1.2;}
+.hdr h1 span{color:var(--gold-light);}
+.hdr p{font-size:12px;color:rgba(255,255,255,.55);margin-top:3px;}
+
+/* ---- TOGGLE ---- */
+.toggle-wrap{display:flex;gap:0;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;overflow:hidden;padding:3px;}
+.tog-btn{padding:10px 28px;border:none;cursor:pointer;font-size:13px;font-weight:800;letter-spacing:.3px;border-radius:9px;transition:all .25s;background:transparent;color:rgba(255,255,255,.6);}
+.tog-btn.active-hoje{background:var(--hoje-h);color:#fff;box-shadow:0 2px 12px rgba(176,48,32,.4);}
+.tog-btn.active-ia{background:var(--ia-h);color:#fff;box-shadow:0 2px 12px rgba(21,90,52,.4);}
+.tog-btn:not([class*="active"]):hover{background:rgba(255,255,255,.15);color:#fff;}
+
+/* ---- MODE BANNER ---- */
+.mode-banner{padding:10px 48px;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;display:flex;align-items:center;gap:8px;transition:all .3s;}
+.mode-banner.hoje-mode{background:#fff3f2;color:var(--hoje-h);border-bottom:2px solid var(--hoje-h);}
+.mode-banner.ia-mode{background:#edfaf3;color:var(--ia-h);border-bottom:2px solid var(--ia-badge);}
+.mode-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.hoje-mode .mode-dot{background:var(--hoje-h);}
+.ia-mode .mode-dot{background:var(--ia-badge);}
+
+/* ---- MAIN LAYOUT ---- */
+.main{padding:28px 48px 12px;display:flex;flex-direction:column;gap:16px;}
+
+/* ---- SWIM LANE ---- */
+.lane{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.08);overflow:hidden;transition:box-shadow .2s;}
+.lane:hover{box-shadow:0 4px 24px rgba(0,0,0,.12);}
+.lane-inner{display:flex;align-items:stretch;}
+
+.lane-title-col{min-width:150px;max-width:150px;padding:20px 16px;display:flex;flex-direction:column;justify-content:center;gap:6px;border-right:2px solid var(--light);}
+.lane-icon{font-size:24px;line-height:1;}
+.lane-name{font-size:12px;font-weight:800;color:var(--navy);line-height:1.3;text-transform:uppercase;letter-spacing:.5px;}
+
+.steps-row{flex:1;display:flex;align-items:center;padding:16px 20px;gap:0;overflow-x:auto;}
+
+/* ---- STEP NODE ---- */
+.step-node{min-width:155px;max-width:155px;border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .22s;position:relative;border:1.5px solid transparent;}
+.step-node:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.13);}
+
+.mode-hoje .step-node{background:var(--hoje-card);border-color:var(--hoje-border);}
+.mode-ia   .step-node{background:var(--ia-card);border-color:var(--ia-border);}
+.step-node.selected{box-shadow:0 0 0 3px var(--gold)!important;transform:translateY(-2px);}
+
+.step-num{width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:6px;}
+.mode-hoje .step-num{background:var(--hoje-h);color:#fff;}
+.mode-ia   .step-num{background:var(--ia-badge);color:#fff;}
+
+.step-title{font-size:11.5px;font-weight:700;color:var(--navy);line-height:1.35;margin-bottom:5px;}
+.step-badge{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;line-height:1.4;}
+.mode-hoje .step-badge{background:var(--hoje-h);color:#fff;}
+.mode-ia   .step-badge{background:var(--ia-badge);color:#fff;}
+
+/* ---- ARROW CONNECTOR ---- */
+.arrow-conn{display:flex;align-items:center;flex-shrink:0;padding:0 6px;}
+.arrow-line{width:28px;height:2px;position:relative;}
+.mode-hoje .arrow-line{background:var(--hoje-border);}
+.mode-ia   .arrow-line{background:var(--ia-border);}
+.arrow-line::after{content:'';position:absolute;right:-5px;top:-5px;width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;}
+.mode-hoje .arrow-line::after{border-left:9px solid var(--hoje-border);}
+.mode-ia   .arrow-line::after{border-left:9px solid var(--ia-border);}
+
+/* ---- DETAIL PANEL ---- */
+.detail-panel{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:22px 32px;display:none;animation:slideUp .25s ease;}
+.detail-panel.visible{display:block;}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.dp-header{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.dp-area-tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:3px 10px;border-radius:4px;}
+.mode-hoje .dp-area-tag{background:var(--hoje-card);color:var(--hoje-h);border:1px solid var(--hoje-border);}
+.mode-ia   .dp-area-tag{background:var(--ia-card);color:var(--ia-badge);border:1px solid var(--ia-border);}
+.dp-step-num{font-size:11px;font-weight:800;color:var(--gray);}
+.dp-body{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.dp-col h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid;}
+.dp-col.hoje h4{color:var(--hoje-h);border-color:var(--hoje-h);}
+.dp-col.ia h4{color:var(--ia-badge);border-color:var(--ia-badge);}
+.dp-col p{font-size:13px;color:#3a3a4a;line-height:1.6;}
+.dp-col .dp-badge{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:4px;margin-top:8px;}
+.dp-col.hoje .dp-badge{background:var(--hoje-h);color:#fff;}
+.dp-col.ia .dp-badge{background:var(--ia-badge);color:#fff;}
+.dp-metric{font-size:22px;font-weight:900;margin-top:6px;}
+.dp-col.hoje .dp-metric{color:var(--hoje-h);}
+.dp-col.ia .dp-metric{color:var(--ia-badge);}
+.dp-close{margin-left:auto;background:none;border:1px solid #ddd;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;color:var(--gray);}
+.dp-close:hover{background:#f0f0f0;}
+
+/* ---- METRICS BAR ---- */
+.metrics-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 48px 28px;}
+.m-card{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;flex-direction:column;align-items:center;text-align:center;transition:all .3s;}
+.m-card.hoje-card{border-top:3px solid var(--hoje-h);}
+.m-card.ia-card{border-top:3px solid var(--ia-badge);}
+.m-num{font-size:26px;font-weight:900;line-height:1;margin-bottom:4px;}
+.m-card.hoje-card .m-num{color:var(--hoje-h);}
+.m-card.ia-card .m-num{color:var(--ia-badge);}
+.m-label{font-size:11px;color:var(--gray);line-height:1.4;}
+
+/* ---- INSTRUCTION ---- */
+.instruction{text-align:center;padding:4px 48px 0;font-size:11px;color:var(--gray);}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-badge">Diagnóstico Estratégico · Abril 2026</div>
+    <h1>Fluxo de Processos: <span>Antes e Depois da IA</span></h1>
+    <p>Apresentação para Diretoria · Valéria · Amik · Douglas — 22/04/2026</p>
+  </div>
+  <div class="toggle-wrap">
+    <button class="tog-btn active-hoje" id="btnHoje" onclick="setMode('hoje')">⚠ Hoje — Sem IA</button>
+    <button class="tog-btn" id="btnIa" onclick="setMode('ia')">🤖 Com Inteligência Artificial</button>
+  </div>
+</header>
+
+<div class="mode-banner hoje-mode" id="modeBanner">
+  <span class="mode-dot"></span>
+  <span id="modeBannerText">VISUALIZANDO: Processo atual — sem uso de IA — com as dores operacionais mapeadas</span>
+</div>
+
+<div class="main" id="mainContainer">
+  <!-- Lanes rendered by JS -->
+</div>
+
+<div class="instruction" id="instruction">Clique em qualquer etapa para ver os detalhes completos</div>
+
+<!-- Detail Panel -->
+<div class="main" style="padding-top:0">
+  <div class="detail-panel" id="detailPanel">
+    <div class="dp-header">
+      <span class="dp-area-tag" id="dpAreaTag"></span>
+      <span class="dp-step-num" id="dpStepNum"></span>
+      <button class="dp-close" onclick="closeDetail()">✕ Fechar</button>
+    </div>
+    <div class="dp-body">
+      <div class="dp-col hoje">
+        <h4>⚠ Hoje — Sem IA</h4>
+        <p id="dpHojeDesc"></p>
+        <span class="dp-badge" id="dpHojeBadge"></span>
+        <div class="dp-metric" id="dpHojeMetric"></div>
+      </div>
+      <div class="dp-col ia">
+        <h4>✓ Com IA</h4>
+        <p id="dpIaDesc"></p>
+        <span class="dp-badge" id="dpIaBadge"></span>
+        <div class="dp-metric" id="dpIaMetric"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="metrics-bar" id="metricsBar">
+  <!-- rendered by JS -->
+</div>
+
+<script>
+const data = [
+  {
+    area:"Leads & CRM",icon:"🎯",
+    steps:[
+      {
+        hoje:{title:"Lead fragmentado",badge:"5+ canais dispersos",desc:"Leads chegam por WhatsApp, portais, Instagram e indicação sem nenhuma centralização. Cerca de 30% são registrados corretamente pelo corretor.",metric:"~30% registrados",metric_label:""},
+        ia:{title:"Captura automática",badge:"100% dos canais",desc:"IA integra todos os canais em um único CRM. Cada lead é capturado automaticamente, independentemente do canal de origem, sem qualquer intervenção do corretor.",metric:"100% capturado",metric_label:""}
+      },
+      {
+        hoje:{title:"Anotação manual",badge:"Dado perdido",desc:"Corretor anota em caderno, planilha pessoal ou WhatsApp. Sem padrão definido. Informações incompletas são a regra — nome, telefone ou renda frequentemente ausentes.",metric:"~40% incompletos",metric_label:""},
+        ia:{title:"IA qualifica o lead",badge:"Score automático",desc:"IA gera score imediato: perfil de renda estimado, produto compatível e urgência de compra — sem o corretor precisar perguntar nada. Dado já vem estruturado.",metric:"Score em segundos",metric_label:""}
+      },
+      {
+        hoje:{title:"Pipeline invisível",badge:"Gestão no escuro",desc:"Gestor não tem visibilidade. Precisa ligar para cada corretor individualmente para saber o status de cada lead. Decisões tomadas sem dados confiáveis.",metric:"0% visibilidade",metric_label:""},
+        ia:{title:"Pipeline em tempo real",badge:"Visão 360°",desc:"Pipeline visual atualizado em tempo real. Gestor vê todos os leads, etapa de cada um, corretor responsável e dias parado — sem perguntar para ninguém.",metric:"100% visível",metric_label:""}
+      },
+      {
+        hoje:{title:"Follow-up manual",badge:"Leads esquecidos",desc:"Não existe régua de relacionamento. Leads que não compraram hoje são abandonados. Recontato depende exclusivamente da memória do corretor.",metric:"~60% abandonados",metric_label:""},
+        ia:{title:"Régua automática",badge:"Zero lead perdido",desc:"IA dispara follow-up no tempo certo pelo canal certo. Lead frio entra em nutrição automática: D+1, D+7, D+30, D+90 — sem intervenção humana.",metric:"D+1, D+7, D+30",metric_label:""}
+      },
+      {
+        hoje:{title:"ERP manual",badge:"~1h por contrato",desc:"Analista digita todos os dados do cliente no sistema. ~1 hora por contrato. Erros de digitação frequentes — um erro bloqueia a emissão do contrato.",metric:"1h por cliente",metric_label:""},
+        ia:{title:"ERP automático",badge:"5 min · zero erro",desc:"IA lê documentos via OCR, extrai todos os dados e preenche o ERP automaticamente. Analista apenas revisa e confirma. 1 hora viram 5 minutos.",metric:"5 min por cliente",metric_label:""}
+      }
+    ]
+  },
+  {
+    area:"MKT Digital",icon:"📣",
+    steps:[
+      {
+        hoje:{title:"Briefing incompleto",badge:"Sem padrão",desc:"Briefing enviado por e-mail sem modelo estruturado. Chega incompleto ou com informações desatualizadas. Retrabalho na agência é frequente.",metric:"Retrabalho recorrente",metric_label:""},
+        ia:{title:"Briefing estruturado",badge:"Modelo inteligente",desc:"IA preenche automaticamente o briefing com dados do produto, persona e histórico de performance. Agência recebe um documento completo e atualizado.",metric:"Pronto em minutos",metric_label:""}
+      },
+      {
+        hoje:{title:"2–3 variações",badge:"Sem teste A/B",desc:"Alto custo de produção limita o número de variações. Geralmente 2-3 versões por campanha. Testes A/B são raros ou completamente inexistentes.",metric:"2-3 versões/campanha",metric_label:""},
+        ia:{title:"50–100 variações",badge:"Testes automáticos",desc:"IA produz 50 a 100 variações de peça e copy em minutos, para diferentes perfis, formatos e fases do funil. Testes A/B são automáticos e contínuos.",metric:"50-100 versões",metric_label:""}
+      },
+      {
+        hoje:{title:"Campanha no ar",badge:"Verba desperdiçada",desc:"Após subir o anúncio, não há acompanhamento sistemático. Ajustes acontecem quando o resultado já está ruim há dias. Verba é consumida sem retorno.",metric:"Ajuste em dias",metric_label:""},
+        ia:{title:"Otimização em tempo real",badge:"Ajuste por hora",desc:"IA monitora todas as campanhas de hora em hora. Se um anúncio perde performance, redistribui verba automaticamente para os de maior resultado.",metric:"Ajuste a cada hora",metric_label:""}
+      },
+      {
+        hoje:{title:"Relatório manual",badge:"Dados com atraso",desc:"Dados exportados manualmente de Meta + Google + portais em arquivos separados. Consolidação demora horas. Informações chegam com 1-2 semanas de atraso.",metric:"1-2 semanas atrasado",metric_label:""},
+        ia:{title:"Dashboard ao vivo",badge:"Dados em tempo real",desc:"Todos os canais integrados em um único dashboard: Meta + Google + portais + WhatsApp. Dados de impressões, CPL, leads e conversões — em tempo real.",metric:"Tempo real",metric_label:""}
+      },
+      {
+        hoje:{title:"ROI desconhecido",badge:"Decisão no escuro",desc:"Impossível saber qual anúncio gerou qual lead, qual lead virou visita, qual visita virou venda. O orçamento de marketing é gasto sem comprovação de retorno.",metric:"ROI = ?",metric_label:""},
+        ia:{title:"ROI por anúncio",badge:"Rastreamento total",desc:"Cada lead carrega a tag do anúncio de origem. Sistema mapeia: anúncio → lead → visita → venda → valor gerado. ROI de cada campanha calculado automaticamente.",metric:"ROI por campanha",metric_label:""}
+      }
+    ]
+  },
+  {
+    area:"Conferência de Materiais",icon:"📋",
+    steps:[
+      {
+        hoje:{title:"Material por e-mail",badge:"Sem fluxo definido",desc:"Peça chega por e-mail ou link de drive. Não existe fluxo de aprovação padronizado. Responsabilidade de conferência está dispersa entre pessoas.",metric:"Sem rastreamento",metric_label:""},
+        ia:{title:"Entrega integrada",badge:"Fluxo automático",desc:"Agência sobe o material diretamente no sistema. A conferência inicia automaticamente. Sem e-mail, sem espera, sem dúvida de quem aprova o quê.",metric:"Início imediato",metric_label:""}
+      },
+      {
+        hoje:{title:"Conferência visual manual",badge:"Inconsistente",desc:"Responsável abre o manual de marca e confere visualmente: fonte, cor, logo. Processo subjetivo. O resultado varia de acordo com quem conferiu.",metric:"Subjetivo",metric_label:""},
+        ia:{title:"IA confere o manual",badge:"100% objetivo",desc:"IA analisa fonte, cor, logo, dimensões e espaçamentos em segundos, comparando pixel a pixel com o manual de marca. Relatório gerado em menos de 1 minuto.",metric:"Em 1 minuto",metric_label:""}
+      },
+      {
+        hoje:{title:"Revisão jurídica manual",badge:"Gargalo de 1-2 dias",desc:"Advogado lê o texto jurídico de cada peça manualmente para verificar conformidade. Gargalo que atrasa toda a aprovação em 1 a 2 dias.",metric:"1-2 dias parado",metric_label:""},
+        ia:{title:"IA verifica o jurídico",badge:"Ação por exceção",desc:"IA compara texto jurídico com templates aprovados e sinaliza qualquer alteração ou desvio. Advogado age apenas nos alertas sinalizados — não em cada peça.",metric:"Alertas pontuais",metric_label:""}
+      },
+      {
+        hoje:{title:"Tabela desatualizada",badge:"Erro em apresentações",desc:"Alguém precisa comparar manualmente a tabela de vendas com o material. Apresentações chegam ao cliente ou em eventos com valores desatualizados.",metric:"Erro frequente",metric_label:""},
+        ia:{title:"Tabela automática",badge:"Sempre atualizada",desc:"Tabela de vendas mantida em fonte única. Todo material gerado pelo sistema já puxta automaticamente os dados mais recentes. Fim das desatualizações.",metric:"100% atualizada",metric_label:""}
+      },
+      {
+        hoje:{title:"Ciclo de 3-5 dias",badge:"Idas e vindas",desc:"Correções anotadas em texto por e-mail, volta para agência, espera, chega de volta, confere de novo. Média de 3 a 5 dias para uma aprovação completa.",metric:"3-5 dias/aprovação",metric_label:""},
+        ia:{title:"Aprovação em 2-4h",badge:"Direto ao ponto",desc:"IA entrega relatório visual marcando exatamente onde corrigir. Agência corrige apenas o necessário. Ciclo de aprovação cai de dias para horas.",metric:"2-4h/aprovação",metric_label:""}
+      }
+    ]
+  },
+  {
+    area:"Gestão de Dados",icon:"📊",
+    steps:[
+      {
+        hoje:{title:"5+ fontes isoladas",badge:"Silos de dados",desc:"Meta Ads → Excel. Google → outro Excel. Portais → outro sistema. CRM → planilha do corretor. Cada fonte em um arquivo. Ninguém cruza nada.",metric:"5+ arquivos separados",metric_label:""},
+        ia:{title:"Hub centralizado",badge:"1 painel unificado",desc:"Meta + Google + portais + WhatsApp + ERP alimentam automaticamente um único dashboard. Sem exportações manuais, sem consolidações. Tudo em tempo real.",metric:"1 hub integrado",metric_label:""}
+      },
+      {
+        hoje:{title:"Lead sem origem",badge:"Canal desconhecido",desc:"Leads chegam sem tag de origem. Impossível saber se vieram de panfletagem, Instagram, portal ou indicação. Investimento por canal é desconhecido.",metric:"Origem desconhecida",metric_label:""},
+        ia:{title:"Lead rastreado",badge:"Origem mapeada",desc:"Cada lead carrega sua tag de origem. Sistema rastreia a jornada completa: canal → lead → visita → proposta → venda → valor. Funil 100% visível.",metric:"Funil rastreado",metric_label:""}
+      },
+      {
+        hoje:{title:"Offline sem registro",badge:"ROI inexistente",desc:"Panfletagem, feiras e eventos ocorrem sem registro de custo, datas, pessoas abordadas ou leads gerados. Investimento sem qualquer comprovação de retorno.",metric:"ROI = R$0 mensurado",metric_label:""},
+        ia:{title:"Offline rastreado",badge:"ROI comprovado",desc:"Ações de rua registradas via formulário. IA cruza data da ação + custo + pico de leads no período. Histórico completo e comparável ano a ano.",metric:"ROI comprovado",metric_label:""}
+      },
+      {
+        hoje:{title:"Relatório manual",badge:"Decisão atrasada",desc:"Para cada reunião, alguém passa horas consolidando dados de fontes diferentes. Relatório chega atrasado, às vezes com dados inconsistentes entre si.",metric:"Horas de trabalho",metric_label:""},
+        ia:{title:"Relatório automático",badge:"Sempre atualizado",desc:"IA gera relatório completo automaticamente com a periodicidade definida. Reunião começa com dados frescos na tela. Zero trabalho manual de consolidação.",metric:"Automático e pontual",metric_label:""}
+      },
+      {
+        hoje:{title:"CAC desconhecido",badge:"Estratégia no escuro",desc:"Com dados dispersos e sem rastreamento, é impossível calcular o Custo de Aquisição de Cliente por canal. Decisões de budget são baseadas em intuição.",metric:"CAC = desconhecido",metric_label:""},
+        ia:{title:"CAC por canal",badge:"Estratégia em dados",desc:"Sistema calcula automaticamente: Custo por Lead, Custo por Visita, Custo por Venda e ROI por canal e campanha. Verba vai para onde funciona.",metric:"CAC calculado",metric_label:""}
+      }
+    ]
+  }
+];
+
+const metricsHoje = [
+  {num:"~30%", label:"Leads registrados corretamente"},
+  {num:"1-2 sem.", label:"Para consolidar dados de campanhas"},
+  {num:"3-5 dias", label:"Ciclo de aprovação de materiais"},
+  {num:"0", label:"Histórico cruzado de ações offline"}
+];
+const metricsIa = [
+  {num:"100%", label:"Leads capturados e qualificados"},
+  {num:"Ao vivo", label:"Dashboard unificado em tempo real"},
+  {num:"2-4h", label:"Aprovação de materiais com IA"},
+  {num:"ROI", label:"De cada ação online e offline mensurado"}
+];
+
+let currentMode = 'hoje';
+let selectedNode = null;
+
+function setMode(mode){
+  currentMode = mode;
+  const wrapper = document.body;
+  const btnH = document.getElementById('btnHoje');
+  const btnI = document.getElementById('btnIa');
+  const banner = document.getElementById('modeBanner');
+  const bannerTxt = document.getElementById('modeBannerText');
+
+  if(mode === 'hoje'){
+    btnH.className = 'tog-btn active-hoje';
+    btnI.className = 'tog-btn';
+    banner.className = 'mode-banner hoje-mode';
+    bannerTxt.textContent = 'VISUALIZANDO: Processo atual — sem uso de IA — com as dores operacionais mapeadas em vermelho';
+  } else {
+    btnH.className = 'tog-btn';
+    btnI.className = 'tog-btn active-ia';
+    banner.className = 'mode-banner ia-mode';
+    bannerTxt.textContent = 'VISUALIZANDO: Processo com IA — etapas automatizadas e melhorias em cada ponto de dor';
+  }
+
+  document.getElementById('mainContainer').className = 'main mode-' + mode;
+  closeDetail();
+  renderMetrics();
+  if(selectedNode) selectNode(selectedNode.area, selectedNode.step);
+}
+
+function renderLanes(){
+  const container = document.getElementById('mainContainer');
+  container.className = 'main mode-hoje';
+  let html = '';
+  data.forEach((lane, li) => {
+    html += `<div class="lane">
+      <div class="lane-inner">
+        <div class="lane-title-col">
+          <div class="lane-icon">${lane.icon}</div>
+          <div class="lane-name">${lane.area}</div>
+        </div>
+        <div class="steps-row">`;
+    lane.steps.forEach((step, si) => {
+      if(si > 0) html += `<div class="arrow-conn"><div class="arrow-line"></div></div>`;
+      html += `<div class="step-node" id="node-${li}-${si}" onclick="selectNode(${li},${si})">
+        <div class="step-num">${si+1}</div>
+        <div class="step-title step-hoje" id="stitle-hoje-${li}-${si}">${step.hoje.title}</div>
+        <div class="step-title step-ia" id="stitle-ia-${li}-${si}" style="display:none">${step.ia.title}</div>
+        <span class="step-badge badge-hoje" id="sbadge-hoje-${li}-${si}">${step.hoje.badge}</span>
+        <span class="step-badge badge-ia" id="sbadge-ia-${li}-${si}" style="display:none">${step.ia.badge}</span>
+      </div>`;
+    });
+    html += `</div></div></div>`;
+  });
+  container.innerHTML = html;
+}
+
+// Update node text content when mode changes
+const origSetMode = setMode;
+setMode = function(mode){
+  origSetMode(mode);
+  data.forEach((lane, li) => {
+    lane.steps.forEach((step, si) => {
+      const thoje = document.getElementById(`stitle-hoje-${li}-${si}`);
+      const tia   = document.getElementById(`stitle-ia-${li}-${si}`);
+      const bhoje = document.getElementById(`sbadge-hoje-${li}-${si}`);
+      const bia   = document.getElementById(`sbadge-ia-${li}-${si}`);
+      if(mode === 'hoje'){
+        if(thoje) thoje.style.display = '';
+        if(tia)   tia.style.display = 'none';
+        if(bhoje) bhoje.style.display = '';
+        if(bia)   bia.style.display = 'none';
+      } else {
+        if(thoje) thoje.style.display = 'none';
+        if(tia)   tia.style.display = '';
+        if(bhoje) bhoje.style.display = 'none';
+        if(bia)   bia.style.display = '';
+      }
+    });
+  });
+}
+
+function selectNode(li, si){
+  // Deselect previous
+  if(selectedNode){
+    const prev = document.getElementById(`node-${selectedNode.area}-${selectedNode.step}`);
+    if(prev) prev.classList.remove('selected');
+  }
+  selectedNode = {area: li, step: si};
+  const node = document.getElementById(`node-${li}-${si}`);
+  if(node) node.classList.add('selected');
+
+  const step = data[li].steps[si];
+  const lane = data[li];
+  const dp = document.getElementById('detailPanel');
+  dp.className = 'detail-panel visible mode-' + currentMode;
+
+  document.getElementById('dpAreaTag').textContent = lane.icon + ' ' + lane.area;
+  document.getElementById('dpStepNum').textContent = 'Etapa ' + (si+1) + ' de ' + lane.steps.length;
+  document.getElementById('dpHojeDesc').textContent = step.hoje.desc;
+  document.getElementById('dpHojeBadge').textContent = '⚠ ' + step.hoje.badge;
+  document.getElementById('dpHojeMetric').textContent = step.hoje.metric;
+  document.getElementById('dpIaDesc').textContent = step.ia.desc;
+  document.getElementById('dpIaBadge').textContent = '✓ ' + step.ia.badge;
+  document.getElementById('dpIaMetric').textContent = step.ia.metric;
+
+  dp.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function closeDetail(){
+  document.getElementById('detailPanel').className = 'detail-panel';
+  if(selectedNode){
+    const prev = document.getElementById(`node-${selectedNode.area}-${selectedNode.step}`);
+    if(prev) prev.classList.remove('selected');
+    selectedNode = null;
+  }
+}
+
+function renderMetrics(){
+  const bar = document.getElementById('metricsBar');
+  const metrics = currentMode === 'hoje' ? metricsHoje : metricsIa;
+  const cls = currentMode === 'hoje' ? 'hoje-card' : 'ia-card';
+  bar.innerHTML = metrics.map(m =>
+    `<div class="m-card ${cls}"><div class="m-num">${m.num}</div><div class="m-label">${m.label}</div></div>`
+  ).join('');
+}
+
+// Init
+renderLanes();
+renderMetrics();
+// Apply initial mode labels
+data.forEach((lane, li) => {
+  lane.steps.forEach((step, si) => {
+    // hoje titles are already shown by default
+  });
+});
+</script>
+</body>
+</html>

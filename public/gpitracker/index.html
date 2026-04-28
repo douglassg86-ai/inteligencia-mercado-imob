@@ -91,6 +91,30 @@ input, select, textarea { font-family: inherit; }
 }
 .btn-install:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 176, 106, 0.4); }
 .btn-install:active { transform: scale(0.98); }
+
+/* Funnel Styles */
+.funnel-container { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 20px 0; }
+.funnel-stage {
+  width: 100%; max-width: 400px; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--panel-2); display: flex; align-items: center; justify-content: space-between;
+  position: relative; transition: all 0.2s;
+}
+.funnel-stage:hover { border-color: var(--accent); background: var(--panel); }
+.funnel-stage .info { flex: 1; }
+.funnel-stage .name { font-size: 13px; font-weight: 600; color: var(--muted); }
+.funnel-stage .count { font-size: 20px; font-weight: 800; }
+.funnel-stage .actions { display: flex; gap: 4px; }
+.funnel-conversion {
+  height: 30px; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--accent); position: relative; width: 100%;
+}
+.funnel-conversion::before, .funnel-conversion::after {
+  content: ''; position: absolute; height: 10px; width: 1px; background: var(--line); left: 50%;
+}
+.funnel-conversion::before { top: 0; }
+.funnel-conversion::after { bottom: 0; }
+.funnel-conv-label { background: var(--bg); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--line); z-index: 1; }
+
 .sidebar-footer { padding: 12px 8px; border-top: 1px solid var(--line); display:flex; gap: 8px; align-items:center; }
 .sidebar-footer .user-avatar {
   width: 34px; height: 34px; border-radius: 50%;
@@ -1510,7 +1534,7 @@ VIEWS.funil = () => {
       ${lockPessoa ? '' : '<div class="seg" id="funil-papel"><button data-r="GPI" class="active">GPIs</button><button data-r="EXEC">Executivos</button></div>'}
     </div>
     ${lockPessoa ? '' : '<div class="card mb-12"><div class="card-title">Pessoa</div><div class="chips" id="funil-pessoa"></div></div>'}
-    <div class="card mb-12"><div class="card-title" id="funil-stage-title">Etapas</div><div class="stage-grid" id="funil-stages"></div></div>
+    <div class="card mb-12"><div class="card-title" id="funil-stage-title">Funil de Vendas</div><div class="funnel-container" id="funil-stages"></div></div>
     <div class="card"><div class="card-title">Últimos lançamentos</div><div id="funil-log"></div></div>
   `;
   let papel = lockPessoa ? (myGpi ? 'GPI' : 'EXEC') : initialPapel;
@@ -1527,19 +1551,46 @@ VIEWS.funil = () => {
     const etapas = papel === 'GPI' ? FUNIL_GPI : FUNIL_EXEC;
     const today = todayISO();
     const counts = {};
-    etapas.forEach(e => { counts[e] = DB.funil.filter(f => f.papel === papel && f.pessoa === pessoa && f.etapa === e && f.data === today).reduce((s,f)=>s+(Number(f.qtd)||0), 0); });
-    $('#funil-stage-title').innerHTML = `Etapas · <span class="muted">${escapeHtml(pessoa||'')}</span> · hoje`;
-    $('#funil-stages').innerHTML = etapas.map((e,i) => `
-      <div class="stage-btn" style="border-color: ${STAGE_COLORS[i%STAGE_COLORS.length]}33;">
-        <div class="stage-name">${escapeHtml(e)}</div>
-        <div class="stage-count" style="color:${STAGE_COLORS[i%STAGE_COLORS.length]};">${counts[e]||0}</div>
-        <div class="stage-actions">
-          <button class="btn sm" data-act="inc" data-d="1"  data-etapa="${escapeHtml(e)}">+1</button>
-          <button class="btn sm" data-act="inc" data-d="5"  data-etapa="${escapeHtml(e)}">+5</button>
-          <button class="btn sm" data-act="inc-n"           data-etapa="${escapeHtml(e)}">+N</button>
-          ${isAdmin()?`<button class="btn sm danger" data-act="inc" data-d="-1" data-etapa="${escapeHtml(e)}">−1</button>`:''}
+    etapas.forEach(e => { 
+      counts[e] = DB.funil.filter(f => f.papel === papel && f.pessoa === pessoa && f.etapa === e && f.data === today).reduce((s,f)=>s+(Number(f.qtd)||0), 0); 
+    });
+    
+    $('#funil-stage-title').innerHTML = `Funil · <span class="muted">${escapeHtml(pessoa||'')}</span> · hoje`;
+    
+    let html = '';
+    etapas.forEach((e, i) => {
+      const color = STAGE_COLORS[i % STAGE_COLORS.length];
+      const count = counts[e] || 0;
+      
+      // Stage Box
+      html += `
+        <div class="funnel-stage" style="border-left: 4px solid ${color};">
+          <div class="info">
+            <div class="name">${escapeHtml(e)}</div>
+            <div class="count" style="color:${color};">${count}</div>
+          </div>
+          <div class="actions">
+            <button class="btn sm" data-act="inc" data-d="1"  data-etapa="${escapeHtml(e)}">+1</button>
+            <button class="btn sm" data-act="inc" data-d="5"  data-etapa="${escapeHtml(e)}">+5</button>
+            <button class="btn sm" data-act="inc-n"           data-etapa="${escapeHtml(e)}">+N</button>
+            ${isAdmin()?`<button class="btn sm danger" data-act="inc" data-d="-1" data-etapa="${escapeHtml(e)}">−1</button>`:''}
+          </div>
         </div>
-      </div>`).join('');
+      `;
+      
+      // Conversion Rate between stages
+      if (i < etapas.length - 1) {
+        const nextCount = counts[etapas[i+1]] || 0;
+        const rate = count > 0 ? ((nextCount / count) * 100).toFixed(1) : '0.0';
+        html += `
+          <div class="funnel-conversion">
+            <div class="funnel-conv-label">↘ ${rate}% conversão</div>
+          </div>
+        `;
+      }
+    });
+    
+    $('#funil-stages').innerHTML = html;
   }
   function renderLog() {
     const log = DB.funil.slice().sort((a,b)=> (b.data+b.id).localeCompare(a.data+a.id)).slice(0,15);

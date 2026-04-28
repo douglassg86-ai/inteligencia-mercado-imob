@@ -2072,18 +2072,18 @@ function editNegocio(id) {
 
 function showNegocioHistory(id) {
   const n = DB.negocios.find(x => x.id === id); if (!n) return;
-  const items = (n.historico||[]).slice().reverse().map(h => \`
+  const items = (n.historico||[]).slice().reverse().map(h => `
     <div class="h-item" style="padding:12px; border-left:3px solid var(--accent-color); background:var(--bg-card); margin-bottom:8px; border-radius:0 4px 4px 0; border:1px solid var(--border-color); border-left:none;">
       <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:12px; color:var(--text-muted);">
-        <span><b>\${h.data.slice(8,10)}/\${h.data.slice(5,7)}</b> · \${escapeHtml(h.autor)}</span>
-        <span>\${escapeHtml(h.etapaDe)} → <b>\${escapeHtml(h.etapaPara)}</b></span>
+        <span><b>${h.data.slice(8,10)}/${h.data.slice(5,7)}</b> · ${escapeHtml(h.autor)}</span>
+        <span>${escapeHtml(h.etapaDe)} → <b>${escapeHtml(h.etapaPara)}</b></span>
       </div>
-      <div style="font-size:14px;">\${escapeHtml(h.obs)}</div>
-    </div>\`).join('');
-  openModal(\`<h2>Histórico · \${escapeHtml(n.cliente1||n.imobiliaria||'Negócio')}</h2>
-    <div class="lc-meta" style="margin-bottom:12px;">Cadastrado em \${escapeHtml((n.data||'').slice(0,10))} por \${escapeHtml(n.criadoPor||'')}</div>
-    <div class="lead-history mt-12" style="max-height:400px; overflow-y:auto;">\${items || '<div class="muted">Sem eventos de histórico registrados.</div>'}</div>
-    <div class="lc-actions mt-20" style="display:flex; justify-content:flex-end;"><button class="btn" onclick="closeModal()">Fechar</button></div>\`);
+      <div style="font-size:14px;">${escapeHtml(h.obs)}</div>
+    </div>`).join('');
+  openModal(`<h2>Histórico · ${escapeHtml(n.cliente1||n.imobiliaria||'Negócio')}</h2>
+    <div class="lc-meta" style="margin-bottom:12px;">Cadastrado em ${escapeHtml((n.data||'').slice(0,10))} por ${escapeHtml(n.criadoPor||'')}</div>
+    <div class="lead-history mt-12" style="max-height:400px; overflow-y:auto;">${items || '<div class="muted">Sem eventos de histórico registrados.</div>'}</div>
+    <div class="lc-actions mt-20" style="display:flex; justify-content:flex-end;"><button class="btn" onclick="closeModal()">Fechar</button></div>`);
 }
 
 function deleteNegocio(id) {

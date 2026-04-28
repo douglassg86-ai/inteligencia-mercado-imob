@@ -1763,18 +1763,7 @@ function openFunilLeadModal(papel, pessoa, etapa) {
     closeModal();
     if (window._reloadFunilStages) _reloadFunilStages();
     if (window._reloadFunilLog) _reloadFunilLog();
-  arr.sort((a,b) => {
-    const sa = leadIsStale(a)?2:leadIsDue(a)?1:0;
-    const sb = leadIsStale(b)?2:leadIsDue(b)?1:0;
-    if (sb !== sa) return sb - sa;
-    return (b.dataUltimaAtualizacao||'').localeCompare(a.dataUltimaAtualizacao||'');
   });
-  const el = $('#leads-list');
-  if (!arr.length) { el.innerHTML = '<div class="empty"><div class="icon-big">🎯</div><div>Nenhum lead com esses filtros.</div></div>'; return; }
-  el.innerHTML = `<div class="lead-grid">${arr.map(l => leadCardHtml(l)).join('')}</div>`;
-  // delegação de cliques
-  el.addEventListener('click', leadListClickHandler, { once: false });
-  el.onclick = leadListClickHandler;
 }
 
 function leadCardHtml(l) {

@@ -83,6 +83,14 @@ input, select, textarea { font-family: inherit; }
   color: var(--accent-2); border-left: 3px solid var(--accent); padding-left: 9px;
 }
 .nav button[disabled] { opacity:.4; cursor: not-allowed; }
+.btn-install { 
+  margin: 12px; padding: 12px; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--accent-text); border: none; border-radius: 12px; font-weight: 700; font-size: 13px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 4px 15px rgba(212, 176, 106, 0.3); transition: all 0.2s ease;
+}
+.btn-install:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 176, 106, 0.4); }
+.btn-install:active { transform: scale(0.98); }
 .sidebar-footer { padding: 12px 8px; border-top: 1px solid var(--line); display:flex; gap: 8px; align-items:center; }
 .sidebar-footer .user-avatar {
   width: 34px; height: 34px; border-radius: 50%;
@@ -516,6 +524,9 @@ tbody tr:last-child td { border-bottom: 0; }
       <button data-view="usuarios" data-admin="1">🔐 &nbsp; Usuários</button>
       <button data-view="config" data-admin="1">⚙️ &nbsp; Configurações</button>
     </div>
+    <button id="pwa-install-btn" class="btn-install" style="display:none;">
+      <span>📲</span> Instalar App
+    </button>
     <div class="sidebar-footer">
       <div class="user-avatar" id="user-avatar">??</div>
       <div class="user-info">
@@ -2515,6 +2526,7 @@ function setupAutocomplete(input, listEl, source, onPick) {
 window.addEventListener('load', checkInviteOnLoad);
 
 /* Register Service Worker for PWA with update detection */
+let deferredPrompt;
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/gpitracker/sw.js')
@@ -2532,6 +2544,39 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.error('SW Registration Failed', err));
   });
 }
+
+/* PWA Install Logic */
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  $('#pwa-install-btn').style.display = 'flex';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  $('#pwa-install-btn').style.display = 'none';
+  toast('Aplicativo instalado com sucesso! 🎉', 'success');
+});
+
+// Show button for iOS if not standalone
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+if (isIOS && !isStandalone) {
+  $('#pwa-install-btn').style.display = 'flex';
+}
+
+$('#pwa-install-btn').onclick = async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      $('#pwa-install-btn').style.display = 'none';
+      deferredPrompt = null;
+    }
+  } else if (isIOS) {
+    alert('Para instalar no iPhone:\n\n1. Clique no ícone de compartilhar (quadrado com seta)\n2. Selecione "Adicionar à Tela de Início"\n3. Clique em Adicionar');
+  }
+};
 </script>
 </body>
 </html>

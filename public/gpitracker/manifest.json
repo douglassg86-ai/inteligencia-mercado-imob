@@ -1,14 +1,14 @@
 {
-  "name": "GPI Tracker",
-  "short_name": "GPI Tracker",
+  "name": "GPI GUIDE",
+  "short_name": "GPI GUIDE",
   "start_url": "/gpitracker/index.html",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#3b82f6",
+  "background_color": "#0b1320",
+  "theme_color": "#0b1320",
   "description": "Sistema de gestão e acompanhamento para GPIs",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3121/3121773.png",
+      "src": "/gpitracker/icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GPI GUIDE">
-<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3121/3121773.png">
+<link rel="apple-touch-icon" href="/gpitracker/icon.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect rx='14' width='64' height='64' fill='%230b1320'/%3E%3Ctext x='50%25' y='62%25' text-anchor='middle' font-family='system-ui' font-weight='800' font-size='22' fill='%23d4b06a'%3EGPI%3C/text%3E%3C/svg%3E"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -2514,11 +2514,21 @@ function setupAutocomplete(input, listEl, source, onPick) {
 /* check invite link on load */
 window.addEventListener('load', checkInviteOnLoad);
 
-/* Register Service Worker for PWA */
+/* Register Service Worker for PWA with update detection */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/gpitracker/sw.js')
-      .then(reg => console.log('SW Registered', reg))
+      .then(reg => {
+        console.log('SW Registered');
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              toast('Nova versão disponível! Recarregue para atualizar. 🚀', 'info');
+            }
+          });
+        });
+      })
       .catch(err => console.error('SW Registration Failed', err));
   });
 }

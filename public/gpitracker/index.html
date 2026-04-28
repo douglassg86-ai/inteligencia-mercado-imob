@@ -11,6 +11,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect rx='14' width='64' height='64' fill='%230b1320'/%3E%3Ctext x='50%25' y='62%25' text-anchor='middle' font-family='system-ui' font-weight='800' font-size='22' fill='%23d4b06a'%3EGPI%3C/text%3E%3C/svg%3E"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root, [data-theme="dark"] {
   --bg: #0b1320; --bg-2: #111c2e; --panel: #15223a; --panel-2: #1b2c4a;
@@ -505,8 +506,7 @@ tbody tr:last-child td { border-bottom: 0; }
       <button data-view="dashboard" class="active">📊 &nbsp; Dashboard</button>
       <button data-view="visita">📍 &nbsp; Registrar Visita</button>
       <button data-view="funil">⚡ &nbsp; Funil GPI</button>
-      <button data-view="leads">🎯 &nbsp; Leads <span id="nav-leads-badge" class="nav-badge" style="display:none;">0</span></button>
-      <button data-view="negocios">🏠 &nbsp; Negócios</button>
+      <button data-view="negocios">🏠 &nbsp; Negócios <span id="nav-negocios-badge" class="nav-badge" style="display:none;">0</span></button>
       <button data-view="cadastros" data-admin="1">👥 &nbsp; Cadastros</button>
       <button data-view="usuarios" data-admin="1">🔐 &nbsp; Usuários</button>
       <button data-view="config" data-admin="1">⚙️ &nbsp; Configurações</button>
@@ -541,7 +541,7 @@ tbody tr:last-child td { border-bottom: 0; }
   <button data-view="dashboard" class="active"><span class="ico">📊</span><span>Dashboard</span></button>
   <button data-view="visita"><span class="ico">📍</span><span>Visita</span></button>
   <button data-view="funil"><span class="ico">⚡</span><span>Funil</span></button>
-  <button data-view="leads"><span class="ico">🎯</span><span>Leads</span><span id="bnav-leads-badge" class="bnav-badge" style="display:none;">0</span></button>
+  <button data-view="negocios"><span class="ico">🏠</span><span>Negócios</span><span id="bnav-negocios-badge" class="bnav-badge" style="display:none;">0</span></button>
   <button data-view="more"><span class="ico">⋯</span><span>Mais</span></button>
 </nav>
 
@@ -613,9 +613,32 @@ const DEPRECATED_EMAILS = [
 ];
 
 /* ----- STATE ----- */
-let DB = loadDB();
+let DB = null;
 let CURRENT_USER = null;
 let GPS_POSITION = null; // {lat, lng, accuracy}
+
+const SUPABASE_URL = 'https://zgdhydvxqikpcnygjbwg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_88ApQ7LJNJrcs0UgInUJOQ_vuiC5Oks';
+let supabaseClient = null;
+
+async function initCloudStorage() {
+  if (window.supabase) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+  DB = loadLocalDB(); // Fallback síncrono rápido
+
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient.from('gpi_estado').select('state_json').eq('id', 1).single();
+      if (data && data.state_json) {
+        DB = ensureSeedUsers(mergeSeedCoords(data.state_json, loadSeed()));
+        safeLocal.setItem(STORAGE_KEY, JSON.stringify(DB));
+      }
+    } catch(err) {
+      console.warn("Falha ao baixar do Supabase (offline ou sem tabela?), usando cache local.", err);
+    }
+  }
+}
 
 function loadSeed() {
   return JSON.parse(document.getElementById('seed-data').textContent);
@@ -656,11 +679,35 @@ function ensureSeedUsers(db) {
   if (idx(SEED_ADMIN.email) < 0) db.users.push({...SEED_ADMIN});
   (typeof SEED_ADMIN_USERS !== 'undefined' ? SEED_ADMIN_USERS : []).forEach(u => { if (idx(u.email) < 0) db.users.push({...u}); });
   SEED_GPI_USERS.forEach(u => { if (idx(u.email) < 0) db.users.push({...u}); });
-  // garantir array de leads em DBs antigos
-  db.leads = db.leads || [];
+  
+  // MIGRAR LEADS ANTIGOS PARA NEGÓCIOS
+  db.negocios = db.negocios || [];
+  if (db.leads && db.leads.length > 0) {
+    db.leads.forEach(l => {
+      db.negocios.push({
+        id: l.id || Math.random().toString(36).substr(2,9),
+        data: l.dataCadastro || l.data || new Date().toISOString().slice(0,10),
+        status: l.etapa || 'INTERESSADOS',
+        produto: l.produto || '',
+        unidade: '',
+        vgv: l.valorEstimado || 0,
+        cliente1: l.nome || '',
+        fone1: l.telefone || '',
+        estrutura: 'PARCERIAS',
+        responsavel: l.gpi || '',
+        imobiliaria: l.imobiliaria || '',
+        corretor: l.corretor || '',
+        proximoFollowup: l.proximoFollowup || '',
+        historico: l.historico || [],
+        criadoPor: l.gpi || 'Sistema',
+        dataUltimaAtualizacao: l.ultimaAtualizacao || new Date().toISOString().slice(0,10)
+      });
+    });
+    db.leads = []; // limpa para não duplicar na próxima carga
+  }
   return db;
 }
-function loadDB() {
+function loadLocalDB() {
   const seed = loadSeed();
   try {
     const raw = safeLocal.getItem(STORAGE_KEY);
@@ -680,7 +727,16 @@ function loadDB() {
     leads: [],
   };
 }
-function saveDB() { safeLocal.setItem(STORAGE_KEY, JSON.stringify(DB)); }
+async function saveDB() { 
+  safeLocal.setItem(STORAGE_KEY, JSON.stringify(DB)); 
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('gpi_estado').upsert({ id: 1, state_json: DB });
+    } catch(err) {
+      console.error("Falha ao salvar no Supabase", err);
+    }
+  }
+}
 
 /* ----- HELPERS ----- */
 const $  = s => document.querySelector(s);
@@ -781,7 +837,7 @@ function showApp() {
   }, 500);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   $('#login-form').addEventListener('submit', e => {
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -807,6 +863,8 @@ document.addEventListener('DOMContentLoaded', () => {
     goto(b.dataset.view);
   });
 
+
+  await initCloudStorage();
   if (tryRestoreSession()) showApp(); else showLogin();
 });
 
@@ -1040,25 +1098,25 @@ function renderDash() {
       <div class="icon">🔥</div></div></div>
   `;
 
-  // Alerta de leads pendentes / follow-up
-  const stale = staleLeadsForScope();
-  const due   = dueLeadsForScope();
-  const ativos = leadsForCurrentScope().filter(l => l.status === 'ativo');
+  // Alerta de negócios pendentes / follow-up
+  const stale = staleNegociosForScope();
+  const due   = dueNegociosForScope();
+  const ativos = negociosForCurrentScope().filter(isNegocioAtivo);
   $('#dash-leads-alert').innerHTML = (stale.length || due.length) ? `
     <div class="alert-banner mb-12">
-      <div class="ico">🎯</div>
+      <div class="ico">🏠</div>
       <div class="body">
-        <b>${ativos.length} lead${ativos.length===1?'':'s'} ativos</b>
+        <b>${ativos.length} negócio${ativos.length===1?'':'s'} em aberto</b>
         ${stale.length?` · <span style="color:#ef4444;">⚠️ ${stale.length} sem update >${LEAD_STALE_DAYS}d</span>`:''}
         ${due.length?` · <span style="color:#f59e0b;">📅 ${due.length} follow-up nos próximos ${LEAD_DUE_DAYS}d</span>`:''}
-        <br><span class="muted small">Atualize a etapa, descarte ou reagende para manter o funil saudável.</span>
+        <br><span class="muted small">Atualize o status ou reagende para manter o funil saudável.</span>
       </div>
-      <button class="btn primary" onclick="goto('leads')">Abrir Leads</button>
+      <button class="btn primary" onclick="goto('negocios')">Abrir Negócios</button>
     </div>
   ` : (ativos.length ? `<div class="alert-banner mb-12" style="border-color: rgba(34,197,94,.35);">
     <div class="ico">✅</div>
-    <div class="body"><b>${ativos.length} lead${ativos.length===1?'':'s'} ativos</b> · todos com follow-up em dia.</div>
-    <button class="btn" onclick="goto('leads')">Ver leads</button>
+    <div class="body"><b>${ativos.length} negócio${ativos.length===1?'':'s'} em aberto</b> · todos com follow-up em dia.</div>
+    <button class="btn" onclick="goto('negocios')">Ver negócios</button>
   </div>` : '');
 
   $('#funil-gpi-pill').textContent = periodLabel;
@@ -1512,7 +1570,7 @@ function deleteFunil(id) {
   if (window._reloadFunilLog) _reloadFunilLog();
 }
 
-/* ============= LEADS / FOLLOW-UP ============= */
+/* ============= NEGÓCIOS / FOLLOW-UP ============= */
 
 function daysSince(dateStr) {
   if (!dateStr) return Infinity;
@@ -1526,25 +1584,26 @@ function addDaysISO(n) {
   const d = new Date(); d.setDate(d.getDate() + (n||0));
   return d.toISOString().slice(0,10);
 }
-function leadIsStale(l) { return l.status === 'ativo' && daysSince(l.dataUltimaAtualizacao) > LEAD_STALE_DAYS; }
-function leadIsDue(l) {
-  if (l.status !== 'ativo' || !l.proximoFollowup) return false;
-  return daysSince(l.proximoFollowup) >= -LEAD_DUE_DAYS;
+function isNegocioAtivo(n) { return n.status !== 'VENDA' && n.status !== 'DESCARTADO'; }
+function negocioIsStale(n) { return isNegocioAtivo(n) && daysSince(n.dataUltimaAtualizacao || n.data) > LEAD_STALE_DAYS; }
+function negocioIsDue(n) {
+  if (!isNegocioAtivo(n) || !n.proximoFollowup) return false;
+  return daysSince(n.proximoFollowup) >= -LEAD_DUE_DAYS;
 }
-function leadsForCurrentScope() {
+function negociosForCurrentScope() {
   const myGpi = CURRENT_USER?.gpiAssoc;
-  if (!isAdmin() && myGpi) return DB.leads.filter(l => l.gpi === myGpi);
-  return DB.leads;
+  if (!isAdmin() && myGpi) return DB.negocios.filter(n => n.responsavel === myGpi);
+  return DB.negocios;
 }
-function staleLeadsForScope() { return leadsForCurrentScope().filter(leadIsStale); }
-function dueLeadsForScope()   { return leadsForCurrentScope().filter(leadIsDue); }
+function staleNegociosForScope() { return negociosForCurrentScope().filter(negocioIsStale); }
+function dueNegociosForScope()   { return negociosForCurrentScope().filter(negocioIsDue); }
 
-function updateLeadBadges() {
-  const stale = staleLeadsForScope();
-  const due   = dueLeadsForScope();
-  const total = new Set([...stale, ...due].map(l => l.id)).size;
+function updateNavBadges() {
+  const stale = staleNegociosForScope();
+  const due   = dueNegociosForScope();
+  const total = new Set([...stale, ...due].map(n => n.id)).size;
   const txt = total > 99 ? '99+' : String(total);
-  ['#nav-leads-badge','#bnav-leads-badge'].forEach(sel => {
+  ['#nav-negocios-badge','#bnav-negocios-badge'].forEach(sel => {
     const el = $(sel); if (!el) return;
     if (total > 0) { el.textContent = txt; el.style.display = 'inline-flex'; }
     else el.style.display = 'none';
@@ -1686,7 +1745,6 @@ function openFunilLeadModal(papel, pessoa, etapa) {
     closeModal();
     if (window._reloadFunilStages) _reloadFunilStages();
     if (window._reloadFunilLog) _reloadFunilLog();
-    updateLeadBadges();
   });
   $('#flead-form').addEventListener('submit', e => {
     e.preventDefault();
@@ -1705,107 +1763,6 @@ function openFunilLeadModal(papel, pessoa, etapa) {
     closeModal();
     if (window._reloadFunilStages) _reloadFunilStages();
     if (window._reloadFunilLog) _reloadFunilLog();
-    updateLeadBadges();
-  });
-}
-
-/* ----- VIEWS.leads ----- */
-let LEAD_FILTER = { status: 'ativo', etapa: 'todas', q: '', alerta: 'todos' };
-
-VIEWS.leads = () => {
-  const myGpi = CURRENT_USER?.gpiAssoc;
-  const escopo = (!isAdmin() && myGpi) ? `Mostrando seus leads (${escapeHtml(myGpi)})` : 'Mostrando todos os leads';
-
-  $('#app').innerHTML = `
-    <div class="page-head">
-      <div>
-        <h1>🎯 Leads</h1>
-        <p>${escopo}. Atualize ou descarte para manter o funil saudável.</p>
-      </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="btn primary" onclick="openLeadCreateModal()">+ Novo lead</button>
-      </div>
-    </div>
-
-    <div id="leads-alerts"></div>
-
-    <div class="card mb-12">
-      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-        <input id="lead-q" placeholder="Buscar cliente, corretor, imobiliária..." style="flex:1; min-width:220px;" value="${escapeHtml(LEAD_FILTER.q)}"/>
-        <select id="lead-status">
-          <option value="ativo">Ativos</option>
-          <option value="descartado">Descartados</option>
-          <option value="fechado">Fechados (vendidos)</option>
-          <option value="todos">Todos</option>
-        </select>
-        <select id="lead-etapa">
-          <option value="todas">Todas as etapas</option>
-          ${LEAD_STAGES.map(e => `<option value="${e}">${e}</option>`).join('')}
-        </select>
-        <select id="lead-alerta">
-          <option value="todos">Sem filtro de alerta</option>
-          <option value="stale">⚠️ Sem update >${LEAD_STALE_DAYS}d</option>
-          <option value="due">📅 Follow-up próximo</option>
-        </select>
-      </div>
-    </div>
-
-    <div id="leads-list"></div>
-  `;
-  $('#lead-status').value = LEAD_FILTER.status;
-  $('#lead-etapa').value = LEAD_FILTER.etapa;
-  $('#lead-alerta').value = LEAD_FILTER.alerta;
-  ['lead-q','lead-status','lead-etapa','lead-alerta'].forEach(id => {
-    $('#'+id).addEventListener('input', () => {
-      LEAD_FILTER = {
-        q: $('#lead-q').value.trim(),
-        status: $('#lead-status').value,
-        etapa: $('#lead-etapa').value,
-        alerta: $('#lead-alerta').value,
-      };
-      renderLeadsList();
-    });
-  });
-  renderLeadsList();
-};
-
-function renderLeadsAlerts() {
-  const stale = staleLeadsForScope();
-  const due = dueLeadsForScope();
-  const el = $('#leads-alerts'); if (!el) return;
-  if (!stale.length && !due.length) { el.innerHTML = ''; return; }
-  el.innerHTML = `
-    ${stale.length ? `<div class="alert-banner">
-      <div class="ico">⚠️</div>
-      <div class="body"><b>${stale.length} lead${stale.length>1?'s':''} sem update há mais de ${LEAD_STALE_DAYS} dias.</b><br>
-      <span class="muted small">Atualize a etapa ou descarte para manter o funil saudável.</span></div>
-      <button class="btn sm" onclick="LEAD_FILTER.alerta='stale'; $('#lead-alerta').value='stale'; renderLeadsList();">Ver agora</button>
-    </div>` : ''}
-    ${due.length ? `<div class="alert-banner" style="border-color: rgba(245,158,11,.4);">
-      <div class="ico">📅</div>
-      <div class="body"><b>${due.length} follow-up${due.length>1?'s':''} programado${due.length>1?'s':''} para os próximos ${LEAD_DUE_DAYS} dias.</b></div>
-      <button class="btn sm" onclick="LEAD_FILTER.alerta='due'; $('#lead-alerta').value='due'; renderLeadsList();">Ver agora</button>
-    </div>` : ''}
-  `;
-}
-
-function renderLeadsList() {
-  renderLeadsAlerts();
-  const myGpi = CURRENT_USER?.gpiAssoc;
-  const scope = (!isAdmin() && myGpi) ? DB.leads.filter(l => l.gpi === myGpi) : DB.leads;
-  const q = (LEAD_FILTER.q||'').toLowerCase();
-  let arr = scope.filter(l => {
-    if (LEAD_FILTER.status !== 'todos' && l.status !== LEAD_FILTER.status) return false;
-    if (LEAD_FILTER.etapa !== 'todas' && l.etapaAtual !== LEAD_FILTER.etapa) return false;
-    if (LEAD_FILTER.alerta === 'stale' && !leadIsStale(l)) return false;
-    if (LEAD_FILTER.alerta === 'due' && !leadIsDue(l)) return false;
-    if (q) {
-      const blob = `${l.cliente} ${l.corretor} ${l.imobiliaria} ${l.produto} ${l.gpi} ${l.fone}`.toLowerCase();
-      if (!blob.includes(q)) return false;
-    }
-    return true;
-  });
-  // ordenar: stale primeiro, depois due, depois por dataUltimaAtualizacao desc
   arr.sort((a,b) => {
     const sa = leadIsStale(a)?2:leadIsDue(a)?1:0;
     const sb = leadIsStale(b)?2:leadIsDue(b)?1:0;
@@ -1980,11 +1937,15 @@ VIEWS.negocios = () => {
     $('#neg-count').textContent = `${list.length} de ${DB.negocios.length}`;
     if (!list.length) { $('#neg-table').innerHTML = '<div class="empty"><div class="icon-big">🏠</div>Nenhum negócio encontrado.</div>'; return; }
     $('#neg-table').innerHTML = `<table>
-      <thead><tr><th>Data</th><th>Status</th><th>Produto</th><th>Un.</th><th>Cliente</th><th>VGV</th><th>Estr.</th><th>Resp.</th><th>Imobiliária</th>${isAdmin()?'<th></th>':''}</tr></thead>
+      <thead><tr><th>Data</th><th>Status</th><th>Produto</th><th>Un.</th><th>Cliente</th><th>VGV</th><th>Estr.</th><th>Resp.</th><th>Follow-up</th><th>Imobiliária</th>${isAdmin()?'<th></th>':''}</tr></thead>
       <tbody>${list.map(n => {
         const date = (n.dataAssinatura||n.data||'').slice(0,10);
-        const stCls = n.status==='VENDA'?'green':n.status==='NEGOCIAÇÃO'?'orange':n.status==='ATENDIMENTOS'?'blue':n.status==='AGENDAMENTOS'?'purple':'gray';
-        const clickable = isAdmin() ? `style="cursor:pointer;" onclick="editNegocio('${n.id}')"` : '';
+        const stCls = n.status==='VENDA'?'green':n.status==='NEGOCIAÇÃO'?'orange':n.status==='ATENDIMENTOS'?'blue':n.status==='AGENDAMENTOS'?'purple':n.status==='DESCARTADO'?'gray':'';
+        const isOwner = n.responsavel === CURRENT_USER?.email || n.responsavel === CURRENT_USER?.gpiAssoc;
+        const clickable = (isAdmin() || isOwner) ? `style="cursor:pointer;" onclick="editNegocio('${n.id}')"` : '';
+        const fupStr = n.proximoFollowup ? `${n.proximoFollowup.slice(8,10)}/${n.proximoFollowup.slice(5,7)}` : '—';
+        const fupWarn = negocioIsStale(n) ? '⚠️' : negocioIsDue(n) ? '📅' : '';
+        
         return `<tr ${clickable}>
           <td>${date||'—'}</td>
           <td><span class="badge ${stCls}">${escapeHtml(n.status||'—')}</span></td>
@@ -1993,8 +1954,9 @@ VIEWS.negocios = () => {
           <td>${fmtBRLk(n.vgv)}</td>
           <td><span class="badge gray">${escapeHtml(n.estrutura||'')}</span></td>
           <td>${escapeHtml(n.responsavel||'')}</td>
+          <td>${fupStr} ${fupWarn}</td>
           <td class="truncate" style="max-width:180px;">${escapeHtml(n.imobiliaria||n.corretor||'')}</td>
-          ${isAdmin()?`<td onclick="event.stopPropagation()"><button class="btn sm danger" onclick="deleteNegocio('${n.id}')">×</button></td>`:''}
+          ${isAdmin()?`<td onclick="event.stopPropagation()"><button class="btn sm" onclick="showNegocioHistory('${n.id}')">📜</button> <button class="btn sm danger" onclick="deleteNegocio('${n.id}')">×</button></td>`:''}
         </tr>`;
       }).join('')}</tbody></table>`;
   }
@@ -2003,9 +1965,11 @@ VIEWS.negocios = () => {
 
 function editNegocio(id) {
   const isNew = !id;
-  if (!isNew && !isAdmin()) return toast('Apenas admin pode editar negócios existentes','error');
-  const n = isNew ? { id: uid(), data: todayISO(), status:'INTERESSADOS', estrutura:'PARCERIAS', vgv: 0, criadoPor: CURRENT_USER.email } : DB.negocios.find(x=>x.id===id);
+  const n = isNew ? { id: uid(), data: todayISO(), status:'INTERESSADOS', estrutura:'PARCERIAS', vgv: 0, criadoPor: CURRENT_USER.email, historico: [], dataUltimaAtualizacao: todayISO() } : DB.negocios.find(x=>x.id===id);
   if (!n) return;
+  const isOwner = n.responsavel === CURRENT_USER?.email || n.responsavel === CURRENT_USER?.gpiAssoc;
+  if (!isNew && !isAdmin() && !isOwner) return toast('Apenas admin ou responsável podem editar negócios existentes','error');
+  
   openModal(`
     <h2>${isNew ? '+ Novo Negócio' : 'Editar Negócio'}</h2>
     <form id="neg-form" class="form">
@@ -2014,7 +1978,7 @@ function editNegocio(id) {
         <div><label>Data de assinatura</label><input type="date" name="dataAssinatura" value="${escapeHtml(n.dataAssinatura||'')}" /></div>
       </div>
       <div class="form-row">
-        <div><label>Status / Etapa</label><select name="status">${FUNIL_EXEC.map(s=>`<option ${n.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div><label>Status / Etapa</label><select name="status" id="neg-status-select">${FUNIL_EXEC.map(s=>`<option ${n.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
         <div><label>Produto</label><select name="produto">${PRODUTOS.map(p=>`<option ${n.produto===p?'selected':''}>${p}</option>`).join('')}</select></div>
       </div>
       <div class="form-row">
@@ -2046,17 +2010,55 @@ function editNegocio(id) {
         <div><label>Homologado</label><select name="homologado"><option value="false" ${!n.homologado?'selected':''}>Não</option><option value="true" ${n.homologado?'selected':''}>Sim</option></select></div>
       </div>
       <div><label>Observações</label><textarea name="observacoes">${escapeHtml(n.observacoes||'')}</textarea></div>
-      <div style="display:flex; gap:10px; justify-content: flex-end;">
+      
+      <div style="background:var(--bg-card); padding:12px; border-radius:6px; margin-top:16px; border:1px solid var(--border-color);">
+        <h3 style="margin-top:0; font-size:14px; margin-bottom:8px;">Follow-up e Interações</h3>
+        <div class="form-row">
+          <div><label>Próximo Follow-up</label><input type="date" name="proximoFollowup" value="${escapeHtml(n.proximoFollowup||'')}"/></div>
+        </div>
+        <div>
+          <label>Adicionar Interação / Atualização (Histórico)</label>
+          <textarea name="novaInteracao" placeholder="O que foi conversado? Resumo da evolução..."></textarea>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; justify-content: flex-end; margin-top:16px;">
         <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
         <button type="submit" class="btn primary">${isNew ? 'Criar' : 'Salvar'}</button>
       </div>
     </form>
   `);
   setupAutocomplete($('#neg-imob'), $('#neg-imob-list'), DB.imobiliarias.map(i=>i.nome), () => {});
+  
+  // Sugere proximoFollowup ao mudar status
+  $('#neg-status-select').addEventListener('change', e => {
+    const s = e.target.value;
+    if (s !== 'VENDA' && s !== 'DESCARTADO') {
+      const form = $('#neg-form');
+      if (!form.proximoFollowup.value) form.proximoFollowup.value = addDaysISO(3);
+    }
+  });
+
   $('#neg-form').addEventListener('submit', e => {
     e.preventDefault();
     const fd = new FormData(e.target); const obj = Object.fromEntries(fd.entries());
     obj.vgv = Number(obj.vgv)||0; obj.homologado = obj.homologado === 'true';
+    
+    // Tratamento de Histórico
+    const novaInt = (obj.novaInteracao||'').trim();
+    const etapaAntiga = n.status || '—';
+    const novaEtapa = obj.status;
+    delete obj.novaInteracao; // remove from object assignment
+
+    if (!n.historico) n.historico = [];
+    if (isNew) {
+      n.historico.push({ data: todayISO(), etapaDe: '—', etapaPara: novaEtapa, obs: novaInt || 'Negócio cadastrado', autor: CURRENT_USER?.email||'' });
+      n.dataUltimaAtualizacao = todayISO();
+    } else if (etapaAntiga !== novaEtapa || novaInt) {
+      n.historico.push({ data: todayISO(), etapaDe: etapaAntiga, etapaPara: novaEtapa, obs: novaInt, autor: CURRENT_USER?.email||'' });
+      n.dataUltimaAtualizacao = todayISO();
+    }
+
     Object.assign(n, obj);
     if (n.imobiliaria && !DB.imobiliarias.some(i => i.nome === n.imobiliaria)) {
       DB.imobiliarias.push({ nome: n.imobiliaria, lat:null, lng:null, endereco:'' });
@@ -2064,13 +2066,32 @@ function editNegocio(id) {
     if (isNew) DB.negocios.push(n);
     saveDB(); closeModal(); toast('Negócio salvo ✓','success');
     if (window._reloadNegocios) _reloadNegocios();
+    updateNavBadges();
   });
 }
+
+function showNegocioHistory(id) {
+  const n = DB.negocios.find(x => x.id === id); if (!n) return;
+  const items = (n.historico||[]).slice().reverse().map(h => \`
+    <div class="h-item" style="padding:12px; border-left:3px solid var(--accent-color); background:var(--bg-card); margin-bottom:8px; border-radius:0 4px 4px 0; border:1px solid var(--border-color); border-left:none;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:12px; color:var(--text-muted);">
+        <span><b>\${h.data.slice(8,10)}/\${h.data.slice(5,7)}</b> · \${escapeHtml(h.autor)}</span>
+        <span>\${escapeHtml(h.etapaDe)} → <b>\${escapeHtml(h.etapaPara)}</b></span>
+      </div>
+      <div style="font-size:14px;">\${escapeHtml(h.obs)}</div>
+    </div>\`).join('');
+  openModal(\`<h2>Histórico · \${escapeHtml(n.cliente1||n.imobiliaria||'Negócio')}</h2>
+    <div class="lc-meta" style="margin-bottom:12px;">Cadastrado em \${escapeHtml((n.data||'').slice(0,10))} por \${escapeHtml(n.criadoPor||'')}</div>
+    <div class="lead-history mt-12" style="max-height:400px; overflow-y:auto;">\${items || '<div class="muted">Sem eventos de histórico registrados.</div>'}</div>
+    <div class="lc-actions mt-20" style="display:flex; justify-content:flex-end;"><button class="btn" onclick="closeModal()">Fechar</button></div>\`);
+}
+
 function deleteNegocio(id) {
   if (!isAdmin()) return toast('Apenas admin','error');
   if (!confirm('Excluir este negócio?')) return;
   DB.negocios = DB.negocios.filter(n => n.id !== id);
   saveDB(); if (window._reloadNegocios) _reloadNegocios();
+  updateNavBadges();
 }
 
 /* ============= CADASTROS ============= */

@@ -2578,16 +2578,26 @@ window.addEventListener('load', checkInviteOnLoad);
 
 /* Register Service Worker for PWA with update detection */
 let deferredPrompt;
+let refreshing = false;
 if ('serviceWorker' in navigator) {
+  // Evento disparado quando um novo SW assume o controle
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
+
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/gpitracker/sw.js')
       .then(reg => {
         console.log('SW Registered');
+        // Se houver uma atualização esperando, avisa o usuário (opcional, já que o controllerchange recarrega)
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              toast('Nova versão disponível! Recarregue para atualizar. 🚀', 'info');
+              toast('Atualizando para a nova versão... 🚀', 'info');
             }
           });
         });

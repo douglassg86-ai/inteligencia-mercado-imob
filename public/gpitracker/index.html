@@ -630,13 +630,25 @@ async function initCloudStorage() {
   if (supabaseClient) {
     try {
       const { data, error } = await supabaseClient.from('gpi_estado').select('state_json').eq('id', 1).single();
-      if (data && data.state_json) {
+      if (error) {
+        console.error('[Supabase] Erro ao carregar:', error.message, '| Code:', error.code);
+        window._supabaseStatus = { ok: false, msg: error.message, code: error.code };
+      } else if (data && data.state_json) {
         DB = ensureSeedUsers(mergeSeedCoords(data.state_json, loadSeed()));
         safeLocal.setItem(STORAGE_KEY, JSON.stringify(DB));
+        window._supabaseStatus = { ok: true, msg: 'Conexão OK — dados sincronizados da nuvem.' };
+        console.log('[Supabase] Dados carregados da nuvem com sucesso.');
+      } else {
+        // tabela existe mas sem linha id=1 ainda, salva o estado atual
+        window._supabaseStatus = { ok: true, msg: 'Tabela vazia — enviando estado inicial.' };
+        await supabaseClient.from('gpi_estado').upsert({ id: 1, state_json: DB });
       }
     } catch(err) {
-      console.warn("Falha ao baixar do Supabase (offline ou sem tabela?), usando cache local.", err);
+      console.error('[Supabase] Exceção ao inicializar:', err);
+      window._supabaseStatus = { ok: false, msg: String(err) };
     }
+  } else {
+    window._supabaseStatus = { ok: false, msg: 'SDK não carregado. Verifique o script CDN.' };
   }
 }
 
@@ -731,9 +743,20 @@ async function saveDB() {
   safeLocal.setItem(STORAGE_KEY, JSON.stringify(DB)); 
   if (supabaseClient) {
     try {
-      await supabaseClient.from('gpi_estado').upsert({ id: 1, state_json: DB });
+      const { error } = await supabaseClient.from('gpi_estado').upsert({ id: 1, state_json: DB });
+      if (error) {
+        console.error('[Supabase] Erro ao salvar:', error.message);
+        // Toast visível apenas quando o usuário não viu este erro antes
+        if (!window._supErrShown) {
+          window._supErrShown = true;
+          setTimeout(() => toast('\u26a0\ufe0f Supabase: ' + error.message + ' — Verifique a aba Config―', 'error'), 300);
+        }
+      } else {
+        window._supErrShown = false;
+        window._supabaseStatus = { ok: true, msg: 'Salvo na nuvem.' };
+      }
     } catch(err) {
-      console.error("Falha ao salvar no Supabase", err);
+      console.error('[Supabase] Exceção ao salvar:', err);
     }
   }
 }
@@ -2357,13 +2380,17 @@ VIEWS.config = () => {
       </div>
     </div>
     <div class="card mb-12" style="border-color: rgba(59,130,246,.4);">
-      <div class="card-title" style="color: #93c5fd;">☁️ Integração com Nuvem (Supabase + GitHub)</div>
-      <p class="muted small">Quando os acessos forem fornecidos, este app passa a sincronizar em tempo real entre dispositivos. Estrutura já preparada: basta apontar a camada de dados para o Supabase.</p>
-      <div class="form-row mt-12">
-        <div><label>Supabase URL</label><input id="cfg-supa-url" placeholder="https://seu-projeto.supabase.co" value="${escapeHtml(DB.cloud?.supabaseUrl||'')}"/></div>
-        <div><label>Supabase anon key</label><input id="cfg-supa-key" placeholder="eyJhbGciOi..." value="${escapeHtml(DB.cloud?.supabaseKey||'')}"/></div>
-      </div>
-      <button class="btn mt-12" onclick="saveCloudCfg()">Salvar (não conecta ainda — aguarda implementação)</button>
+      <div class="card-title" style="color: #93c5fd;">☁️ Status da Sincronização (Supabase)</div>
+      ${(() => {
+        const st = window._supabaseStatus;
+        if (!st) return '<p class="muted small">⏳ Verificando conexão... Recarregue a página.</p>';
+        if (st.ok) return `<p style="color:var(--green); font-size:14px;">✅ ${escapeHtml(st.msg)}</p>`;
+        const sql = `CREATE TABLE public.gpi_estado (\n  id int primary key,\n  state_json jsonb not null,\n  updated_at timestamptz default now()\n);\nALTER TABLE public.gpi_estado DISABLE ROW LEVEL SECURITY;`;
+        return `<p style="color:var(--red); font-size:14px; margin-bottom:8px;">❌ Erro: <b>${escapeHtml(st.msg)}</b>${st.code ? ' (code: '+escapeHtml(st.code)+')' : ''}</p>
+        <p class="muted small" style="margin-bottom:8px;">A tabela <b>gpi_estado</b> provavelmente não existe ainda. Acesse o <a href="https://supabase.com/dashboard/project/zgdhydvxqikpcnygjbwg/editor" target="_blank" style="color:var(--accent);">SQL Editor do Supabase</a> e execute:</p>
+        <pre style="background:var(--bg); padding:10px; border-radius:6px; font-size:12px; overflow-x:auto; border:1px solid var(--border-color);">${escapeHtml(sql)}</pre>
+        <button class="btn primary mt-12" onclick="testAndInitSupabase()">🔁 Testar conexão agora</button>`;
+      })()}
     </div>
     <div class="card" style="border-color: rgba(239,68,68,.4);">
       <div class="card-title" style="color: #fecaca;">⚠️ Zona de perigo</div>
@@ -2376,11 +2403,34 @@ VIEWS.config = () => {
   `;
 };
 
+async function testAndInitSupabase() {
+  if (!supabaseClient) { toast('SDK Supabase não carregado','error'); return; }
+  toast('Testando conexão...','');
+  try {
+    const { data, error } = await supabaseClient.from('gpi_estado').select('id').eq('id',1).single();
+    if (error && error.code === 'PGRST116') {
+      // Tabela existe mas sem dados — insere o estado atual
+      const { error: e2 } = await supabaseClient.from('gpi_estado').upsert({ id: 1, state_json: DB });
+      if (e2) { window._supabaseStatus = { ok: false, msg: e2.message, code: e2.code }; toast('Erro ao inserir: '+e2.message,'error'); }
+      else { window._supabaseStatus = { ok: true, msg: 'Estado inicial enviado com sucesso!' }; toast('✅ Supabase conectado e estado enviado!','success'); }
+    } else if (error) {
+      window._supabaseStatus = { ok: false, msg: error.message, code: error.code };
+      toast('❌ Erro: '+error.message,'error');
+    } else {
+      window._supabaseStatus = { ok: true, msg: 'Tabela encontrada e conexão OK!' };
+      toast('✅ Supabase conectado!','success');
+    }
+  } catch(err) {
+    window._supabaseStatus = { ok: false, msg: String(err) };
+    toast('Exceção: '+err,'error');
+  }
+  VIEWS.config();
+}
 function saveCloudCfg() {
   DB.cloud = DB.cloud || {};
-  DB.cloud.supabaseUrl = $('#cfg-supa-url').value.trim();
-  DB.cloud.supabaseKey = $('#cfg-supa-key').value.trim();
-  saveDB(); toast('Configuração salva. Aguarda integração.','success');
+  DB.cloud.supabaseUrl = $('#cfg-supa-url')?.value.trim();
+  DB.cloud.supabaseKey = $('#cfg-supa-key')?.value.trim();
+  saveDB(); toast('Configuração salva.','success');
 }
 function saveMetas() {
   DB.metaMes.gpiContatos = Number($('#meta-gpi').value)||4000;

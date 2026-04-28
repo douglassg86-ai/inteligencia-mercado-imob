@@ -1,0 +1,17 @@
+{
+  "name": "GPI Tracker",
+  "short_name": "GPI Tracker",
+  "start_url": "/gpitracker/index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "description": "Sistema de gestão e acompanhamento para GPIs",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3121/3121773.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

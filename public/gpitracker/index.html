@@ -1137,6 +1137,7 @@ function dashFilter(items, getDate, getResp) {
     .filter(x => !DASH_FILTER.gpi || getResp(x) === DASH_FILTER.gpi);
 }
 
+function renderDash() {
   const [from, to] = periodRange(DASH_FILTER.period);
   const periodLabel = (from || to) ? (DASH_FILTER.period === 'mes' ? 'Este Mês' : DASH_FILTER.period === 'hoje' ? 'Hoje' : `${from||'…'} → ${to||'…'}`) : 'Todo o período';
   

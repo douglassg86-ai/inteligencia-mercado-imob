@@ -1890,29 +1890,37 @@ function openLeadCreateModal() {
 
 /* ============= NEGÓCIOS ============= */
 VIEWS.negocios = () => {
+  const myGpi = CURRENT_USER?.gpiAssoc;
+  const gpiMode = !isAdmin() && !!myGpi;
   $('#app').innerHTML = `
     <div class="page-head">
-      <div><h1>Negócios</h1><p>Cadastro de clientes interessados, propostas e vendas. Total: ${DB.negocios.length}</p></div>
+      <div><h1>Negócios</h1><p>${gpiMode ? `Seus negócios, ${myGpi}.` : `Visão geral — Total: ${DB.negocios.length}`}</p></div>
       <button class="btn primary" onclick="editNegocio()">+ Novo Negócio</button>
     </div>
     <div class="toolbar">
-      <input id="neg-search" placeholder="Buscar cliente, corretor, imobiliária..."/>
+      <input id="neg-search" placeholder="Buscar cliente, imobiliária, produto..."/>
       <select id="neg-status"><option value="">Status (todos)</option>${FUNIL_EXEC.map(s=>`<option>${s}</option>`).join('')}</select>
       <select id="neg-produto"><option value="">Produto (todos)</option>${PRODUTOS.map(p=>`<option>${p}</option>`).join('')}</select>
-      <select id="neg-resp"><option value="">Responsável</option>${[...DB.gpis, ...DB.executivos].map(r=>`<option>${r}</option>`).join('')}</select>
-      <select id="neg-estr"><option value="">Estrutura</option>${ESTRUTURAS.map(e=>`<option>${e}</option>`).join('')}</select>
+      ${!gpiMode ? `<select id="neg-resp"><option value="">Responsável</option>${[...DB.gpis, ...DB.executivos].map(r=>`<option>${r}</option>`).join('')}</select>
+      <select id="neg-estr"><option value="">Estrutura</option>${ESTRUTURAS.map(e=>`<option>${e}</option>`).join('')}</select>` : ''}
       <div class="spacer"></div>
       <span class="muted small" id="neg-count"></span>
     </div>
     <div class="card" style="padding:0;"><div class="table-wrap" id="neg-table"></div></div>
   `;
-  const filters = { search:'', status:'', produto:'', resp:'', estr:'' };
+  const filters = { search:'', status:'', produto:'', resp: gpiMode ? myGpi : '', estr:'' };
   $('#neg-search').addEventListener('input', e => { filters.search = e.target.value.toLowerCase(); render(); });
-  ['neg-status','neg-produto','neg-resp','neg-estr'].forEach(id => $('#'+id).addEventListener('change', e => { filters[id.replace('neg-','')] = e.target.value; render(); }));
+  $('#neg-status').addEventListener('change', e => { filters.status = e.target.value; render(); });
+  $('#neg-produto').addEventListener('change', e => { filters.produto = e.target.value; render(); });
+  if (!gpiMode) {
+    $('#neg-resp').addEventListener('change', e => { filters.resp = e.target.value; render(); });
+    $('#neg-estr').addEventListener('change', e => { filters.estr = e.target.value; render(); });
+  }
 
   function render() {
     const f = filters;
-    const list = DB.negocios.filter(n => {
+    const baseList = gpiMode ? DB.negocios.filter(n => n.responsavel === myGpi) : DB.negocios;
+    const list = baseList.filter(n => {
       if (f.status && n.status !== f.status) return false;
       if (f.produto && n.produto !== f.produto) return false;
       if (f.resp && n.responsavel !== f.resp) return false;
@@ -1922,32 +1930,50 @@ VIEWS.negocios = () => {
         if (!s.includes(f.search)) return false;
       }
       return true;
-    }).sort((a,b)=> (b.dataAssinatura||b.data||'').localeCompare(a.dataAssinatura||a.data||''));
-    $('#neg-count').textContent = `${list.length} de ${DB.negocios.length}`;
+    }).sort((a,b) => (b.dataAssinatura||b.data||'').localeCompare(a.dataAssinatura||a.data||''));
+    $('#neg-count').textContent = `${list.length} negócio${list.length!==1?'s':''}`;
     if (!list.length) { $('#neg-table').innerHTML = '<div class="empty"><div class="icon-big">🏠</div>Nenhum negócio encontrado.</div>'; return; }
-    $('#neg-table').innerHTML = `<table>
-      <thead><tr><th>Data</th><th>Status</th><th>Produto</th><th>Un.</th><th>Cliente</th><th>VGV</th><th>Estr.</th><th>Resp.</th><th>Follow-up</th><th>Imobiliária</th>${isAdmin()?'<th></th>':''}</tr></thead>
-      <tbody>${list.map(n => {
-        const date = (n.dataAssinatura||n.data||'').slice(0,10);
-        const stCls = n.status==='VENDA'?'green':n.status==='NEGOCIAÇÃO'?'orange':n.status==='ATENDIMENTOS'?'blue':n.status==='AGENDAMENTOS'?'purple':n.status==='DESCARTADO'?'gray':'';
-        const isOwner = n.responsavel === CURRENT_USER?.email || n.responsavel === CURRENT_USER?.gpiAssoc;
-        const clickable = (isAdmin() || isOwner) ? `style="cursor:pointer;" onclick="editNegocio('${n.id}')"` : '';
-        const fupStr = n.proximoFollowup ? `${n.proximoFollowup.slice(8,10)}/${n.proximoFollowup.slice(5,7)}` : '—';
-        const fupWarn = negocioIsStale(n) ? '⚠️' : negocioIsDue(n) ? '📅' : '';
-        
-        return `<tr ${clickable}>
-          <td>${date||'—'}</td>
-          <td><span class="badge ${stCls}">${escapeHtml(n.status||'—')}</span></td>
-          <td>${escapeHtml(n.produto||'')}</td><td>${escapeHtml(n.unidade||'')}</td>
-          <td class="truncate" style="max-width:180px;">${escapeHtml(n.cliente1||'')}</td>
-          <td>${fmtBRLk(n.vgv)}</td>
-          <td><span class="badge gray">${escapeHtml(n.estrutura||'')}</span></td>
-          <td>${escapeHtml(n.responsavel||'')}</td>
-          <td>${fupStr} ${fupWarn}</td>
-          <td class="truncate" style="max-width:180px;">${escapeHtml(n.imobiliaria||n.corretor||'')}</td>
-          ${isAdmin()?`<td onclick="event.stopPropagation()"><button class="btn sm" onclick="showNegocioHistory('${n.id}')">📜</button> <button class="btn sm danger" onclick="deleteNegocio('${n.id}')">×</button></td>`:''}
-        </tr>`;
-      }).join('')}</tbody></table>`;
+
+    if (gpiMode) {
+      // TABELA SIMPLIFICADA PARA GPI
+      $('#neg-table').innerHTML = `<table>
+        <thead><tr><th>Status</th><th>Produto</th><th>Un.</th><th>Cliente</th><th>Follow-up</th><th>Imobiliária</th></tr></thead>
+        <tbody>${list.map(n => {
+          const stCls = n.status==='VENDA'?'green':n.status==='NEGOCIAÇÃO'?'orange':n.status==='ATENDIMENTOS'?'blue':n.status==='AGENDAMENTOS'?'purple':n.status==='DESCARTADO'?'gray':'';
+          const fupStr = n.proximoFollowup ? `${n.proximoFollowup.slice(8,10)}/${n.proximoFollowup.slice(5,7)}` : '—';
+          const fupWarn = negocioIsStale(n) ? ' ⚠️' : negocioIsDue(n) ? ' 📅' : '';
+          return `<tr style="cursor:pointer;" onclick="editNegocio('${n.id}')">
+            <td><span class="badge ${stCls}">${escapeHtml(n.status||'—')}</span></td>
+            <td>${escapeHtml(n.produto||'—')}</td>
+            <td>${escapeHtml(n.unidade||'—')}</td>
+            <td class="truncate" style="max-width:200px;">${escapeHtml(n.cliente1||'—')}</td>
+            <td>${fupStr}${fupWarn}</td>
+            <td class="truncate" style="max-width:180px;">${escapeHtml(n.imobiliaria||n.corretor||'—')}</td>
+          </tr>`;
+        }).join('')}</tbody></table>`;
+    } else {
+      // TABELA COMPLETA PARA ADMIN / EXECUTIVO
+      $('#neg-table').innerHTML = `<table>
+        <thead><tr><th>Data</th><th>Status</th><th>Produto</th><th>Un.</th><th>Cliente</th><th>VGV</th><th>Estr.</th><th>Resp.</th><th>Follow-up</th><th>Imobiliária</th><th></th></tr></thead>
+        <tbody>${list.map(n => {
+          const date = (n.dataAssinatura||n.data||'').slice(0,10);
+          const stCls = n.status==='VENDA'?'green':n.status==='NEGOCIAÇÃO'?'orange':n.status==='ATENDIMENTOS'?'blue':n.status==='AGENDAMENTOS'?'purple':n.status==='DESCARTADO'?'gray':'';
+          const fupStr = n.proximoFollowup ? `${n.proximoFollowup.slice(8,10)}/${n.proximoFollowup.slice(5,7)}` : '—';
+          const fupWarn = negocioIsStale(n) ? ' ⚠️' : negocioIsDue(n) ? ' 📅' : '';
+          return `<tr style="cursor:pointer;" onclick="editNegocio('${n.id}')">
+            <td>${date||'—'}</td>
+            <td><span class="badge ${stCls}">${escapeHtml(n.status||'—')}</span></td>
+            <td>${escapeHtml(n.produto||'')}</td><td>${escapeHtml(n.unidade||'')}</td>
+            <td class="truncate" style="max-width:180px;">${escapeHtml(n.cliente1||'')}</td>
+            <td>${fmtBRLk(n.vgv)}</td>
+            <td><span class="badge gray">${escapeHtml(n.estrutura||'')}</span></td>
+            <td>${escapeHtml(n.responsavel||'')}</td>
+            <td>${fupStr}${fupWarn}</td>
+            <td class="truncate" style="max-width:180px;">${escapeHtml(n.imobiliaria||n.corretor||'')}</td>
+            <td onclick="event.stopPropagation()"><button class="btn sm" onclick="showNegocioHistory('${n.id}')">📜</button> <button class="btn sm danger" onclick="deleteNegocio('${n.id}')">×</button></td>
+          </tr>`;
+        }).join('')}</tbody></table>`;
+    }
   }
   render(); window._reloadNegocios = render;
 };

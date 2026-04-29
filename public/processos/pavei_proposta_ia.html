@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANTI ONE | Proposta Estratégica Pavei</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <!-- GSAP for Award-Winning Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.0.45/dist/lenis.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #030303;
+            --accent: #c9963a;
+            --accent-soft: rgba(201, 150, 58, 0.1);
+            --accent-glow: rgba(201, 150, 58, 0.4);
+            --text-main: #f0f0f0;
+            --text-dim: #888;
+            --card-bg: rgba(255, 255, 255, 0.02);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --red: #ff3e3e;
+            --green: #00f28f;
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none; /* Custom cursor */
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Custom Cursor */
+        #cursor {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease-out;
+        }
+        #cursor-follower {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--accent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.2s ease-out, opacity 0.3s;
+        }
+
+        /* Typography */
+        h1, h2, h3, .stat-value {
+            font-family: var(--font-display);
+            text-transform: uppercase;
+            line-height: 0.9;
+        }
+
+        .tagline {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            letter-spacing: 0.4em;
+            color: var(--accent);
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        /* Layout */
+        section {
+            min-height: 100vh;
+            width: 100%;
+            position: relative;
+            padding: 120px 8%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Hero */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero h1 {
+            font-size: clamp(60px, 12vw, 160px);
+            font-weight: 800;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 span {
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255,255,255,0.2);
+        }
+
+        .hero-bg-text {
+            position: absolute;
+            font-size: 25vw;
+            font-weight: 900;
+            color: rgba(255,255,255,0.02);
+            white-space: nowrap;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Noise Texture */
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://grainy-gradients.vercel.app/noise.svg');
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Sticky Reveal Section */
+        .sticky-wrapper {
+            position: relative;
+            height: 400vh; /* Control length of scroll */
+        }
+
+        .sticky-content {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .step-slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10%;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .step-slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .step-info {
+            max-width: 500px;
+        }
+
+        .step-info h2 {
+            font-size: clamp(40px, 6vw, 80px);
+            margin-bottom: 30px;
+            color: var(--accent);
+        }
+
+        .step-visual {
+            width: 50%;
+            height: 60vh;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            backdrop-filter: blur(20px);
+        }
+
+        /* Comparison Slider */
+        .comp-slider-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            border-radius: 30px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+        }
+
+        .comp-side {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .comp-side.before {
+            background: #0a0a0a;
+            color: var(--text-dim);
+            z-index: 1;
+        }
+
+        .comp-side.after {
+            background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
+            color: var(--text-main);
+            z-index: 2;
+            clip-path: inset(0 0 0 50%); /* Start at 50% */
+        }
+
+        .slider-handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            background: var(--accent);
+            z-index: 3;
+            cursor: ew-resize;
+        }
+
+        .slider-handle::after {
+            content: "↔";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: 700;
+        }
+
+        /* Solution Cards */
+        .solutions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .solution-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 40px;
+            border-radius: 24px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .solution-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-10px);
+            background: rgba(201, 150, 58, 0.05);
+        }
+
+        .solution-card h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+
+        .solution-card .icon {
+            font-size: 32px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        /* Horizontal Scroll Roadmap */
+        .horizontal-scroll-container {
+            overflow: hidden;
+            display: flex;
+            width: 300vw; /* 3 pages long */
+            padding-left: 10%;
+        }
+
+        .roadmap-stage {
+            width: 100vw;
+            padding-right: 10%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stage-num {
+            font-size: 150px;
+            font-weight: 800;
+            color: transparent;
+            -webkit-text-stroke: 1px var(--accent);
+            opacity: 0.2;
+            margin-bottom: -40px;
+        }
+
+        /* Stats */
+        .stats-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: clamp(60px, 10vw, 120px);
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        /* Smooth Scrollbar styles */
+        .lenis.lenis-smooth {
+            height: auto;
+        }
+        .lenis.lenis-smooth [data-lenis-prevent] {
+            overscroll-behavior: contain;
+        }
+        .lenis.lenis-stopped {
+            overflow: hidden;
+        }
+
+        @media (max-width: 1024px) {
+            .solutions-grid { grid-template-columns: 1fr 1fr; }
+            .step-slide { flex-direction: column; justify-content: center; text-align: center; }
+            .step-visual { width: 100%; height: 40vh; margin-top: 40px; }
+        }
+
+        @media (max-width: 768px) {
+            .solutions-grid { grid-template-columns: 1fr; }
+            .stats-section { flex-direction: column; gap: 60px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="cursor"></div>
+    <div id="cursor-follower"></div>
+    <div class="noise"></div>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-bg-text">PAVEI</div>
+        <div style="position: relative; z-index: 3;">
+            <span class="tagline">ANTI ONE × PAVEI · 2026</span>
+            <h1>A REVOLUÇÃO<br>DO <span>REAL ESTATE</span></h1>
+            <div style="margin-top: 40px; font-size: 18px; color: var(--text-dim); max-width: 600px; margin-left: auto; margin-right: auto;">
+                Diagnóstico Estratégico e Implementação de Ecossistema IA para Valéria Arruk.
+            </div>
+            <div style="margin-top: 60px; font-size: 12px; letter-spacing: 5px; opacity: 0.5;">
+                SCROLL TO DISCOVER
+            </div>
+        </div>
+    </section>
+
+    <!-- PHILOSOPHY STICKY -->
+    <div class="sticky-wrapper" id="philosophy-sticky">
+        <div class="sticky-content">
+            <div class="step-slide active" data-step="1">
+                <div class="step-info">
+                    <span class="tagline">FILOSOFIA 01</span>
+                    <h2>A Imersão é o Alicerce.</h2>
+                    <p>Não entregamos software pronto. Entendemos o DNA da Pavei para que a solução seja uma extensão do seu sucesso, não uma barreira.</p>
+                </div>
+                <div class="step-visual">
+                    <div style="text-align: center;">
+                        <span style="font-size: 80px; display: block; filter: grayscale(1) brightness(2);">🧠</span>
+                        <span style="font-family: var(--font-mono); font-size: 14px; opacity: 0.5;">UNDERSTANDING THE ECOSYSTEM</span>
+                    </div>
+                </div>
+            </div>
+            <div class="step-slide" data-step="2">
+                <div class="step-info">
+                    <span class="tagline">FILOSOFIA 02</span>
+                    <h2>A Ferramenta Serve ao Processo.</h2>
+                    <p>O maior erro corporativo é adaptar a empresa a uma ferramenta. Na ANTI ONE, redesenhamos o processo ideal e depois construímos a IA para executá-lo.</p>
+                </div>
+                <div class="step-visual">
+                    <div style="font-family: var(--font-mono); font-size: 18px;">
+                        PROCESS <span style="color: var(--accent);">>></span> TOOL
+                    </div>
+                </div>
+            </div>
+            <div class="step-slide" data-step="3">
+                <div class="step-info">
+                    <span class="tagline">FILOSOFIA 03</span>
+                    <h2>Dados são a Nova Moeda.</h2>
+                    <p>Mapeamos 16 pontos de dor que drenam sua lucratividade. Nossa meta é transformar esses vazamentos em ativos de inteligência.</p>
+                </div>
+                <div class="step-visual">
+                    <div class="stat-value">16</div>
+                    <div class="stat-label">PAIN POINTS MAPPED</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPARISON SECTION -->
+    <section id="comparison">
+        <div style="margin-bottom: 80px;">
+            <span class="tagline">INTERACTIVE ANALYSIS</span>
+            <h2>O SALTO TECNOLÓGICO</h2>
+            <p style="color: var(--text-dim); margin-top: 20px; max-width: 500px;">Arraste o slider para comparar o cenário atual fragmentado com o futuro integrado pela ANTI ONE.</p>
+        </div>
+
+        <div class="comp-slider-container" id="slider-root">
+            <div class="comp-side before">
+                <h3 style="color: var(--red); margin-bottom: 30px;">CENÁRIO ATUAL</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                    <div>
+                        <h4 style="font-size: 12px; margin-bottom: 10px;">VENDAS</h4>
+                        <p style="font-size: 14px;">Input manual, leads perdidos por falta de follow-up, 1h para digitar contratos.</p>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 12px; margin-bottom: 10px;">MARKETING</h4>
+                        <p style="font-size: 14px;">2-3 variações de anúncios, ROI desconhecido, relatórios manuais mensais.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="comp-side after">
+                <h3 style="color: var(--green); margin-bottom: 30px;">ECOSSISTEMA IA</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                    <div>
+                        <h4 style="font-size: 12px; margin-bottom: 10px;">VENDAS</h4>
+                        <p style="font-size: 14px;">Captura automática 100%, score preditivo de leads, contratos via OCR em 5min.</p>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 12px; margin-bottom: 10px;">MARKETING</h4>
+                        <p style="font-size: 14px;">50+ variações testadas por hora, ROI rastreado em tempo real, ajuste de verba automático.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="slider-handle" id="slider-handle"></div>
+        </div>
+    </section>
+
+    <!-- SOLUTIONS MENU -->
+    <section id="solutions">
+        <div style="margin-bottom: 60px;">
+            <span class="tagline">SERVICE CATALOG</span>
+            <h2>CARDÁPIO DE SOLUÇÕES</h2>
+        </div>
+
+        <div class="solutions-grid">
+            <div class="solution-card">
+                <span class="icon">🎯</span>
+                <h3>Lead Intake Hub</h3>
+                <p>Centralização de 100% dos leads de portais, redes e WhatsApp sem intervenção humana.</p>
+            </div>
+            <div class="solution-card">
+                <span class="icon">🤖</span>
+                <h3>Predictive Scoring</h3>
+                <p>IA que classifica leads por renda estimada e potencial de compra antes da primeira ligação.</p>
+            </div>
+            <div class="solution-card">
+                <span class="icon">📄</span>
+                <h3>Legal OCR</h3>
+                <p>Leitura automática de documentos e preenchimento de ERP em segundos, eliminando erro humano.</p>
+            </div>
+            <div class="solution-card">
+                <span class="icon">🔍</span>
+                <h3>Brand Validator</h3>
+                <p>IA que revisa materiais de marketing contra o manual de marca e textos jurídicos em 60 segundos.</p>
+            </div>
+            <div class="solution-card">
+                <span class="icon">📈</span>
+                <h3>Performance AI</h3>
+                <p>Otimização de campanhas em tempo real focada em CAC e ROI rastreável.</p>
+            </div>
+            <div class="solution-card">
+                <span class="icon">📊</span>
+                <h3>Executive Hub</h3>
+                <p>Dashboard unificado com a saúde da empresa atualizada a cada 15 minutos.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- HORIZONTAL ROADMAP -->
+    <section id="roadmap-trigger" style="padding: 0; overflow: hidden; background: #050505;">
+        <div class="horizontal-scroll-container" id="roadmap-scroll">
+            <div class="roadmap-stage">
+                <span class="stage-num">01</span>
+                <span class="tagline">PHASE ONE: 30 DAYS</span>
+                <h2>IMERSÃO &<br>LEADS CORE</h2>
+                <p style="max-width: 500px; color: var(--text-dim); margin-top: 20px;">
+                    Mapeamento detalhado dos sub-processos e ativação do Hub de Captura Automática. Impacto imediato na taxa de resposta comercial.
+                </p>
+            </div>
+            <div class="roadmap-stage">
+                <span class="stage-num">02</span>
+                <span class="tagline">PHASE TWO: 60 DAYS</span>
+                <h2>ESCUDO JURÍDICO &<br>MARKETING SCALE</h2>
+                <p style="max-width: 500px; color: var(--text-dim); margin-top: 20px;">
+                    Implementação da IA de conferência de materiais e automação de escala em anúncios. Redução de gargalos e proteção de marca.
+                </p>
+            </div>
+            <div class="roadmap-stage">
+                <span class="stage-num">03</span>
+                <span class="tagline">PHASE THREE: 90 DAYS</span>
+                <h2>DADOS SUPREMOS &<br>FECHAMENTO OCR</h2>
+                <p style="max-width: 500px; color: var(--text-dim); margin-top: 20px;">
+                    Consolidação do Hub Executivo e automação total de contratos. A Pavei operando em alta velocidade e com dados em tempo real.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- IMPACT STATS -->
+    <section class="stats-section">
+        <div class="stat-box">
+            <div class="stat-value" id="stat1">75%</div>
+            <div class="stat-label">RED. TEMPO OPERACIONAL</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="stat2">30%</div>
+            <div class="stat-label">ALTA NA CONVERSÃO</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="stat3">100%</div>
+            <div class="stat-label">DATA VISIBILITY</div>
+        </div>
+    </section>
+
+    <!-- CLOSING -->
+    <section style="text-align: center; background: radial-gradient(circle at center, #111, #030303);">
+        <span class="tagline">NEXT STEPS</span>
+        <h2 style="font-size: clamp(30px, 8vw, 80px);">PRONTA PARA A<br>PRÓXIMA FASE?</h2>
+        <div style="margin-top: 60px;">
+            <p style="color: var(--text-dim); margin-bottom: 20px;">Apresentação para <b>Valéria Arruk</b></p>
+            <p style="font-family: var(--font-mono); font-size: 14px;">POR <b>BARBARA MOTTA</b> · ANTI ONE</p>
+        </div>
+        
+        <div style="margin-top: 80px; display: flex; justify-content: center; gap: 20px;">
+            <a href="#" style="padding: 20px 40px; border: 1px solid var(--accent); color: var(--accent); text-decoration: none; font-size: 12px; letter-spacing: 2px; font-weight: 700;">APROVAR PROPOSTA</a>
+        </div>
+    </section>
+
+    <script>
+        // Init Lenis Smooth Scroll
+        const lenis = new Lenis();
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // Custom Cursor Logic
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('cursor-follower');
+        document.addEventListener('mousemove', (e) => {
+            gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0 });
+            gsap.to(follower, { x: e.clientX - 15, y: e.clientY - 15, duration: 0.3 });
+        });
+
+        // Hover cursor effect
+        document.querySelectorAll('a, .solution-card, .slider-handle').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                gsap.to(follower, { scale: 2, borderColor: '#fff', backgroundColor: 'rgba(255,255,255,0.1)' });
+            });
+            el.addEventListener('mouseleave', () => {
+                gsap.to(follower, { scale: 1, borderColor: '#c9963a', backgroundColor: 'transparent' });
+            });
+        });
+
+        // GSAP ScrollTrigger Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Sticky Reveal Animation
+        const slides = document.querySelectorAll('.step-slide');
+        const stickyTL = gsap.timeline({
+            scrollTrigger: {
+                trigger: "#philosophy-sticky",
+                start: "top top",
+                end: "bottom bottom",
+                scrub: 1,
+            }
+        });
+
+        slides.forEach((slide, i) => {
+            if (i > 0) {
+                stickyTL.to(slides[i-1], { opacity: 0, y: -50, duration: 1 }, i);
+                stickyTL.fromTo(slide, { opacity: 0, y: 50 }, { opacity: 1, y: 0, visibility: 'visible', duration: 1 }, i);
+            }
+        });
+
+        // Before/After Slider Logic
+        const slider = document.getElementById('slider-root');
+        const handle = document.getElementById('slider-handle');
+        const afterSide = document.querySelector('.comp-side.after');
+
+        slider.addEventListener('mousemove', (e) => {
+            const rect = slider.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let percentage = (x / rect.width) * 100;
+            
+            if (percentage >= 0 && percentage <= 100) {
+                gsap.to(handle, { left: percentage + "%", duration: 0.1 });
+                gsap.to(afterSide, { clipPath: `inset(0 0 0 ${percentage}%)`, duration: 0.1 });
+            }
+        });
+
+        // Horizontal Roadmap Scroll
+        gsap.to("#roadmap-scroll", {
+            x: "-200vw", // Move across 2 stages
+            ease: "none",
+            scrollTrigger: {
+                trigger: "#roadmap-trigger",
+                start: "top top",
+                end: "bottom+=2000 top",
+                pin: true,
+                scrub: 1,
+            }
+        });
+
+        // Stat Counter
+        function animateValue(id, start, end, duration) {
+            let obj = document.getElementById(id);
+            let current = start;
+            let range = end - start;
+            let increment = end > start ? 1 : -1;
+            let stepTime = Math.abs(Math.floor(duration / range));
+            let timer = setInterval(function() {
+                current += increment;
+                obj.innerText = current + (id === 'stat1' || id === 'stat2' ? '%' : '');
+                if (current == end) {
+                    clearInterval(timer);
+                }
+            }, stepTime);
+        }
+
+        ScrollTrigger.create({
+            trigger: ".stats-section",
+            start: "top 80%",
+            onEnter: () => {
+                animateValue("stat1", 0, 75, 2000);
+                animateValue("stat2", 0, 30, 2000);
+                animateValue("stat3", 0, 100, 2000);
+            }
+        });
+
+        // Hero Parallax
+        gsap.to(".hero-bg-text", {
+            y: 200,
+            scrollTrigger: {
+                trigger: ".hero",
+                scrub: true
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,536 @@
+{
+  "project": {
+    "name": "IA Prospecção — Plaenge Porto Alegre",
+    "type": "presentation_site",
+    "language": "pt-BR",
+    "purpose": "Site de apresentação para a diretoria da Plaenge sobre pesquisa de ferramentas de IA para prospecção e follow-up automatizado de leads imobiliários.",
+    "audience": "Diretoria executiva — decisores corporativos",
+    "tone": "premium, data-driven, inovador, confiante"
+  },
+
+  "design_system": {
+    "theme": "dark",
+    "inspiration_references": [
+      "Linear.app — dark mode, glassmorphism cards, micro-animações suaves",
+      "Stripe.com — seções com gradientes 3D, tipografia hierárquica bold",
+      "Vercel.com — minimalismo poderoso, alto contraste, números grandes em destaque",
+      "Apple product pages — scroll storytelling com revelaçõs progressivas",
+      "Lusion.co — imersão visual full-screen"
+    ],
+    "color_palette": {
+      "background_base": "#08080F",
+      "background_surface": "#0F0F1A",
+      "background_card": "rgba(255, 255, 255, 0.04)",
+      "background_card_hover": "rgba(255, 255, 255, 0.08)",
+      "primary_red": "#C8102E",
+      "primary_red_glow": "rgba(200, 16, 46, 0.3)",
+      "primary_red_soft": "rgba(200, 16, 46, 0.12)",
+      "accent_blue": "#1B3A5C",
+      "accent_blue_glow": "rgba(27, 58, 92, 0.4)",
+      "text_primary": "#FFFFFF",
+      "text_secondary": "#A0A0B0",
+      "text_muted": "#5A5A6A",
+      "border_subtle": "rgba(255, 255, 255, 0.08)",
+      "border_card": "rgba(255, 255, 255, 0.12)",
+      "gradient_hero": "linear-gradient(135deg, #08080F 0%, #0F0F1A 50%, #12060C 100%)",
+      "gradient_red_accent": "linear-gradient(135deg, #C8102E, #FF2D50)",
+      "gradient_section_divider": "linear-gradient(90deg, transparent, rgba(200,16,46,0.5), transparent)",
+      "voice_tag_color": "#FF6B6B",
+      "text_tag_color": "#4ECDC4",
+      "hybrid_tag_color": "#9B59B6",
+      "selected_badge_color": "#C8102E"
+    },
+    "typography": {
+      "font_heading": "'Inter', 'SF Pro Display', sans-serif",
+      "font_body": "'Inter', 'SF Pro Text', sans-serif",
+      "font_mono": "'JetBrains Mono', 'Fira Code', monospace",
+      "scale": {
+        "hero_title": "clamp(52px, 8vw, 96px)",
+        "hero_subtitle": "clamp(20px, 2.5vw, 28px)",
+        "section_title": "clamp(36px, 5vw, 64px)",
+        "card_title": "24px",
+        "body": "16px",
+        "caption": "13px",
+        "stat_number": "clamp(48px, 6vw, 80px)"
+      },
+      "weight": {
+        "hero": "800",
+        "heading": "700",
+        "subheading": "600",
+        "body": "400",
+        "label": "500"
+      }
+    },
+    "global_effects": {
+      "glassmorphism_card": "background: rgba(255,255,255,0.04); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.10); border-radius: 20px;",
+      "glow_red": "box-shadow: 0 0 40px rgba(200, 16, 46, 0.25), 0 0 80px rgba(200, 16, 46, 0.10);",
+      "noise_texture": "aplique textura de ruído sutil (2-3% opacity) sobre backgrounds escuros para profundidade",
+      "orbs_background": "orbs circulares desfocados em vermelho e azul navy posicionados estrategicamente no fundo — como os da proposta Plaenge — sem movimento, apenas como decoração de profundidade"
+    },
+    "animations": {
+      "scroll_reveal": "elementos entram com fade-up (translateY 30px → 0) + opacity 0→1, duration 600ms, easing cubic-bezier(0.16, 1, 0.3, 1)",
+      "counter_animation": "números contam de 0 até o valor final ao entrar no viewport, duration 2s, easing easeOutExpo",
+      "card_hover": "scale(1.02) + border-color aumenta para rgba(200,16,46,0.4), transition 200ms ease",
+      "stagger_children": "elementos filhos aparecem em sequência com delay de 100ms entre cada um",
+      "line_draw": "linhas SVG se desenham da esquerda para a direita ao entrar no viewport",
+      "tag_float": "tags de categoria com leve flutuação vertical (keyframe 0→-6px→0, 4s infinite ease-in-out)"
+    }
+  },
+
+  "layout": {
+    "max_width": "1280px",
+    "section_padding": "clamp(80px, 10vw, 140px) 0",
+    "container_padding": "0 clamp(24px, 5vw, 80px)",
+    "nav_height": "72px"
+  },
+
+  "navigation": {
+    "style": "fixed top, glassmorphism com blur, fade-in após scroll de 50px",
+    "logo": "texto PLAENGE em vermelho #C8102E + subtexto 'Inteligência de Mercado' em cinza muted",
+    "links": [
+      { "label": "Contexto", "anchor": "#contexto" },
+      { "label": "Pesquisa", "anchor": "#pesquisa" },
+      { "label": "Ferramentas", "anchor": "#ferramentas" },
+      { "label": "Demo", "anchor": "#demo-3cplus" },
+      { "label": "Estratégia", "anchor": "#estrategia" }
+    ],
+    "cta": {
+      "text": "Ver Demo",
+      "anchor": "#demo-3cplus",
+      "style": "button outline vermelho com hover fill"
+    },
+    "progress_bar": "barra de progresso de leitura fina (2px) em vermelho no topo da nav, preenchendo conforme scroll"
+  },
+
+  "sections": [
+
+    {
+      "id": "hero",
+      "type": "full_screen_hero",
+      "layout": "centered_vertical",
+      "background": {
+        "color": "#08080F",
+        "orbs": [
+          { "color": "rgba(200, 16, 46, 0.15)", "size": "600px", "position": "top-right", "blur": "120px" },
+          { "color": "rgba(27, 58, 92, 0.2)", "size": "500px", "position": "bottom-left", "blur": "100px" },
+          { "color": "rgba(200, 16, 46, 0.08)", "size": "400px", "position": "center", "blur": "150px" }
+        ],
+        "grid_lines": "grade sutil de linhas em rgba(255,255,255,0.03) — estilo tech/blueprint"
+      },
+      "content": {
+        "eyebrow": {
+          "text": "PLAENGE PORTO ALEGRE · INTELIGÊNCIA DE MERCADO · 2026",
+          "style": "tracking-widest, uppercase, font-mono, cor text_muted, fade-in com delay 0ms"
+        },
+        "title": {
+          "text": "IA para Prospecção e Follow-up de Leads",
+          "style": "font-size: stat_number, font-weight 800, color white, gradient-text opcional em vermelho na palavra 'IA'",
+          "animation": "palavras aparecem uma a uma em sequência (word by word reveal)"
+        },
+        "subtitle": {
+          "text": "Pesquisa de mercado com 11 ferramentas. Três soluções selecionadas. Uma proposta estratégica para transformar nossa base de 20.000 leads em oportunidades reais.",
+          "style": "font-size 20px, color text_secondary, max-width 640px, margin auto, fade-up com delay 400ms"
+        },
+        "cta_group": {
+          "layout": "horizontal, gap 16px, centered, margin-top 48px",
+          "primary_button": {
+            "text": "Ver Demonstração 3C Plus",
+            "action": "scroll suave para #demo-3cplus",
+            "style": "background gradient_red_accent, cor branca, padding 16px 32px, border-radius 12px, font-weight 600, com glow_red no hover"
+          },
+          "secondary_button": {
+            "text": "Explorar a Pesquisa",
+            "action": "scroll suave para #pesquisa",
+            "style": "border 1px solid border_card, fundo transparente, cor text_secondary, mesmo padding, hover com fundo background_card"
+          }
+        },
+        "scroll_indicator": {
+          "style": "seta animada apontando para baixo, posição absolute bottom 40px, bounce animation sutil"
+        }
+      },
+      "stats_row": {
+        "position": "bottom of hero, above fold break",
+        "layout": "4 itens em linha horizontal com separadores verticais sutis",
+        "style": "glassmorphism strip, padding 24px 40px, border-top 1px solid border_subtle",
+        "items": [
+          { "number": "20.000", "label": "Leads na Base", "animation": "counter" },
+          { "number": "200", "label": "Novos Leads / Mês", "animation": "counter" },
+          { "number": "11", "label": "Ferramentas Pesquisadas", "animation": "counter" },
+          { "number": "3", "label": "Soluções Selecionadas", "animation": "counter" }
+        ]
+      }
+    },
+
+    {
+      "id": "contexto",
+      "type": "problem_statement",
+      "layout": "two_column_split",
+      "background": "#0F0F1A",
+      "section_label": "01 — CONTEXTO",
+      "heading": "Uma base enorme. Uma equipe focada. Um gap estratégico.",
+      "left_column": {
+        "type": "narrative_text",
+        "paragraphs": [
+          "A Plaenge Porto Alegre tem 5 anos de operação e acumulou ao longo desse tempo uma base de aproximadamente 20.000 leads no CRM Dynamics 365. Todo mês, as campanhas de marketing digital trazem mais 200 contatos novos.",
+          "Nossa equipe comercial — 6 executivos de alto nível — tem seu foco estrategicamente direcionado para o atendimento via imobiliárias parceiras. Um canal fundamental, que exige presença, relacionamento e dedicação constante.",
+          "O resultado: os leads diretos ao cliente — aqueles que chegam pelo site, pelas redes sociais, pelas campanhas — estão sendo subaatendidos. Não por descuido. Por capacidade."
+        ]
+      },
+      "right_column": {
+        "type": "problem_cards_stack",
+        "cards": [
+          {
+            "icon": "base de dados / stack",
+            "color": "vermelho",
+            "title": "20.000 leads dormentes",
+            "description": "Contatos acumulados em 5 anos com potencial real de reativação — sem ação automatizada."
+          },
+          {
+            "icon": "relógio / tempo",
+            "color": "amarelo",
+            "title": "200 novos leads/mês sem follow-up imediato",
+            "description": "Cada hora sem contato = lead perdendo temperatura e considerando a concorrência."
+          },
+          {
+            "icon": "pessoa / executivo",
+            "color": "azul",
+            "title": "Equipe comercial sobrecarregada",
+            "description": "SDR + Closer no mesmo profissional dilui foco e limita o potencial de fechamento."
+          }
+        ]
+      },
+      "callout_bottom": {
+        "text": "Como aproveitar essa base sem sobrecarregar a equipe?",
+        "style": "grande, centralizado, italic, cor vermelho, margin-top 64px, com linha decorativa acima"
+      }
+    },
+
+    {
+      "id": "pesquisa",
+      "type": "research_overview",
+      "layout": "centered_content",
+      "background": "#08080F",
+      "section_label": "02 — A PESQUISA",
+      "heading": "Duas frentes. Onze ferramentas. Uma pesquisa completa.",
+      "sub_heading": "Reuniões realizadas com todas as ferramentas. Propostas analisadas. Demonstrações assistidas.",
+
+      "two_fronts_block": {
+        "layout": "dois cards lado a lado, full-width, altura igual",
+        "card_voice": {
+          "tag": "VOZ",
+          "tag_color": "#FF6B6B",
+          "icon": "microfone / onda de áudio — SVG minimalista",
+          "title": "IA de Voz",
+          "description": "A inteligência artificial realiza ligações telefônicas outbound para os leads. Apresenta o produto, qualifica o interesse e agenda visitas — com voz hiperrealista, sem soar como robô.",
+          "sub_info": "Canal: chamada telefônica / celular",
+          "tools_count": "3 ferramentas pesquisadas",
+          "style": "glassmorphism, borda top em vermelho-coral 3px, hover com glow sutil"
+        },
+        "card_text": {
+          "tag": "TEXTO",
+          "tag_color": "#4ECDC4",
+          "icon": "balão de chat / WhatsApp — SVG minimalista",
+          "title": "IA de Texto",
+          "description": "Conversas automáticas via WhatsApp. Qualificação de interesse, follow-up persistente e agendamento de visitas — 24 horas por dia, 7 dias por semana.",
+          "sub_info": "Canal: WhatsApp / chat multicanal",
+          "tools_count": "6 ferramentas pesquisadas",
+          "style": "glassmorphism, borda top em teal 3px, hover com glow sutil"
+        },
+        "hybrid_note": {
+          "text": "+ 2 plataformas híbridas (voz + texto integrados)",
+          "style": "centered abaixo dos cards, cor text_muted, font-size 14px"
+        }
+      },
+
+      "tools_grid": {
+        "heading": "As 11 Ferramentas Pesquisadas",
+        "layout": "grid responsivo, 4 colunas desktop / 2 tablet / 1 mobile",
+        "animation": "stagger reveal — cada card aparece com 80ms de delay",
+        "tools": [
+          { "name": "PitchYes", "type": "Voz", "tag_color": "#FF6B6B", "selected": true, "highlight": "Especialista imobiliário" },
+          { "name": "Fônio", "type": "Voz", "tag_color": "#FF6B6B", "selected": false, "highlight": "7k+ clientes na Europa" },
+          { "name": "Revolução IA", "type": "Voz", "tag_color": "#FF6B6B", "selected": false, "highlight": "IA conversacional" },
+          { "name": "Laís", "type": "Texto", "tag_color": "#4ECDC4", "selected": true, "highlight": "Especialista em incorporadoras" },
+          { "name": "Qontrol", "type": "Texto", "tag_color": "#4ECDC4", "selected": false, "highlight": "Funil comercial completo" },
+          { "name": "Super Agents", "type": "Texto", "tag_color": "#4ECDC4", "selected": false, "highlight": "Meta WhatsApp AI Hub" },
+          { "name": "EZ Chat", "type": "Texto", "tag_color": "#4ECDC4", "selected": false, "highlight": "Multi-canal, piloto POA" },
+          { "name": "Workers AI", "type": "Texto", "tag_color": "#4ECDC4", "selected": false, "highlight": "GPT + LinkedIn + Eleven Labs" },
+          { "name": "Form Já", "type": "Texto", "tag_color": "#4ECDC4", "selected": false, "highlight": "Proposta customizada Plaenge" },
+          { "name": "3C Plus", "type": "Híbrido", "tag_color": "#9B59B6", "selected": true, "highlight": "Voz + WhatsApp integrados" },
+          { "name": "Findor", "type": "Híbrido", "tag_color": "#9B59B6", "selected": false, "highlight": "Prospecção outbound multicanal" }
+        ],
+        "selected_badge_text": "SELECIONADA",
+        "selected_badge_style": "badge vermelho #C8102E posicionado no canto superior direito do card, font-size 10px uppercase tracking-wide"
+      }
+    },
+
+    {
+      "id": "ferramentas",
+      "type": "deep_dive_tools",
+      "layout": "full_width_sections",
+      "background": "#0A0A14",
+      "section_label": "03 — SOLUÇÕES SELECIONADAS",
+      "heading": "Três ferramentas. Uma para cada frente.",
+
+      "tool_1": {
+        "id": "pitchyes",
+        "tag": "VOZ",
+        "tag_color": "#FF6B6B",
+        "name": "PitchYes",
+        "tagline": "Ligações inteligentes que soam humanas.",
+        "layout": "left_content_right_visual",
+        "background_accent": "orb vermelho-coral no lado direito",
+        "visual_right": {
+          "type": "audio_waveform_mockup",
+          "description": "mockup visual de uma conversa telefônica — linha de onda de áudio animada, indicador 'IA falando', transcript de exemplo aparecendo linha a linha com typing animation. Fundo escuro glassmorphism.",
+          "sample_transcript": [
+            { "speaker": "IA PitchYes", "text": "Olá, aqui é a Sofia, da Plaenge. Você demonstrou interesse em nossos empreendimentos em Porto Alegre — posso te contar mais?" },
+            { "speaker": "Lead", "text": "Sim, pode falar..." },
+            { "speaker": "IA PitchYes", "text": "Ótimo! Estamos com um lançamento exclusivo em Ipanema. Qual o seu perfil — está buscando para morar ou investir?" }
+          ]
+        },
+        "features": [
+          { "icon": "voz", "title": "Voz hiperrealista", "desc": "Não soa como robô — leads não percebem que é IA" },
+          { "icon": "imóvel", "title": "Especialização imobiliária", "desc": "Treinada para venda de lançamentos e imóveis" },
+          { "icon": "calendar", "title": "Follow-up até o sim", "desc": "Liga novamente automaticamente até o agendamento" },
+          { "icon": "config", "title": "Por empreendimento", "desc": "Personalizável por produto e campanha" }
+        ],
+        "fit_plaenge": {
+          "heading": "Por que faz sentido para a Plaenge",
+          "items": [
+            "Reativar os 20.000 leads dormentes com abordagem personalizada",
+            "Atender os 200 novos leads/mês com velocidade de resposta zero",
+            "Executivo só entra na conversa após o agendamento confirmado"
+          ]
+        }
+      },
+
+      "tool_2": {
+        "id": "lais",
+        "tag": "TEXTO",
+        "tag_color": "#4ECDC4",
+        "name": "Laís",
+        "tagline": "A IA que fala a língua do comprador de imóveis.",
+        "layout": "right_content_left_visual",
+        "background_accent": "orb teal no lado esquerdo",
+        "visual_left": {
+          "type": "whatsapp_mockup",
+          "description": "mockup de conversa WhatsApp realista — fundo escuro com bolhas de mensagem estilo WhatsApp Business. Mostrar sequência de conversa com a Laís. Inclui ícone de áudio interpretado com label 'Áudio transcrito pela IA'.",
+          "messages": [
+            { "sender": "Lead", "text": "oi boa tarde, vi um anúncio de vocês", "time": "14:32" },
+            { "sender": "Laís IA", "text": "Olá! 😊 Que ótimo ter seu contato. Sou a Laís, assistente da Plaenge em Porto Alegre. Você se interessou por qual empreendimento?", "time": "14:32" },
+            { "sender": "Lead", "type": "audio", "duration": "0:08", "time": "14:33" },
+            { "sender": "Laís IA", "text": "Entendi! Você mencionou que busca 2 quartos com vaga, certo? Temos opções perfeitas. Quando seria melhor para uma conversa rápida com nosso especialista?", "time": "14:33" }
+          ]
+        },
+        "features": [
+          { "icon": "building", "title": "Construída para incorporadoras", "desc": "Não é chatbot genérico — é especialista no setor" },
+          { "icon": "audio", "title": "Interpreta áudios do WhatsApp", "desc": "Entende e responde mensagens de voz" },
+          { "icon": "clock", "title": "Disponível 24/7", "desc": "Nenhum lead fica sem resposta, nem às 23h" },
+          { "icon": "qualify", "title": "Qualifica e agenda", "desc": "Lead chega ao executivo já triado e interessado" }
+        ],
+        "fit_plaenge": {
+          "heading": "Por que faz sentido para a Plaenge",
+          "items": [
+            "WhatsApp é o canal preferido do consumidor brasileiro",
+            "Interpreta áudios — não perde quem prefere mandar voz",
+            "Curva de treinamento mínima por ser especialista em incorporadoras"
+          ]
+        }
+      },
+
+      "tool_3": {
+        "id": "3cplus",
+        "tag": "HÍBRIDO",
+        "tag_color": "#9B59B6",
+        "name": "3C Plus",
+        "tagline": "Voz e texto na mesma plataforma. Escala corporativa.",
+        "layout": "full_width_with_demo_below",
+        "background_accent": "orb roxo centralizado",
+        "features_grid": {
+          "layout": "2x2 cards",
+          "items": [
+            { "icon": "phone+chat", "title": "Voz + WhatsApp integrados", "desc": "Discagem automática e IA de texto no mesmo painel" },
+            { "icon": "telco", "title": "Infraestrutura telco", "desc": "Robustez e escala de plataforma para call centers corporativos" },
+            { "icon": "dashboard", "title": "Dashboards em tempo real", "desc": "Visibilidade total da operação com métricas de conversão" },
+            { "icon": "crm", "title": "Integração nativa com CRM", "desc": "Dados fluem automaticamente para o Dynamics 365" }
+          ]
+        },
+        "fit_plaenge": {
+          "heading": "Por que faz sentido para a Plaenge",
+          "items": [
+            "Liga primeiro, depois ativa follow-up por WhatsApp — abordagem multicanal completa",
+            "Escala para trabalhar toda a base de 20.000 leads com visibilidade total",
+            "Robustez corporativa para uma operação da magnitude da Plaenge"
+          ]
+        }
+      }
+    },
+
+    {
+      "id": "demo-3cplus",
+      "type": "video_demo_section",
+      "layout": "centered_immersive",
+      "background": {
+        "color": "#050508",
+        "orbs": [
+          { "color": "rgba(155, 89, 182, 0.2)", "size": "700px", "position": "center", "blur": "180px" }
+        ]
+      },
+      "section_label": "DEMO AO VIVO",
+      "heading": "Veja o 3C Plus em Ação",
+      "sub_heading": "Uma conversa real, capturada em produção. A IA liga, qualifica e transfere para o executivo apenas quando o lead demonstra interesse.",
+      "video_block": {
+        "type": "iframe_embed",
+        "provider": "google_drive",
+        "file_id": "1yZDjIuCu8Uf4JSMMUy8GEMy9EjbqaUnn",
+        "start_time_seconds": 1399,
+        "embed_url": "https://drive.google.com/file/d/1yZDjIuCu8Uf4JSMMUy8GEMy9EjbqaUnn/preview#t=1399",
+        "iframe_html": "<iframe src='https://drive.google.com/file/d/1yZDjIuCu8Uf4JSMMUy8GEMy9EjbqaUnn/preview#t=1399' width='100%' height='100%' allow='autoplay' allowfullscreen style='border: none;'></iframe>",
+        "container_style": {
+          "aspect_ratio": "16/9",
+          "max_width": "960px",
+          "margin": "0 auto",
+          "border_radius": "20px",
+          "overflow": "hidden",
+          "border": "1px solid rgba(155, 89, 182, 0.3)",
+          "box_shadow": "0 0 80px rgba(155, 89, 182, 0.2), 0 0 160px rgba(155, 89, 182, 0.08)"
+        },
+        "timestamp_badge": {
+          "text": "▶ Iniciando em 23:19 — momento da demonstração de IA",
+          "style": "badge glassmorphism, posicionado acima do player, cor roxo, font-size 13px"
+        }
+      },
+      "callouts_below_video": {
+        "layout": "3 itens em linha horizontal, abaixo do player",
+        "items": [
+          { "icon": "✓", "text": "Conversa real — não é roteiro" },
+          { "icon": "✓", "text": "Lead não percebe que é IA" },
+          { "icon": "✓", "text": "Transferência automática para o executivo" }
+        ]
+      }
+    },
+
+    {
+      "id": "estrategia",
+      "type": "strategic_vision",
+      "layout": "centered_with_diagram",
+      "background": "#0F0F1A",
+      "section_label": "04 — PROPOSTA ESTRATÉGICA",
+      "heading": "Libere a equipe para o que realmente importa.",
+
+      "funnel_diagram": {
+        "type": "visual_funnel_split",
+        "description": "Diagrama de funil em dois blocos verticais distintos, visualmente separados por linha com label 'DIVISÃO ESTRATÉGICA'",
+        "top_block": {
+          "label": "DOMÍNIO DA IA — 24h / 7 dias",
+          "background": "rgba(200, 16, 46, 0.08), borda vermelha 1px",
+          "steps": ["Prospecção", "Qualificação", "Follow-up", "Agendamento"],
+          "annotation": "20.000 leads processados automaticamente"
+        },
+        "divider_line": {
+          "label": "Lead qualificado e agendado chega ao executivo",
+          "style": "linha tracejada com seta apontando para baixo, label centralizado"
+        },
+        "bottom_block": {
+          "label": "DOMÍNIO DO EXECUTIVO — Foco em Fechamento",
+          "background": "rgba(27, 58, 92, 0.15), borda azul 1px",
+          "steps": ["Visita", "Apresentação", "Negociação", "Fechamento"],
+          "annotation": "Executivo como Closer — não como SDR"
+        }
+      },
+
+      "key_message": {
+        "text": "Executivo como Closer — não como SDR.",
+        "style": "font-size grande, bold 800, centralizado, cor branco, com linha vermelha decorativa à esquerda, margin-y 64px"
+      },
+
+      "impact_numbers": {
+        "layout": "3 cards em linha",
+        "items": [
+          { "number": "20.000", "label": "leads reativáveis pela IA", "color": "vermelho" },
+          { "number": "200", "label": "novos leads/mês processados automaticamente", "color": "vermelho" },
+          { "number": "6", "label": "executivos focados 100% em fechamento", "color": "azul" }
+        ]
+      }
+    },
+
+    {
+      "id": "discussao",
+      "type": "discussion_cta",
+      "layout": "centered_card",
+      "background": "#08080F",
+      "section_label": "05 — DISCUSSÃO",
+      "heading": "Sua percepção é fundamental.",
+      "sub_heading": "Quatro perguntas para guiar nossa conversa.",
+
+      "questions_grid": {
+        "layout": "2x2 grid de cards, numerados",
+        "animation": "stagger reveal",
+        "questions": [
+          {
+            "number": "01",
+            "text": "Esta direção estratégica — IA no topo do funil, executivo no fechamento — faz sentido para o nosso posicionamento?",
+            "color_accent": "vermelho"
+          },
+          {
+            "number": "02",
+            "text": "Qual frente priorizamos como primeiro passo: voz, texto ou uma plataforma híbrida?",
+            "color_accent": "vermelho"
+          },
+          {
+            "number": "03",
+            "text": "Temos abertura para estruturar um projeto piloto com métricas e período definidos?",
+            "color_accent": "vermelho"
+          },
+          {
+            "number": "04",
+            "text": "Além da integração com o Dynamics 365, quais outros critérios a diretoria considera prioritários?",
+            "color_accent": "vermelho"
+          }
+        ]
+      },
+
+      "next_steps": {
+        "heading": "Próximos Passos",
+        "style": "timeline horizontal ou lista numerada com conectores",
+        "steps": [
+          { "n": 1, "text": "Definir piloto e ferramenta" },
+          { "n": 2, "text": "Selecionar segmento da base" },
+          { "n": 3, "text": "Integrar ao Dynamics 365" },
+          { "n": 4, "text": "Medir resultados em 90 dias" }
+        ]
+      }
+    },
+
+    {
+      "id": "footer",
+      "type": "minimal_footer",
+      "content": {
+        "left": "Plaenge Porto Alegre · Inteligência de Mercado · 2026",
+        "center": "Apresentação confidencial — uso interno",
+        "right": "Douglas"
+      },
+      "style": "texto muted, font-size 13px, border-top 1px solid border_subtle, padding 32px"
+    }
+
+  ],
+
+  "technical_requirements": {
+    "responsive": "totalmente responsivo — mobile, tablet e desktop",
+    "performance": "lazy load em imagens e no iframe do Google Drive",
+    "smooth_scroll": "scroll suave nativo entre âncoras",
+    "scroll_animations": "Intersection Observer API para trigger de animações",
+    "counter_animation": "JavaScript puro para contar números ao entrar no viewport",
+    "video_embed_note": "O player do Google Drive deve iniciar automaticamente no tempo 1399s (23:19). Usar o parâmetro #t=1399 na URL do iframe. O container deve ter aspect-ratio 16/9 e border-radius 20px.",
+    "no_external_tracking": "sem analytics ou scripts de terceiros além do player do Drive",
+    "fonts": "carregar Inter via Google Fonts — weights 400, 600, 700, 800"
+  },
+
+  "design_notes": {
+    "overall_feeling": "Este site deve ter a mesma sensação de qualidade e inovação que uma apresentação da Apple ou do Linear. Fundo muito escuro, tipografia grande e bold, elementos com glassmorphism sutil, animações suaves mas impactantes. Cores predominantes: preto profundo + vermelho Plaenge #C8102E como acento principal. Não deve parecer um site de agência imobiliária — deve parecer um site de empresa de tecnologia de ponta apresentando uma proposta de transformação estratégica.",
+    "emotional_arc": "O visitante deve sentir: (1) gravidade do problema — a base represada, (2) impressão com a amplitude da pesquisa — 11 ferramentas, (3) empolgação com as demos ao vivo, (4) clareza e confiança na proposta estratégica",
+    "pitchyes_and_lais_note": "Para PitchYes e Laís, não há vídeo incorporado — apresentar com mockups visuais animados (waveform de áudio para PitchYes, conversa WhatsApp animada para Laís)",
+    "3cplus_demo_priority": "A seção de demo do 3C Plus é o ápice visual do site. Dar máximo destaque — seção própria full-width com ambiente imersivo."
+  }
+}

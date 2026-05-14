@@ -586,6 +586,7 @@ tbody tr:last-child td { border-bottom: 0; }
       <button data-view="negocios">🏠 &nbsp; Negócios <span id="nav-negocios-badge" class="nav-badge" style="display:none;">0</span></button>
       <button data-view="cadastros" data-admin="1">👥 &nbsp; Cadastros</button>
       <button data-view="usuarios" data-admin="1">🔐 &nbsp; Usuários</button>
+      <button data-view="metricas" data-admin="1">📊 &nbsp; Métricas GPI</button>
       <button data-view="config" data-admin="1">⚙️ &nbsp; Configurações</button>
     </div>
     <button id="pwa-install-btn" class="btn-install" style="display:none;">
@@ -981,7 +982,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function openMoreMenu() {
   const items = [];
-  if (isAdmin()) items.push(['cadastros','👥 Cadastros'], ['usuarios','🔐 Usuários'], ['config','⚙️ Configurações']);
+  if (isAdmin()) items.push(['cadastros','👥 Cadastros'], ['usuarios','🔐 Usuários'], ['metricas','📊 Métricas GPI'], ['config','⚙️ Configurações']);
   items.push(['__pwd','🔑 Trocar minha senha']);
   items.push(['__theme', '🌓 Alternar tema'], ['__logout','🚪 Sair']);
   openModal(`<h2>Mais opções</h2>
@@ -1041,7 +1042,7 @@ function goto(view) {
   $$('#nav button[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
   $$('#bottom-nav button[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
   closeSidebar();
-  if (view === 'cadastros' || view === 'usuarios' || view === 'config') {
+  if (['cadastros','usuarios','config','metricas'].includes(view)) {
     if (!isAdmin()) { toast('Acesso restrito a administradores','error'); return goto('dashboard'); }
   }
   const fn = VIEWS[view] || VIEWS.dashboard;
@@ -1505,25 +1506,44 @@ VIEWS.visita = () => {
     return DB.visitas_programadas.filter(p => p.gpi === gpi && p.data === today).map(p => p.imobiliaria);
   }
 
+  // Estado pendente do modal — evita passar strings com caracteres especiais no onclick
+  let _pendingVisit = null;
+
   function renderCarteira() {
     const carteira = getCarteira(selGpi);
     const programadas = getProgramadas(selGpi);
-    // Sort: programadas first, then alphabetical
-    const sorted = [...carteira].sort((a,b) => {
-      const ap = programadas.includes(a), bp = programadas.includes(b);
-      if (ap && !bp) return -1; if (!ap && bp) return 1;
-      return a.localeCompare(b);
-    });
-    $('#carteira-list').innerHTML = sorted.length
-      ? `<div class="carteira-grid">${sorted.map(nome => {
-          const isProg = programadas.includes(nome);
-          const isActive = selImob?.nome === nome;
-          return `<button class="carteira-btn${isProg?' programada':''}${isActive?' active':''}" data-nome="${escapeHtml(nome)}" onclick="_visitSelectImob('${escapeHtml(nome).replace(/'/g,"\\'")}')">
-            <div class="cb-name">${escapeHtml(nome)}</div>
-            ${isProg ? `<span class="programada-badge">📅 Programada</span>` : ''}
-          </button>`;
-        }).join('')}</div>`
-      : '<div class="muted small">Nenhuma imobiliária na carteira. Atribua imobiliárias em Cadastros → Carteira por GPI.</div>';
+
+    // Programadas como atalhos rápidos no topo
+    const progBtns = programadas.length
+      ? `<div style="margin-bottom:10px;">
+           <div class="muted small" style="margin-bottom:6px;">📅 Programadas para hoje:</div>
+           <div style="display:flex; gap:6px; flex-wrap:wrap;">${programadas.map(nome => {
+             const isActive = selImob?.nome === nome;
+             return `<button class="carteira-btn programada${isActive?' active':''}" data-nome="${escapeHtml(nome)}"
+               style="padding:8px 12px; min-width:0; flex:0 0 auto;"
+               onclick="_visitSelectImob(this.dataset.nome)">
+               <div class="cb-name" style="font-size:13px;">${escapeHtml(nome)}</div>
+             </button>`;
+           }).join('')}</div>
+         </div>`
+      : '';
+
+    // Restante da carteira em container com scroll
+    const resto = [...carteira].filter(n => !programadas.includes(n)).sort((a,b)=>a.localeCompare(b));
+    const restoBtns = resto.length
+      ? `<div style="max-height:200px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:6px;">
+           <div class="carteira-grid" style="gap:6px;">${resto.map(nome => {
+             const isActive = selImob?.nome === nome;
+             return `<button class="carteira-btn${isActive?' active':''}" data-nome="${escapeHtml(nome)}"
+               style="padding:8px 10px;"
+               onclick="_visitSelectImob(this.dataset.nome)">
+               <div class="cb-name" style="font-size:12px;">${escapeHtml(nome)}</div>
+             </button>`;
+           }).join('')}</div>
+         </div>`
+      : (!carteira.length ? '<div class="muted small">Nenhuma imobiliária na carteira. Configure em Cadastros → Carteira por GPI.</div>' : '');
+
+    $('#carteira-list').innerHTML = progBtns + restoBtns;
   }
   renderCarteira();
 
@@ -1542,7 +1562,7 @@ VIEWS.visita = () => {
 
   function updateStatus() {
     const nome = selImob?.nome || $('#visit-imob').value.trim();
-    const valid = selGpi && nome;
+    const valid = !!(selGpi && nome);
     $('#btn-visit-save').disabled = !valid;
     if (valid) $('#visit-status').textContent = `Pronto · ${selGpi} → ${nome}`;
     else if (selGpi) $('#visit-status').textContent = 'Falta selecionar a imobiliária';
@@ -1553,7 +1573,9 @@ VIEWS.visita = () => {
     if (!selGpi) return toast('Selecione o GPI', 'error');
     const nomeImob = selImob?.nome || $('#visit-imob').value.trim();
     if (!nomeImob) return toast('Selecione a imobiliária', 'error');
-    const obs = $('#visit-obs').value.trim();
+
+    // Guarda estado no closure, sem passar strings no onclick
+    _pendingVisit = { nomeImob, obs: $('#visit-obs').value.trim(), gpi: selGpi };
 
     openModal(`
       <h2>📍 Visita confirmada!</h2>
@@ -1563,30 +1585,32 @@ VIEWS.visita = () => {
         <input type="number" id="modal-corretores" min="0" value="0" style="margin-top:8px; font-size:22px; text-align:center; width:100%; padding:10px; border-radius:12px; border:2px solid var(--line); background:var(--bg-2); color:var(--text);"/>
       </div>
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button class="btn primary" style="flex:1;" onclick="_visitSave('${escapeHtml(nomeImob).replace(/'/g,"\\'")}', '${escapeHtml(obs).replace(/'/g,"\\'")}')">✓ Registrar</button>
+        <button class="btn primary" style="flex:1;" onclick="_visitSave()">✓ Registrar</button>
         <button class="btn" onclick="closeModal()">Cancelar</button>
       </div>
     `);
     setTimeout(() => $('#modal-corretores')?.focus(), 100);
   });
 
-  window._visitSave = (nomeImob, obs) => {
+  window._visitSave = () => {
+    if (!_pendingVisit) return;
+    const { nomeImob, obs, gpi } = _pendingVisit;
     const corretores = Number($('#modal-corretores')?.value) || 0;
     let imobObj = DB.imobiliarias.find(i => i.nome.toLowerCase() === nomeImob.toLowerCase());
     if (!imobObj) { imobObj = { nome: nomeImob, lat: null, lng: null, endereco: '' }; DB.imobiliarias.push(imobObj); }
     const v = {
       id: uid(), data: today, hora: new Date().toTimeString().slice(0,5),
-      gpi: selGpi, imobiliaria: imobObj.nome,
+      gpi, imobiliaria: imobObj.nome,
       corretoresImpactados: corretores, tipo: 'Visita', obs,
       criadoPor: CURRENT_USER.email,
     };
     DB.visitas.unshift(v);
-    DB.funil.push({ id: uid(), data: v.data, papel:'GPI', pessoa: selGpi, etapa: 'CONTATOS EFETIVOS', qtd: 1, obs: 'Visita: '+imobObj.nome, ref: v.id });
+    DB.funil.push({ id: uid(), data: v.data, papel:'GPI', pessoa: gpi, etapa: 'CONTATOS EFETIVOS', qtd: 1, obs: 'Visita: '+imobObj.nome, ref: v.id });
     if (corretores > 0) {
-      DB.funil.push({ id: uid(), data: v.data, papel:'GPI', pessoa: selGpi, etapa: 'INTERESSADOS', qtd: corretores, obs: 'Corretores em '+imobObj.nome, ref: v.id });
+      DB.funil.push({ id: uid(), data: v.data, papel:'GPI', pessoa: gpi, etapa: 'INTERESSADOS', qtd: corretores, obs: 'Corretores em '+imobObj.nome, ref: v.id });
     }
-    // Remove from programadas if it was scheduled
-    DB.visitas_programadas = DB.visitas_programadas.filter(p => !(p.gpi === selGpi && p.imobiliaria === imobObj.nome && p.data === today));
+    DB.visitas_programadas = DB.visitas_programadas.filter(p => !(p.gpi === gpi && p.imobiliaria === imobObj.nome && p.data === today));
+    _pendingVisit = null;
     saveDB(); closeModal(); toast('Visita registrada ✓', 'success');
     VIEWS.visita();
   };
@@ -2550,12 +2574,25 @@ function editNegocio(id) {
     delete obj.novaInteracao; // remove from object assignment
 
     if (!n.historico) n.historico = [];
+    const gpiResp = obj.responsavel || n.responsavel || '';
+    const autorEntry = { data: todayISO(), autor: CURRENT_USER?.email||'', gpi: gpiResp };
     if (isNew) {
-      n.historico.push({ data: todayISO(), etapaDe: '—', etapaPara: novaEtapa, obs: novaInt || 'Negócio cadastrado', autor: CURRENT_USER?.email||'' });
+      n.historico.push({ ...autorEntry, etapaDe: '—', etapaPara: novaEtapa, obs: novaInt || 'Negócio cadastrado' });
       n.dataUltimaAtualizacao = todayISO();
     } else if (etapaAntiga !== novaEtapa || novaInt) {
-      n.historico.push({ data: todayISO(), etapaDe: etapaAntiga, etapaPara: novaEtapa, obs: novaInt, autor: CURRENT_USER?.email||'' });
+      n.historico.push({ ...autorEntry, etapaDe: etapaAntiga, etapaPara: novaEtapa, obs: novaInt });
       n.dataUltimaAtualizacao = todayISO();
+    } else {
+      // Atualização sem mudança de etapa: registrar para contar interações
+      n.historico.push({ ...autorEntry, etapaDe: etapaAntiga, etapaPara: novaEtapa, obs: novaInt || 'Atualização' });
+      n.dataUltimaAtualizacao = todayISO();
+    }
+
+    // Detectar primeiro preenchimento de fone1 → evento CRM_FLAG
+    const foneAnterior = n.fone1 || '';
+    const foneNovo = obj.fone1 || '';
+    if (!foneAnterior && foneNovo) {
+      n.historico.push({ ...autorEntry, etapaDe: etapaAntiga, etapaPara: 'CRM_FLAG', obs: 'Contato do cliente adicionado — lançar no CRM Dynamics' });
     }
 
     Object.assign(n, obj);
@@ -2598,7 +2635,7 @@ function quickStatusNegocio(id, newStatus) {
   const old = n.status;
   if (old === newStatus) return;
   if (!n.historico) n.historico = [];
-  n.historico.push({ data: todayISO(), etapaDe: old, etapaPara: newStatus, obs: 'Atualização rápida', autor: CURRENT_USER?.email||'' });
+  n.historico.push({ data: todayISO(), etapaDe: old, etapaPara: newStatus, obs: 'Atualização rápida', autor: CURRENT_USER?.email||'', gpi: n.responsavel||'' });
   n.status = newStatus;
   n.dataUltimaAtualizacao = todayISO();
   saveDB(); toast(`${newStatus} ✓`, 'success');
@@ -2611,7 +2648,7 @@ function snoozeNegocio(id) {
   n.proximoFollowup = addDaysISO(7);
   n.dataUltimaAtualizacao = todayISO();
   if (!n.historico) n.historico = [];
-  n.historico.push({ data: todayISO(), etapaDe: n.status, etapaPara: n.status, obs: 'Snooze +7 dias', autor: CURRENT_USER?.email||'' });
+  n.historico.push({ data: todayISO(), etapaDe: n.status, etapaPara: n.status, obs: 'Snooze +7 dias', autor: CURRENT_USER?.email||'', gpi: n.responsavel||'' });
   saveDB(); toast('Follow-up adiado 7 dias ✓', 'success');
   updateNavBadges();
   if (window._reloadNegocios) _reloadNegocios();
@@ -2883,6 +2920,167 @@ function checkInviteOnLoad() {
 }
 
 /* ============= CONFIGURAÇÕES ============= */
+/* ============= MÉTRICAS GPI ============= */
+VIEWS.metricas = () => {
+  const today = todayISO();
+  const d30 = new Date(); d30.setDate(d30.getDate()-30);
+  const d30ISO = d30.toISOString().slice(0,10);
+  const mesAtual = today.slice(0,7); // 'YYYY-MM'
+
+  $('#app').innerHTML = `
+    <div class="page-head">
+      <div><h1>📊 Métricas GPI</h1><p>Interações, negócios e tempos de evolução por GPI.</p></div>
+      <div class="seg" id="met-periodo">
+        <button data-p="mes" class="active">Este mês</button>
+        <button data-p="30d">30 dias</button>
+        <button data-p="all">Tudo</button>
+      </div>
+    </div>
+    <div id="met-body"></div>
+  `;
+
+  let periodo = 'mes';
+  $$('#met-periodo button').forEach(b => b.addEventListener('click', () => {
+    $$('#met-periodo button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); periodo = b.dataset.p; renderMetricas();
+  }));
+
+  function inPeriodo(dateISO) {
+    if (!dateISO) return false;
+    if (periodo === 'mes') return dateISO.startsWith(mesAtual);
+    if (periodo === '30d') return dateISO >= d30ISO;
+    return true;
+  }
+
+  function diasEntre(d1, d2) {
+    if (!d1 || !d2) return null;
+    const ms = new Date(d2) - new Date(d1);
+    return ms > 0 ? Math.round(ms / 86400000) : null;
+  }
+
+  function avg(arr) {
+    const valid = arr.filter(x => x !== null);
+    return valid.length ? Math.round(valid.reduce((a,b)=>a+b,0)/valid.length) : null;
+  }
+
+  function renderMetricas() {
+    const gpis = DB.gpis;
+
+    // Pré-calcular por GPI
+    const stats = gpis.map(gpi => {
+      // Negócios deste GPI
+      const negs = DB.negocios.filter(n => n.responsavel === gpi);
+
+      // Novos negócios no período
+      const novos = negs.filter(n => inPeriodo(n.data)).length;
+
+      // Total de interações no período (entradas no histórico atribuídas a este GPI)
+      const interacoes = negs.reduce((acc, n) => {
+        const h = (n.historico||[]).filter(e => inPeriodo(e.data) && e.etapaPara !== '—');
+        return acc + h.length;
+      }, 0);
+
+      // Atualizações de negócios (interações excluindo criação inicial)
+      const atualizacoes = negs.reduce((acc, n) => {
+        const h = (n.historico||[]).filter(e => inPeriodo(e.data) && e.obs !== 'Negócio cadastrado' && e.etapaDe !== '—');
+        return acc + h.length;
+      }, 0);
+
+      // Tempo médio até CRM_FLAG
+      const temposCRM = negs.map(n => {
+        const ev = (n.historico||[]).find(e => e.etapaPara === 'CRM_FLAG');
+        return ev ? diasEntre(n.data, ev.data) : null;
+      });
+      const mediaCRM = avg(temposCRM);
+
+      // Tempo médio até VENDA
+      const temposVenda = negs.map(n => {
+        const ev = (n.historico||[]).find(e => e.etapaPara === 'VENDA');
+        return ev ? diasEntre(n.data, ev.data) : null;
+      });
+      const mediaVenda = avg(temposVenda);
+
+      // Vendas no período
+      const vendas = negs.filter(n => {
+        const ev = (n.historico||[]).find(e => e.etapaPara === 'VENDA' && inPeriodo(e.data));
+        return !!ev;
+      }).length;
+
+      // Visitas no período
+      const visitas = DB.visitas.filter(v => v.gpi === gpi && inPeriodo(v.data)).length;
+
+      // Treinamentos concluídos no período
+      const treins = DB.treinamentos.filter(t => t.gpi === gpi && t.status === 'concluido' && inPeriodo(t.data)).length;
+
+      return { gpi, novos, interacoes, atualizacoes, vendas, visitas, treins, mediaCRM, mediaVenda };
+    });
+
+    // Histórico detalhado de interações por GPI
+    const periodoLabel = periodo === 'mes' ? 'este mês' : periodo === '30d' ? 'últimos 30 dias' : 'todo o período';
+
+    $('#met-body').innerHTML = `
+      <div class="card mb-12" style="padding:0; overflow:hidden;">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>GPI</th>
+              <th title="Entradas no histórico de negócios">Interações</th>
+              <th title="Entradas no histórico excluindo criação">Atualizações</th>
+              <th title="Negócios criados no período">Novos negócios</th>
+              <th title="Negócios que chegaram a VENDA no período">Vendas</th>
+              <th title="Visitas em imobiliárias no período">Visitas</th>
+              <th title="Treinamentos concluídos no período">Treinos</th>
+              <th title="Dias médios da criação até ter contato (CRM)">⏱ → CRM</th>
+              <th title="Dias médios da criação até VENDA">⏱ → Venda</th>
+            </tr></thead>
+            <tbody>${stats.map(s => `<tr>
+              <td><strong>${escapeHtml(s.gpi)}</strong></td>
+              <td><span class="badge blue">${s.interacoes}</span></td>
+              <td><span class="badge gray">${s.atualizacoes}</span></td>
+              <td><span class="badge gold">${s.novos}</span></td>
+              <td><span class="badge green">${s.vendas}</span></td>
+              <td>${s.visitas}</td>
+              <td>${s.treins}</td>
+              <td>${s.mediaCRM !== null ? s.mediaCRM+'d' : '<span class="muted">—</span>'}</td>
+              <td>${s.mediaVenda !== null ? s.mediaVenda+'d' : '<span class="muted">—</span>'}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>
+        <div class="muted small" style="padding:10px 16px;">Período: ${periodoLabel}. Interações = entradas no histórico de negócios atribuídas ao GPI responsável.</div>
+      </div>
+
+      <div class="grid grid-2 mb-12">
+        ${stats.map(s => `
+        <div class="card">
+          <div class="card-title">${escapeHtml(s.gpi)}</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
+            ${[
+              ['Interações', s.interacoes, 'blue'],
+              ['Atualizações', s.atualizacoes, 'gray'],
+              ['Novos negócios', s.novos, 'gold'],
+              ['Vendas', s.vendas, 'green'],
+              ['Visitas', s.visitas, ''],
+              ['Treinos', s.treins, ''],
+            ].map(([label, val, cls]) => `
+              <div style="background:var(--panel-2); border-radius:10px; padding:10px 12px; border:1px solid var(--line);">
+                <div class="muted small">${label}</div>
+                <div style="font-size:22px; font-weight:800; margin-top:2px;">${cls ? `<span class="badge ${cls}" style="font-size:16px;">${val}</span>` : val}</div>
+              </div>`).join('')}
+            <div style="background:var(--panel-2); border-radius:10px; padding:10px 12px; border:1px solid var(--line); grid-column:span 2;">
+              <div class="muted small">⏱ Tempo médio criação → CRM</div>
+              <div style="font-size:18px; font-weight:700; margin-top:2px;">${s.mediaCRM !== null ? s.mediaCRM+' dias' : '—'}</div>
+              <div class="muted small" style="margin-top:6px;">⏱ Tempo médio criação → Venda</div>
+              <div style="font-size:18px; font-weight:700; margin-top:2px;">${s.mediaVenda !== null ? s.mediaVenda+' dias' : '—'}</div>
+            </div>
+          </div>
+        </div>`).join('')}
+      </div>
+    `;
+  }
+
+  renderMetricas();
+};
+
 VIEWS.config = () => {
   $('#app').innerHTML = `
     <div class="page-head"><div><h1>Configurações</h1><p>Backup, exportação, metas, integração com nuvem.</p></div></div>

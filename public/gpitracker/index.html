@@ -507,6 +507,45 @@ tbody tr:last-child td { border-bottom: 0; }
 .login-card .form { gap: 14px; text-align: left; }
 
 @media print { .sidebar, .topbar, .toolbar, .btn, .bottom-nav { display: none !important; } }
+
+/* CARTEIRA / VISITA PROGRAMADA */
+.carteira-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.carteira-btn {
+  display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; border-radius: 12px;
+  background: var(--panel-2); border: 2px solid var(--line); cursor: pointer; text-align: left;
+  color: var(--text); transition: all .15s;
+}
+.carteira-btn:hover, .carteira-btn.active { border-color: var(--accent); background: rgba(212,176,106,.07); }
+.carteira-btn .cb-name { font-weight: 700; font-size: 14px; }
+.carteira-btn.programada { border-color: rgba(59,130,246,.6); background: rgba(59,130,246,.08); }
+.programada-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(59,130,246,.18); color:#93c5fd; margin-bottom:8px; }
+[data-theme="light"] .programada-badge { color: #2563eb; background: rgba(59,130,246,.12); }
+
+/* CRM FLAG */
+.crm-flag {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px;
+  background: rgba(168,85,247,.15); color: #d8b4fe; border-radius: 999px;
+  font-size: 10px; font-weight: 800; letter-spacing: .3px; white-space: nowrap;
+}
+[data-theme="light"] .crm-flag { color: #7c3aed; background: rgba(168,85,247,.12); }
+
+/* QUICK UPDATE negócios */
+.quick-status { padding: 4px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg-2); color: var(--text); font-size: 12px; cursor: pointer; }
+.quick-status:focus { outline: none; border-color: var(--accent); }
+.btn-snooze { padding: 4px 8px; font-size: 11px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg-2); color: var(--muted); cursor: pointer; white-space: nowrap; }
+.btn-snooze:hover { border-color: var(--accent); color: var(--accent-2); }
+
+/* TREINAMENTO CARD */
+.trein-card {
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  display:flex; align-items:center; gap:12px;
+}
+.trein-card .tc-ico { font-size: 24px; }
+.trein-card .tc-body { flex:1; }
+.trein-card .tc-title { font-weight: 700; font-size: 14px; }
+.trein-card .tc-meta { font-size: 12px; color: var(--muted); margin-top:2px; }
+.trein-card.pendente { border-color: rgba(245,158,11,.5); background: rgba(245,158,11,.06); }
+.trein-card.concluido { border-color: rgba(34,197,94,.4); background: rgba(34,197,94,.05); }
 </style>
 </head>
 <body data-theme="dark">
@@ -542,6 +581,7 @@ tbody tr:last-child td { border-bottom: 0; }
     <div class="nav" id="nav">
       <button data-view="dashboard" class="active">📊 &nbsp; Dashboard</button>
       <button data-view="visita">📍 &nbsp; Registrar Visita</button>
+      <button data-view="treinamento">📚 &nbsp; Treinamentos</button>
       <button data-view="funil">⚡ &nbsp; Funil GPI</button>
       <button data-view="negocios">🏠 &nbsp; Negócios <span id="nav-negocios-badge" class="nav-badge" style="display:none;">0</span></button>
       <button data-view="cadastros" data-admin="1">👥 &nbsp; Cadastros</button>
@@ -580,7 +620,7 @@ tbody tr:last-child td { border-bottom: 0; }
 <nav id="bottom-nav" class="bottom-nav" style="display:none;">
   <button data-view="dashboard" class="active"><span class="ico">📊</span><span>Dashboard</span></button>
   <button data-view="visita"><span class="ico">📍</span><span>Visita</span></button>
-  <button data-view="funil"><span class="ico">⚡</span><span>Funil</span></button>
+  <button data-view="treinamento"><span class="ico">📚</span><span>Treino</span></button>
   <button data-view="negocios"><span class="ico">🏠</span><span>Negócios</span><span id="bnav-negocios-badge" class="bnav-badge" style="display:none;">0</span></button>
   <button data-view="more"><span class="ico">⋯</span><span>Mais</span></button>
 </nav>
@@ -732,6 +772,11 @@ function ensureSeedUsers(db) {
   (typeof SEED_ADMIN_USERS !== 'undefined' ? SEED_ADMIN_USERS : []).forEach(u => { if (idx(u.email) < 0) db.users.push({...u}); });
   SEED_GPI_USERS.forEach(u => { if (idx(u.email) < 0) db.users.push({...u}); });
   
+  // Garantir campos novos em DBs antigas
+  db.treinamentos = db.treinamentos || [];
+  db.visitas_programadas = db.visitas_programadas || [];
+  db.carteira = db.carteira || {};
+
   // MIGRAR LEADS ANTIGOS PARA NEGÓCIOS
   db.negocios = db.negocios || [];
   if (db.leads && db.leads.length > 0) {
@@ -768,9 +813,12 @@ function loadLocalDB() {
   return {
     negocios: seed.negocios || [],
     visitas: [],
+    treinamentos: [],
+    visitas_programadas: [],
     funil: [],
     imobiliarias: (seed.imobiliarias || []).map(normImob),
     corretores: [],
+    carteira: {},
     gpis: ['Nishi','Renato','Raffael','Jardim'],
     executivos: ['Aline','Gisiely','Peano','Rodrigo','Douglas'],
     metaMes: { gpiContatos: 4000, execProspeccao: 10000 },
@@ -887,17 +935,17 @@ function showApp() {
   $('#user-role').textContent = assoc ? `${roleTxt} · ${assoc}` : roleTxt;
   // hide admin-only nav for viewers
   $$('#nav button[data-admin]').forEach(b => { b.style.display = isAdmin() ? '' : 'none'; });
-  // try GPS
-  requestGPS();
   goto('dashboard');
-  // alerta de leads pendentes
+  // alertas ao abrir o app
   setTimeout(() => {
-    updateLeadBadges();
-    const stale = staleLeadsForScope().length;
-    const due = dueLeadsForScope().length;
-    if (stale) toast(`⚠️ ${stale} lead${stale>1?'s':''} sem update há mais de ${LEAD_STALE_DAYS} dias. Toque em 🎯 Leads para atualizar.`,'error');
-    else if (due) toast(`📅 ${due} follow-up${due>1?'s':''} programado${due>1?'s':''} para os próximos dias.`,'success');
-  }, 500);
+    updateNavBadges();
+    const stale = staleNegociosForScope().length;
+    const due   = dueNegociosForScope().length;
+    if (stale) toast(`⚠️ ${stale} negócio${stale>1?'s':''} sem update há mais de ${LEAD_STALE_DAYS} dias.`,'error');
+    else if (due) toast(`📅 ${due} follow-up${due>1?'s':''} nos próximos dias.`,'success');
+    // verificar treinamentos pendentes de confirmação (passaram 1h do horário)
+    checkTreinamentosPendentes();
+  }, 600);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -998,7 +1046,7 @@ function goto(view) {
   }
   const fn = VIEWS[view] || VIEWS.dashboard;
   fn();
-  if (typeof updateLeadBadges === 'function') updateLeadBadges();
+  updateNavBadges();
 }
 function openSidebar(){ $('#sidebar').classList.add('open'); $('#scrim').classList.add('show'); }
 function closeSidebar(){ $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('show'); }
@@ -1368,13 +1416,20 @@ function renderChartAtividade() {
 }
 
 /* ============= REGISTRAR VISITA ============= */
-VIEWS.visita = async () => {
-  const visitasHoje = DB.visitas.filter(v => v.data === todayISO()).length;
+VIEWS.visita = () => {
+  const today = todayISO();
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+  const tomorrowISO = tomorrow.toISOString().slice(0,10);
+  const visitasHoje = DB.visitas.filter(v => v.data === today).length;
   const myGpi = CURRENT_USER?.gpiAssoc || null;
   const lockGpi = !isAdmin() && !!myGpi;
+
+  // Determine initially selected GPI for display
+  const defaultGpi = lockGpi ? myGpi : (DB.gpis[0] || null);
+
   $('#app').innerHTML = `
     <div class="page-head">
-      <div><h1>Registrar Visita</h1><p>Imobiliárias próximas detectadas via GPS · 1 toque pra registrar.</p></div>
+      <div><h1>Registrar Visita</h1><p>Selecione a imobiliária da sua carteira e registre a visita.</p></div>
       <span class="badge gold">${visitasHoje} hoje</span>
     </div>
 
@@ -1384,39 +1439,40 @@ VIEWS.visita = async () => {
           ? `<div class="card-title">1. Visitando como <span class="badge gold">${escapeHtml(myGpi)}</span></div>`
           : `<div class="card-title">1. Quem está visitando?</div>
              <div class="chips" id="visit-gpi">
-               ${DB.gpis.map(g => `<div class="chip ${(CURRENT_USER && (CURRENT_USER.gpiAssoc===g || CURRENT_USER.nome?.includes(g)))?'active':''}" data-g="${escapeHtml(g)}">${escapeHtml(g)}</div>`).join('')}
+               ${DB.gpis.map((g,i) => `<div class="chip ${i===0?'active':''}" data-g="${escapeHtml(g)}">${escapeHtml(g)}</div>`).join('')}
              </div>`
         }
 
-        <div class="card-title mt-20">2. Imobiliária <span id="gps-state" class="gps-pill warn">⏳ buscando GPS...</span></div>
-        <div id="nearby-list"></div>
+        <div class="card-title mt-20">2. Imobiliária</div>
+        <div id="carteira-list"></div>
 
-        <div style="margin-top: 14px;">
-          <label>Buscar / Outra</label>
-          <div class="autocomplete">
-            <input id="visit-imob" placeholder="Digite o nome da imobiliária..." autocomplete="off"/>
-            <div id="visit-imob-list" class="autocomplete-list"></div>
+        <details style="margin-top:10px;">
+          <summary style="cursor:pointer; color:var(--muted); font-size:13px;">🔍 Buscar outra imobiliária</summary>
+          <div style="margin-top:10px;">
+            <div class="autocomplete">
+              <input id="visit-imob" placeholder="Digite o nome da imobiliária..." autocomplete="off"/>
+              <div id="visit-imob-list" class="autocomplete-list"></div>
+            </div>
+            <button class="btn sm mt-8" onclick="addImobNova()">+ Cadastrar nova imobiliária</button>
           </div>
-          <button class="btn sm mt-12" onclick="addImobNova()">+ Cadastrar nova imobiliária aqui</button>
-        </div>
+        </details>
 
-        <div class="card-title mt-20">3. Resumo (opcional)</div>
-        <div class="form-row">
-          <div><label>Corretores impactados</label><input type="number" id="visit-corretores" min="0" value="0"/></div>
-          <div><label>Tipo</label>
-            <select id="visit-tipo"><option>Visita</option><option>Treinamento</option><option>Disparo</option><option>Reunião</option><option>Ação de campo</option></select>
-          </div>
-        </div>
-        <div><label>Observação</label><textarea id="visit-obs" placeholder="Ex: apresentei lançamento Verdant..."></textarea></div>
+        <div class="card-title mt-20">3. Observação (opcional)</div>
+        <div><textarea id="visit-obs" placeholder="Ex: apresentei lançamento Verdant..."></textarea></div>
       </div>
 
       <div class="card visit-card">
         <div class="big-emoji">📍</div>
         <h2>Tudo pronto?</h2>
-        <div id="visit-status" class="visit-status">Selecione o GPI e a imobiliária</div>
+        <div id="visit-status" class="visit-status">Selecione a imobiliária</div>
         <button class="btn primary giant mt-20" id="btn-visit-save" disabled>📍 REGISTRAR VISITA</button>
-        <button class="btn ghost mt-12 sm" id="btn-visit-nogps">Registrar sem GPS</button>
       </div>
+    </div>
+
+    <div class="card mb-12">
+      <div class="card-title">📅 Programar visitas para amanhã <span class="muted small">(${tomorrowISO})</span></div>
+      <p class="muted small" style="margin:4px 0 12px;">Marque quais imobiliárias você planeja visitar amanhã. Elas ficarão destacadas quando você abrir o app.</p>
+      <div id="program-list"></div>
     </div>
 
     <div class="card">
@@ -1425,120 +1481,167 @@ VIEWS.visita = async () => {
     </div>
   `;
 
-  let selGpi = lockGpi ? myGpi : null; let selImob = null;
+  let selGpi = lockGpi ? myGpi : defaultGpi;
+  let selImob = null;
+
   if (!lockGpi) {
     $$('#visit-gpi .chip').forEach(c => {
       if (c.classList.contains('active')) selGpi = c.dataset.g;
       c.addEventListener('click', () => {
         $$('#visit-gpi .chip').forEach(x => x.classList.remove('active'));
-        c.classList.add('active'); selGpi = c.dataset.g; updateStatus();
+        c.classList.add('active'); selGpi = c.dataset.g;
+        selImob = null; renderCarteira(); updateStatus();
       });
     });
   }
 
-  // GPS + nearby
-  const gps = await requestGPS();
-  const gpsEl = $('#gps-state');
-  if (gps) { gpsEl.className = 'gps-pill'; gpsEl.innerHTML = `📡 ${Math.round(gps.accuracy)}m`; }
-  else { gpsEl.className = 'gps-pill err'; gpsEl.innerHTML = '⚠️ GPS off'; }
-  renderNearby(gps);
+  function getCarteira(gpi) {
+    if (!gpi) return DB.imobiliarias.map(i => i.nome);
+    const assigned = DB.carteira[gpi];
+    return (assigned && assigned.length) ? assigned : DB.imobiliarias.map(i => i.nome);
+  }
 
-  setupAutocomplete($('#visit-imob'), $('#visit-imob-list'), DB.imobiliarias.map(i => i.nome), val => { selectImob({ nome: val }); });
+  function getProgramadas(gpi) {
+    return DB.visitas_programadas.filter(p => p.gpi === gpi && p.data === today).map(p => p.imobiliaria);
+  }
 
-  function selectImob(imob) {
-    selImob = imob;
-    $('#visit-imob').value = imob.nome;
-    $$('#nearby-list .nearby-btn').forEach(b => b.classList.toggle('active', b.dataset.nome === imob.nome));
+  function renderCarteira() {
+    const carteira = getCarteira(selGpi);
+    const programadas = getProgramadas(selGpi);
+    // Sort: programadas first, then alphabetical
+    const sorted = [...carteira].sort((a,b) => {
+      const ap = programadas.includes(a), bp = programadas.includes(b);
+      if (ap && !bp) return -1; if (!ap && bp) return 1;
+      return a.localeCompare(b);
+    });
+    $('#carteira-list').innerHTML = sorted.length
+      ? `<div class="carteira-grid">${sorted.map(nome => {
+          const isProg = programadas.includes(nome);
+          const isActive = selImob?.nome === nome;
+          return `<button class="carteira-btn${isProg?' programada':''}${isActive?' active':''}" data-nome="${escapeHtml(nome)}" onclick="_visitSelectImob('${escapeHtml(nome).replace(/'/g,"\\'")}')">
+            <div class="cb-name">${escapeHtml(nome)}</div>
+            ${isProg ? `<span class="programada-badge">📅 Programada</span>` : ''}
+          </button>`;
+        }).join('')}</div>`
+      : '<div class="muted small">Nenhuma imobiliária na carteira. Atribua imobiliárias em Cadastros → Carteira por GPI.</div>';
+  }
+  renderCarteira();
+
+  window._visitSelectImob = (nome) => {
+    const imobObj = DB.imobiliarias.find(i => i.nome.toLowerCase() === nome.toLowerCase()) || { nome };
+    selImob = imobObj;
+    $('#visit-imob').value = nome;
+    $$('#carteira-list .carteira-btn').forEach(b => b.classList.toggle('active', b.dataset.nome === nome));
     updateStatus();
-  }
-  window._selectImob = selectImob;
+  };
 
-  function renderNearby(gps) {
-    if (!gps) {
-      $('#nearby-list').innerHTML = '<div class="muted small">GPS indisponível — use a busca abaixo.</div>';
-      return;
-    }
-    const withCoords = DB.imobiliarias.filter(i => i.lat && i.lng).map(i => ({...i, dist: haversine(gps, {lat:i.lat,lng:i.lng})}));
-    withCoords.sort((a,b)=>a.dist-b.dist);
-    const top = withCoords.slice(0,5);
-    if (!top.length) {
-      $('#nearby-list').innerHTML = '<div class="muted small">Nenhuma imobiliária com coordenadas ainda. Registre a primeira visita e o GPS será salvo automaticamente para próximas detecções.</div>';
-      return;
-    }
-    $('#nearby-list').innerHTML = `<div class="nearby-grid">${top.map(i=>`
-      <button class="nearby-btn" data-nome="${escapeHtml(i.nome)}" onclick='_selectImob(${JSON.stringify(i)})'>
-        <div class="nb-name">${escapeHtml(i.nome)}</div>
-        <div class="nb-dist">📍 ${i.dist<1?Math.round(i.dist*1000)+' m':i.dist.toFixed(1)+' km'}</div>
-        ${i.endereco?`<div class="nb-meta truncate">${escapeHtml(i.endereco)}</div>`:''}
-      </button>`).join('')}</div>`;
-  }
-
-  function updateStatus() {
-    const valid = selGpi && (selImob || $('#visit-imob').value.trim());
-    $('#btn-visit-save').disabled = !valid;
-    if (selGpi && (selImob || $('#visit-imob').value.trim())) $('#visit-status').textContent = `Pronto · ${selGpi} → ${selImob?.nome || $('#visit-imob').value}`;
-    else if (selGpi) $('#visit-status').textContent = `Falta a imobiliária...`;
-    else $('#visit-status').textContent = `Selecione GPI e imobiliária`;
-  }
+  setupAutocomplete($('#visit-imob'), $('#visit-imob-list'), DB.imobiliarias.map(i => i.nome), val => {
+    window._visitSelectImob(val);
+  });
   $('#visit-imob').addEventListener('input', () => { selImob = null; updateStatus(); });
 
-  function saveVisit(allowNoGps) {
+  function updateStatus() {
+    const nome = selImob?.nome || $('#visit-imob').value.trim();
+    const valid = selGpi && nome;
+    $('#btn-visit-save').disabled = !valid;
+    if (valid) $('#visit-status').textContent = `Pronto · ${selGpi} → ${nome}`;
+    else if (selGpi) $('#visit-status').textContent = 'Falta selecionar a imobiliária';
+    else $('#visit-status').textContent = 'Selecione GPI e imobiliária';
+  }
+
+  $('#btn-visit-save').addEventListener('click', () => {
     if (!selGpi) return toast('Selecione o GPI', 'error');
-    const nomeImob = (selImob?.nome || $('#visit-imob').value.trim());
-    if (!nomeImob) return toast('Selecione/digite a imobiliária', 'error');
-    if (!GPS_POSITION && !allowNoGps) return toast('Aguarde o GPS ou clique em "Registrar sem GPS"', 'error');
+    const nomeImob = selImob?.nome || $('#visit-imob').value.trim();
+    if (!nomeImob) return toast('Selecione a imobiliária', 'error');
+    const obs = $('#visit-obs').value.trim();
 
+    openModal(`
+      <h2>📍 Visita confirmada!</h2>
+      <p style="color:var(--muted);">${escapeHtml(selGpi)} → ${escapeHtml(nomeImob)}</p>
+      <div style="margin: 20px 0;">
+        <label style="font-weight:700;">Quantos corretores estavam na imobiliária?</label>
+        <input type="number" id="modal-corretores" min="0" value="0" style="margin-top:8px; font-size:22px; text-align:center; width:100%; padding:10px; border-radius:12px; border:2px solid var(--line); background:var(--bg-2); color:var(--text);"/>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn primary" style="flex:1;" onclick="_visitSave('${escapeHtml(nomeImob).replace(/'/g,"\\'")}', '${escapeHtml(obs).replace(/'/g,"\\'")}')">✓ Registrar</button>
+        <button class="btn" onclick="closeModal()">Cancelar</button>
+      </div>
+    `);
+    setTimeout(() => $('#modal-corretores')?.focus(), 100);
+  });
+
+  window._visitSave = (nomeImob, obs) => {
+    const corretores = Number($('#modal-corretores')?.value) || 0;
     let imobObj = DB.imobiliarias.find(i => i.nome.toLowerCase() === nomeImob.toLowerCase());
-    if (!imobObj) {
-      imobObj = { nome: nomeImob, lat: GPS_POSITION?.lat ?? null, lng: GPS_POSITION?.lng ?? null, endereco: '' };
-      DB.imobiliarias.push(imobObj);
-    } else if (!imobObj.lat && GPS_POSITION) {
-      imobObj.lat = GPS_POSITION.lat; imobObj.lng = GPS_POSITION.lng;
-    }
-
+    if (!imobObj) { imobObj = { nome: nomeImob, lat: null, lng: null, endereco: '' }; DB.imobiliarias.push(imobObj); }
     const v = {
-      id: uid(), data: todayISO(), hora: new Date().toTimeString().slice(0,5),
+      id: uid(), data: today, hora: new Date().toTimeString().slice(0,5),
       gpi: selGpi, imobiliaria: imobObj.nome,
-      lat: GPS_POSITION?.lat ?? null, lng: GPS_POSITION?.lng ?? null, accuracy: GPS_POSITION?.accuracy ?? null,
-      corretoresImpactados: Number($('#visit-corretores').value)||0,
-      tipo: $('#visit-tipo').value, obs: $('#visit-obs').value.trim(),
+      corretoresImpactados: corretores, tipo: 'Visita', obs,
       criadoPor: CURRENT_USER.email,
     };
     DB.visitas.unshift(v);
     DB.funil.push({ id: uid(), data: v.data, papel:'GPI', pessoa: selGpi, etapa: 'CONTATOS EFETIVOS', qtd: 1, obs: 'Visita: '+imobObj.nome, ref: v.id });
-    if (v.corretoresImpactados > 0) {
-      DB.funil.push({ id: uid(), data: v.data, papel:'GPI', pessoa: selGpi, etapa: 'INTERESSADOS', qtd: v.corretoresImpactados, obs:'Corretores impactados em '+imobObj.nome, ref: v.id });
+    if (corretores > 0) {
+      DB.funil.push({ id: uid(), data: v.data, papel:'GPI', pessoa: selGpi, etapa: 'INTERESSADOS', qtd: corretores, obs: 'Corretores em '+imobObj.nome, ref: v.id });
     }
-    saveDB(); toast('Visita registrada ✓', 'success');
+    // Remove from programadas if it was scheduled
+    DB.visitas_programadas = DB.visitas_programadas.filter(p => !(p.gpi === selGpi && p.imobiliaria === imobObj.nome && p.data === today));
+    saveDB(); closeModal(); toast('Visita registrada ✓', 'success');
     VIEWS.visita();
+  };
+
+  // Programar visitas para amanhã
+  function renderProgramList() {
+    const carteira = getCarteira(selGpi || (lockGpi ? myGpi : DB.gpis[0]));
+    const gpi = selGpi || (lockGpi ? myGpi : DB.gpis[0]);
+    const jaProgram = DB.visitas_programadas.filter(p => p.gpi === gpi && p.data === tomorrowISO).map(p => p.imobiliaria);
+    if (!carteira.length) { $('#program-list').innerHTML = '<div class="muted small">Nenhuma imobiliária na carteira.</div>'; return; }
+    $('#program-list').innerHTML = `<div class="carteira-grid">${carteira.sort((a,b)=>a.localeCompare(b)).map(nome => {
+      const on = jaProgram.includes(nome);
+      return `<button class="carteira-btn${on?' programada active':''}" onclick="_toggleProgramar('${escapeHtml(nome).replace(/'/g,"\\'")}')">
+        <div class="cb-name">${escapeHtml(nome)}</div>
+        ${on ? `<span class="programada-badge">✓ Programada</span>` : '<span style="font-size:11px; color:var(--muted);">Toque para programar</span>'}
+      </button>`;
+    }).join('')}</div>`;
   }
-  $('#btn-visit-save').addEventListener('click', () => saveVisit(false));
-  $('#btn-visit-nogps').addEventListener('click', () => saveVisit(true));
+  renderProgramList();
+
+  window._toggleProgramar = (nome) => {
+    const gpi = selGpi || (lockGpi ? myGpi : DB.gpis[0]);
+    if (!gpi) return toast('Selecione o GPI primeiro', 'error');
+    const idx = DB.visitas_programadas.findIndex(p => p.gpi === gpi && p.imobiliaria === nome && p.data === tomorrowISO);
+    if (idx >= 0) {
+      DB.visitas_programadas.splice(idx, 1);
+      toast(`Removido: ${nome}`, 'success');
+    } else {
+      DB.visitas_programadas.push({ id: uid(), gpi, imobiliaria: nome, data: tomorrowISO, criadoPor: CURRENT_USER.email });
+      toast(`Programado: ${nome}`, 'success');
+    }
+    saveDB(); renderProgramList();
+  };
 
   const last = DB.visitas.slice(0,15);
   $('#visit-list').innerHTML = last.length ? `<div class="table-wrap"><table>
-    <thead><tr><th>Data</th><th>Hora</th><th>GPI</th><th>Imobiliária</th><th>Tipo</th><th>Impact.</th><th>GPS</th>${isAdmin()?'<th></th>':''}</tr></thead>
+    <thead><tr><th>Data</th><th>Hora</th><th>GPI</th><th>Imobiliária</th><th>Corretores</th><th>Obs</th>${isAdmin()?'<th></th>':''}</tr></thead>
     <tbody>${last.map(v => `<tr>
       <td>${v.data}</td><td>${v.hora||''}</td><td>${escapeHtml(v.gpi||'')}</td>
       <td>${escapeHtml(v.imobiliaria||'')}</td>
-      <td><span class="badge gray">${escapeHtml(v.tipo||'Visita')}</span></td>
       <td>${v.corretoresImpactados||0}</td>
-      <td>${v.lat ? `<a href="https://maps.google.com/?q=${v.lat},${v.lng}" target="_blank">📍</a>` : '—'}</td>
+      <td class="muted small truncate" style="max-width:160px;">${escapeHtml(v.obs||'')}</td>
       ${isAdmin()?`<td><button class="btn sm danger" onclick="deleteVisit('${v.id}')">×</button></td>`:''}
-    </tr>`).join('')}</tbody></table></div>` : '<div class="empty"><div class="icon-big">📍</div>Nenhuma visita ainda hoje. Faça a primeira do dia!</div>';
+    </tr>`).join('')}</tbody></table></div>`
+    : '<div class="empty"><div class="icon-big">📍</div>Nenhuma visita hoje ainda. Faça a primeira do dia!</div>';
 };
 
 function addImobNova() {
   const nome = prompt('Nome da nova imobiliária:');
   if (!nome) return;
-  const t = nome.trim();
-  if (!t) return;
+  const t = nome.trim(); if (!t) return;
   if (DB.imobiliarias.some(i => i.nome.toLowerCase() === t.toLowerCase())) return toast('Já existe na lista','error');
-  DB.imobiliarias.push({ nome: t, lat: GPS_POSITION?.lat || null, lng: GPS_POSITION?.lng || null, endereco: '' });
+  DB.imobiliarias.push({ nome: t, lat: null, lng: null, endereco: '' });
   saveDB();
-  $('#visit-imob').value = t;
-  $('#visit-imob').dispatchEvent(new Event('input'));
-  toast('Imobiliária cadastrada ✓ Selecione-a no campo','success');
+  toast('Imobiliária cadastrada ✓ Selecione-a no campo abaixo','success');
   VIEWS.visita();
 }
 
@@ -1548,6 +1651,185 @@ function deleteVisit(id) {
   DB.visitas = DB.visitas.filter(v => v.id !== id);
   DB.funil = DB.funil.filter(f => f.ref !== id);
   saveDB(); VIEWS.visita();
+}
+
+/* ============= TREINAMENTOS ============= */
+VIEWS.treinamento = () => {
+  const myGpi = CURRENT_USER?.gpiAssoc || null;
+  const lockGpi = !isAdmin() && !!myGpi;
+  const today = todayISO();
+  const now = new Date();
+  const defaultDate = new Date(); defaultDate.setDate(defaultDate.getDate()+1);
+  const defaultDateISO = defaultDate.toISOString().slice(0,10);
+
+  const treinamentos = DB.treinamentos.slice().sort((a,b) => (b.data+b.hora).localeCompare(a.data+a.hora));
+  const pendentes = treinamentos.filter(t => t.status === 'pendente');
+  const concluidos = treinamentos.filter(t => t.status === 'concluido');
+
+  $('#app').innerHTML = `
+    <div class="page-head">
+      <div><h1>Treinamentos</h1><p>Agende e registre treinamentos nas imobiliárias.</p></div>
+      <span class="badge gold">${treinamentos.length} total</span>
+    </div>
+
+    <div class="grid grid-2 mb-12">
+      <div class="card">
+        <div class="card-title">📅 Agendar novo treinamento</div>
+
+        ${lockGpi
+          ? `<div style="margin-bottom:12px;">GPI: <span class="badge gold">${escapeHtml(myGpi)}</span></div>`
+          : `<div><label>GPI</label>
+             <select id="trein-gpi">
+               ${DB.gpis.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}
+             </select></div>`
+        }
+
+        <div><label>Imobiliária</label>
+          <div class="autocomplete">
+            <input id="trein-imob" placeholder="Selecione a imobiliária..." autocomplete="off"/>
+            <div id="trein-imob-list" class="autocomplete-list"></div>
+          </div>
+        </div>
+
+        <div class="form-row mt-8">
+          <div><label>Data</label><input type="date" id="trein-data" value="${defaultDateISO}"/></div>
+          <div><label>Horário</label><input type="time" id="trein-hora" value="09:00"/></div>
+        </div>
+
+        <div class="mt-8"><label>Observação (opcional)</label>
+          <textarea id="trein-obs" placeholder="Ex: Apresentação do lançamento Verdant..."></textarea>
+        </div>
+
+        <button class="btn primary mt-12" onclick="_saveTreinamento()">📚 Agendar Treinamento</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⏳ Pendentes <span class="pill">${pendentes.length}</span></div>
+        <div id="trein-pendentes">
+          ${pendentes.length ? pendentes.map(t => renderTreinCard(t)).join('') : '<div class="empty small">Nenhum treinamento pendente.</div>'}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✅ Concluídos <span class="pill">${concluidos.length}</span></div>
+      <div id="trein-concluidos" style="display:grid; gap:8px;">
+        ${concluidos.length ? concluidos.slice(0,20).map(t => renderTreinCard(t)).join('') : '<div class="empty small">Nenhum treinamento concluído ainda.</div>'}
+      </div>
+    </div>
+  `;
+
+  const gpiForCarteira = lockGpi ? myGpi : ($('#trein-gpi')?.value || DB.gpis[0]);
+  const carteira = (DB.carteira[gpiForCarteira] && DB.carteira[gpiForCarteira].length)
+    ? DB.carteira[gpiForCarteira]
+    : DB.imobiliarias.map(i => i.nome);
+  setupAutocomplete($('#trein-imob'), $('#trein-imob-list'), carteira, val => { $('#trein-imob').value = val; });
+
+  if (!lockGpi) {
+    $('#trein-gpi')?.addEventListener('change', () => {
+      const gpi = $('#trein-gpi').value;
+      const cart = (DB.carteira[gpi] && DB.carteira[gpi].length) ? DB.carteira[gpi] : DB.imobiliarias.map(i => i.nome);
+      setupAutocomplete($('#trein-imob'), $('#trein-imob-list'), cart, val => { $('#trein-imob').value = val; });
+    });
+  }
+
+  window._saveTreinamento = () => {
+    const gpi = lockGpi ? myGpi : $('#trein-gpi').value;
+    const imob = $('#trein-imob').value.trim();
+    const data = $('#trein-data').value;
+    const hora = $('#trein-hora').value;
+    const obs  = $('#trein-obs').value.trim();
+    if (!gpi) return toast('Selecione o GPI', 'error');
+    if (!imob) return toast('Selecione a imobiliária', 'error');
+    if (!data) return toast('Informe a data', 'error');
+    DB.treinamentos.push({ id: uid(), gpi, imobiliaria: imob, data, hora, obs, status: 'pendente', criadoPor: CURRENT_USER.email });
+    saveDB(); toast('Treinamento agendado ✓', 'success');
+    VIEWS.treinamento();
+  };
+
+  window._concluirTreinamento = (id) => {
+    openModal(`
+      <h2>✅ Concluir Treinamento</h2>
+      <div style="margin:20px 0;">
+        <label style="font-weight:700;">Quantos corretores participaram?</label>
+        <input type="number" id="modal-trein-corretores" min="0" value="0"
+          style="margin-top:8px; font-size:22px; text-align:center; width:100%; padding:10px;
+          border-radius:12px; border:2px solid var(--line); background:var(--bg-2); color:var(--text);"/>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn primary" style="flex:1;" onclick="_confirmarConclusao('${id}')">✓ Confirmar</button>
+        <button class="btn" onclick="closeModal()">Cancelar</button>
+      </div>
+    `);
+    setTimeout(() => $('#modal-trein-corretores')?.focus(), 100);
+  };
+
+  window._confirmarConclusao = (id) => {
+    const t = DB.treinamentos.find(x => x.id === id);
+    if (!t) return closeModal();
+    const qtd = Number(($('#modal-trein-corretores') || $('#modal-check-trein'))?.value) || 0;
+    t.status = 'concluido';
+    t.corretoresParticiparam = qtd;
+    t.concluidoEm = new Date().toISOString();
+    if (qtd > 0) {
+      DB.funil.push({ id: uid(), data: t.data, papel:'GPI', pessoa: t.gpi, etapa:'CONTATOS EFETIVOS', qtd, obs:'Treinamento: '+t.imobiliaria, ref: t.id });
+    }
+    saveDB(); closeModal(); toast('Treinamento concluído ✓', 'success');
+    VIEWS.treinamento();
+  };
+
+  window._deleteTreinamento = (id) => {
+    if (!isAdmin()) return toast('Apenas admin','error');
+    if (!confirm('Excluir treinamento?')) return;
+    DB.treinamentos = DB.treinamentos.filter(x => x.id !== id);
+    saveDB(); VIEWS.treinamento();
+  };
+};
+
+function renderTreinCard(t) {
+  const isPendente = t.status === 'pendente';
+  return `<div class="trein-card ${t.status}" style="margin-bottom:8px;">
+    <div class="tc-ico">${isPendente ? '📚' : '✅'}</div>
+    <div class="tc-body">
+      <div class="tc-title">${escapeHtml(t.imobiliaria)}</div>
+      <div class="tc-meta">${escapeHtml(t.gpi)} · ${t.data}${t.hora?' '+t.hora:''}</div>
+      ${t.corretoresParticiparam ? `<div class="tc-meta" style="color:var(--green);">${t.corretoresParticiparam} corretores ✓</div>` : ''}
+      ${t.obs ? `<div class="tc-meta truncate">${escapeHtml(t.obs)}</div>` : ''}
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+      ${isPendente ? `<button class="btn sm primary" onclick="_concluirTreinamento('${t.id}')">Concluir</button>` : ''}
+      ${isAdmin() ? `<button class="btn sm danger" onclick="_deleteTreinamento('${t.id}')">×</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function checkTreinamentosPendentes() {
+  const now = new Date();
+  const overdue = DB.treinamentos.filter(t => {
+    if (t.status !== 'pendente') return false;
+    const dt = new Date(t.data + 'T' + (t.hora || '08:00') + ':00');
+    return (now - dt) >= 60 * 60 * 1000; // 1h após o horário
+  });
+  if (!overdue.length) return;
+
+  const myGpi = CURRENT_USER?.gpiAssoc || null;
+  const relevant = myGpi ? overdue.filter(t => t.gpi === myGpi) : overdue;
+  if (!relevant.length) return;
+
+  const t = relevant[0]; // prompt one at a time
+  openModal(`
+    <h2>📚 Treinamento realizado?</h2>
+    <p style="color:var(--muted);">O treinamento em <b>${escapeHtml(t.imobiliaria)}</b> com ${escapeHtml(t.gpi)} estava agendado para ${t.data} ${t.hora||''}.</p>
+    <p>Quantos corretores participaram?</p>
+    <input type="number" id="modal-check-trein" min="0" value="0"
+      style="font-size:22px; text-align:center; width:100%; padding:10px;
+      border-radius:12px; border:2px solid var(--line); background:var(--bg-2); color:var(--text);"/>
+    <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+      <button class="btn primary" style="flex:1;" onclick="_confirmarConclusao('${t.id}')">✓ Sim, confirmar</button>
+      <button class="btn" onclick="closeModal()">Ainda não aconteceu</button>
+      ${isAdmin()?`<button class="btn danger sm" onclick="_deleteTreinamento('${t.id}')">Cancelar treinamento</button>`:''}
+    </div>
+  `);
 }
 
 /* ============= FUNIL GPI ============= */
@@ -1938,14 +2220,14 @@ function leadListClickHandler(e) {
   const react = e.target.closest('button[data-react]');
   const del = e.target.closest('button[data-del]');
   const hist = e.target.closest('button[data-hist]');
-  if (snz)  { snoozeLead(snz.dataset.snz, 3); renderLeadsList(); updateLeadBadges(); }
+  if (snz)  { snoozeLead(snz.dataset.snz, 3); renderLeadsList(); updateNavBadges(); }
   if (disc) {
     const motivo = prompt('Motivo do descarte:', '') || '';
     if (motivo === null) return;
-    discardLead(disc.dataset.disc, motivo); renderLeadsList(); updateLeadBadges();
+    discardLead(disc.dataset.disc, motivo); renderLeadsList(); updateNavBadges();
   }
-  if (react){ reactivateLead(react.dataset.react); renderLeadsList(); updateLeadBadges(); }
-  if (del)  { if (confirm('Apagar este lead permanentemente?')) { deleteLead(del.dataset.del); renderLeadsList(); updateLeadBadges(); } }
+  if (react){ reactivateLead(react.dataset.react); renderLeadsList(); updateNavBadges(); }
+  if (del)  { if (confirm('Apagar este lead permanentemente?')) { deleteLead(del.dataset.del); renderLeadsList(); updateNavBadges(); } }
   if (hist) { showLeadHistory(hist.dataset.hist); }
 }
 // dropdown de avanço usa change, não click
@@ -1955,7 +2237,7 @@ document.addEventListener('change', e => {
   const obs = prompt('Observação (opcional):','') || '';
   advanceLead(sel.dataset.adv, v, obs);
   if (typeof renderLeadsList === 'function' && document.querySelector('#leads-list')) renderLeadsList();
-  updateLeadBadges();
+  updateNavBadges();
 });
 
 function showLeadHistory(id) {
@@ -2008,7 +2290,7 @@ function openLeadCreateModal() {
     if (!lead) return;
     closeModal();
     if (typeof renderLeadsList === 'function' && document.querySelector('#leads-list')) renderLeadsList();
-    updateLeadBadges();
+    updateNavBadges();
   });
 }
 
@@ -2058,21 +2340,27 @@ VIEWS.negocios = () => {
     $('#neg-count').textContent = `${list.length} negócio${list.length!==1?'s':''}`;
     if (!list.length) { $('#neg-table').innerHTML = '<div class="empty"><div class="icon-big">🏠</div>Nenhum negócio encontrado.</div>'; return; }
 
+    const statusOpts = FUNIL_EXEC.map(s => `<option value="${s}">${s}</option>`).join('');
     if (gpiMode) {
       // TABELA SIMPLIFICADA PARA GPI
       $('#neg-table').innerHTML = `<table>
-        <thead><tr><th>Status</th><th>Produto</th><th>Un.</th><th>Cliente</th><th>Follow-up</th><th>Imobiliária</th></tr></thead>
+        <thead><tr><th>Status</th><th>Produto</th><th>Un.</th><th>Cliente</th><th>Follow-up</th><th>Imobiliária</th><th></th></tr></thead>
         <tbody>${list.map(n => {
-          const stCls = n.status==='VENDA'?'green':n.status==='NEGOCIAÇÃO'?'orange':n.status==='ATENDIMENTOS'?'blue':n.status==='AGENDAMENTOS'?'purple':n.status==='DESCARTADO'?'gray':'';
           const fupStr = n.proximoFollowup ? `${n.proximoFollowup.slice(8,10)}/${n.proximoFollowup.slice(5,7)}` : '—';
           const fupWarn = negocioIsStale(n) ? ' ⚠️' : negocioIsDue(n) ? ' 📅' : '';
-          return `<tr style="cursor:pointer;" onclick="editNegocio('${n.id}')">
-            <td><span class="badge ${stCls}">${escapeHtml(n.status||'—')}</span></td>
-            <td>${escapeHtml(n.produto||'—')}</td>
-            <td>${escapeHtml(n.unidade||'—')}</td>
-            <td class="truncate" style="max-width:200px;">${escapeHtml(n.cliente1||'—')}</td>
-            <td>${fupStr}${fupWarn}</td>
-            <td class="truncate" style="max-width:180px;">${escapeHtml(n.imobiliaria||n.corretor||'—')}</td>
+          const crmFlag = n.fone1 ? `<span class="crm-flag">CRM</span>` : '';
+          return `<tr>
+            <td onclick="event.stopPropagation()">
+              <select class="quick-status" onchange="quickStatusNegocio('${n.id}', this.value)">
+                ${FUNIL_EXEC.map(s=>`<option value="${s}"${n.status===s?' selected':''}>${s}</option>`).join('')}
+              </select>
+            </td>
+            <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.produto||'—')}</td>
+            <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.unidade||'—')}</td>
+            <td class="truncate" style="max-width:180px; cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.cliente1||'—')} ${crmFlag}</td>
+            <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${fupStr}${fupWarn}</td>
+            <td class="truncate" style="max-width:160px; cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.imobiliaria||n.corretor||'—')}</td>
+            <td onclick="event.stopPropagation()"><button class="btn-snooze" onclick="snoozeNegocio('${n.id}')" title="Snooze 7 dias">+7d</button></td>
           </tr>`;
         }).join('')}</tbody></table>`;
     } else {
@@ -2081,20 +2369,29 @@ VIEWS.negocios = () => {
         <thead><tr><th>Data</th><th>Status</th><th>Produto</th><th>Un.</th><th>Cliente</th><th>VGV</th><th>Estr.</th><th>Resp.</th><th>Follow-up</th><th>Imobiliária</th><th></th></tr></thead>
         <tbody>${list.map(n => {
           const date = (n.dataAssinatura||n.data||'').slice(0,10);
-          const stCls = n.status==='VENDA'?'green':n.status==='NEGOCIAÇÃO'?'orange':n.status==='ATENDIMENTOS'?'blue':n.status==='AGENDAMENTOS'?'purple':n.status==='DESCARTADO'?'gray':'';
           const fupStr = n.proximoFollowup ? `${n.proximoFollowup.slice(8,10)}/${n.proximoFollowup.slice(5,7)}` : '—';
           const fupWarn = negocioIsStale(n) ? ' ⚠️' : negocioIsDue(n) ? ' 📅' : '';
-          return `<tr style="cursor:pointer;" onclick="editNegocio('${n.id}')">
-            <td>${date||'—'}</td>
-            <td><span class="badge ${stCls}">${escapeHtml(n.status||'—')}</span></td>
-            <td>${escapeHtml(n.produto||'')}</td><td>${escapeHtml(n.unidade||'')}</td>
-            <td class="truncate" style="max-width:180px;">${escapeHtml(n.cliente1||'')}</td>
-            <td>${fmtBRLk(n.vgv)}</td>
-            <td><span class="badge gray">${escapeHtml(n.estrutura||'')}</span></td>
-            <td>${escapeHtml(n.responsavel||'')}</td>
-            <td>${fupStr}${fupWarn}</td>
-            <td class="truncate" style="max-width:180px;">${escapeHtml(n.imobiliaria||n.corretor||'')}</td>
-            <td onclick="event.stopPropagation()"><button class="btn sm" onclick="showNegocioHistory('${n.id}')">📜</button> <button class="btn sm danger" onclick="deleteNegocio('${n.id}')">×</button></td>
+          const crmFlag = n.fone1 ? `<span class="crm-flag">CRM</span>` : '';
+          return `<tr>
+            <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${date||'—'}</td>
+            <td onclick="event.stopPropagation()">
+              <select class="quick-status" onchange="quickStatusNegocio('${n.id}', this.value)">
+                ${FUNIL_EXEC.map(s=>`<option value="${s}"${n.status===s?' selected':''}>${s}</option>`).join('')}
+              </select>
+            </td>
+            <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.produto||'')}</td>
+            <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.unidade||'')}</td>
+            <td class="truncate" style="max-width:160px; cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.cliente1||'')} ${crmFlag}</td>
+            <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${fmtBRLk(n.vgv)}</td>
+            <td style="cursor:pointer;" onclick="editNegocio('${n.id}')"><span class="badge gray">${escapeHtml(n.estrutura||'')}</span></td>
+            <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.responsavel||'')}</td>
+            <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${fupStr}${fupWarn}</td>
+            <td class="truncate" style="max-width:160px; cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.imobiliaria||n.corretor||'')}</td>
+            <td onclick="event.stopPropagation()" style="white-space:nowrap;">
+              <button class="btn-snooze" onclick="snoozeNegocio('${n.id}')" title="Snooze 7 dias">+7d</button>
+              <button class="btn sm" onclick="showNegocioHistory('${n.id}')">📜</button>
+              <button class="btn sm danger" onclick="deleteNegocio('${n.id}')">×</button>
+            </td>
           </tr>`;
         }).join('')}</tbody></table>`;
     }
@@ -2104,71 +2401,134 @@ VIEWS.negocios = () => {
 
 function editNegocio(id) {
   const isNew = !id;
-  const n = isNew ? { id: uid(), data: todayISO(), status:'INTERESSADOS', estrutura:'PARCERIAS', vgv: 0, criadoPor: CURRENT_USER.email, historico: [], dataUltimaAtualizacao: todayISO() } : DB.negocios.find(x=>x.id===id);
+  const myGpi = CURRENT_USER?.gpiAssoc || null;
+  const lockGpi = !isAdmin() && !!myGpi;
+  const n = isNew
+    ? { id: uid(), data: todayISO(), status:'INTERESSADOS', estrutura:'PARCERIAS', vgv: 0,
+        responsavel: myGpi || '', criadoPor: CURRENT_USER.email, historico: [], dataUltimaAtualizacao: todayISO() }
+    : DB.negocios.find(x=>x.id===id);
   if (!n) return;
-  const isOwner = n.responsavel === CURRENT_USER?.email || n.responsavel === CURRENT_USER?.gpiAssoc;
+  const isOwner = n.responsavel === CURRENT_USER?.email || n.responsavel === myGpi;
   if (!isNew && !isAdmin() && !isOwner) return toast('Apenas admin ou responsável podem editar negócios existentes','error');
-  
+
+  const hasCRM = !!n.fone1;
+
   openModal(`
     <h2>${isNew ? '+ Novo Negócio' : 'Editar Negócio'}</h2>
+    ${hasCRM ? `<div class="crm-flag" style="margin-bottom:12px; font-size:12px; padding:8px 12px; border-radius:10px; width:fit-content;">
+      🔗 Negócio com contato do cliente — trabalhar no <b>CRM Dynamics</b>
+    </div>` : ''}
     <form id="neg-form" class="form">
-      <div class="form-row">
-        <div><label>Data</label><input type="date" name="data" value="${escapeHtml(n.data||'')}" /></div>
-        <div><label>Data de assinatura</label><input type="date" name="dataAssinatura" value="${escapeHtml(n.dataAssinatura||'')}" /></div>
+
+      <div style="background:rgba(212,176,106,.08); border:1px solid rgba(212,176,106,.3); border-radius:10px; padding:14px; margin-bottom:14px;">
+        <div style="font-size:11px; font-weight:800; color:var(--accent-2); letter-spacing:.5px; margin-bottom:10px;">CAMPOS OBRIGATÓRIOS</div>
+        <div class="form-row">
+          <div>
+            <label>Corretor <span style="color:var(--red);">*</span></label>
+            <div class="autocomplete">
+              <input name="corretor" id="neg-corretor" value="${escapeHtml(n.corretor||'')}" autocomplete="off" required/>
+              <div id="neg-corretor-list" class="autocomplete-list"></div>
+            </div>
+            <div id="neg-corretor-contato" class="muted small mt-4"></div>
+          </div>
+          <div>
+            <label>Imobiliária <span style="color:var(--red);">*</span></label>
+            <div class="autocomplete">
+              <input name="imobiliaria" id="neg-imob" value="${escapeHtml(n.imobiliaria||'')}" autocomplete="off" required/>
+              <div id="neg-imob-list" class="autocomplete-list"></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div><label>Produto <span style="color:var(--red);">*</span></label>
+            <select name="produto" required>
+              <option value="">— Selecione —</option>
+              ${PRODUTOS.map(p=>`<option ${n.produto===p?'selected':''}>${p}</option>`).join('')}
+            </select>
+          </div>
+          <div><label>Status / Etapa</label>
+            <select name="status" id="neg-status-select">
+              ${FUNIL_EXEC.map(s=>`<option ${n.status===s?'selected':''}>${s}</option>`).join('')}
+            </select>
+          </div>
+        </div>
       </div>
+
       <div class="form-row">
-        <div><label>Status / Etapa</label><select name="status" id="neg-status-select">${FUNIL_EXEC.map(s=>`<option ${n.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
-        <div><label>Produto</label><select name="produto">${PRODUTOS.map(p=>`<option ${n.produto===p?'selected':''}>${p}</option>`).join('')}</select></div>
+        <div><label>Cliente — Nome</label><input name="cliente1" value="${escapeHtml(n.cliente1||'')}" /></div>
+        <div>
+          <label>Telefone / WhatsApp</label>
+          <input name="fone1" id="neg-fone1" value="${escapeHtml(n.fone1||'')}" placeholder="Com contato → lançar no CRM Dynamics"/>
+        </div>
       </div>
+      <div id="neg-crm-hint" style="display:${hasCRM?'block':'none'}; margin-bottom:8px;">
+        <span class="crm-flag">🔗 Lançar no CRM Dynamics</span>
+      </div>
+
       <div class="form-row">
         <div><label>Unidade</label><input name="unidade" value="${escapeHtml(n.unidade||'')}" /></div>
         <div><label>VGV (R$)</label><input name="vgv" type="number" step="0.01" value="${n.vgv||0}" /></div>
       </div>
       <div class="form-row">
-        <div><label>Cliente — Nome</label><input name="cliente1" value="${escapeHtml(n.cliente1||'')}" /></div>
         <div><label>CPF</label><input name="cpf1" value="${escapeHtml(n.cpf1||'')}" /></div>
-      </div>
-      <div class="form-row">
-        <div><label>Telefone</label><input name="fone1" value="${escapeHtml(n.fone1||'')}" /></div>
         <div><label>Cliente 2 (opcional)</label><input name="cliente2" value="${escapeHtml(n.cliente2||'')}" /></div>
       </div>
       <div class="form-row">
         <div><label>Estrutura</label><select name="estrutura">${ESTRUTURAS.map(e=>`<option ${n.estrutura===e?'selected':''}>${e}</option>`).join('')}</select></div>
-        <div><label>Responsável</label><select name="responsavel"><option value="">—</option>${[...DB.gpis, ...DB.executivos].map(r=>`<option ${n.responsavel===r?'selected':''}>${r}</option>`).join('')}</select></div>
-      </div>
-      <div class="form-row">
-        <div>
-          <label>Imobiliária</label>
-          <input name="imobiliaria" id="neg-imob" value="${escapeHtml(n.imobiliaria||'')}" autocomplete="off"/>
-          <div id="neg-imob-list" class="autocomplete-list"></div>
+        <div><label>Responsável</label>
+          <select name="responsavel" ${lockGpi?'disabled':''}>
+            <option value="">—</option>
+            ${[...DB.gpis, ...DB.executivos].map(r=>`<option ${n.responsavel===r?'selected':''}>${r}</option>`).join('')}
+          </select>
+          ${lockGpi?`<input type="hidden" name="responsavel" value="${escapeHtml(myGpi)}"/>`:''}
         </div>
-        <div><label>Corretor</label><input name="corretor" value="${escapeHtml(n.corretor||'')}" /></div>
       </div>
       <div class="form-row">
-        <div><label>Telefone do corretor</label><input name="foneCorretor" value="${escapeHtml(n.foneCorretor||'')}" /></div>
+        <div><label>Data</label><input type="date" name="data" value="${escapeHtml(n.data||'')}" /></div>
+        <div><label>Data de assinatura</label><input type="date" name="dataAssinatura" value="${escapeHtml(n.dataAssinatura||'')}" /></div>
+      </div>
+      <div class="form-row">
         <div><label>Homologado</label><select name="homologado"><option value="false" ${!n.homologado?'selected':''}>Não</option><option value="true" ${n.homologado?'selected':''}>Sim</option></select></div>
       </div>
       <div><label>Observações</label><textarea name="observacoes">${escapeHtml(n.observacoes||'')}</textarea></div>
-      
-      <div style="background:var(--bg-card); padding:12px; border-radius:6px; margin-top:16px; border:1px solid var(--border-color);">
-        <h3 style="margin-top:0; font-size:14px; margin-bottom:8px;">Follow-up e Interações</h3>
+
+      <div style="background:var(--panel-2); padding:12px; border-radius:10px; margin-top:14px; border:1px solid var(--line);">
+        <div class="card-title" style="margin-bottom:8px;">Follow-up e Histórico</div>
         <div class="form-row">
           <div><label>Próximo Follow-up</label><input type="date" name="proximoFollowup" value="${escapeHtml(n.proximoFollowup||'')}"/></div>
         </div>
         <div>
-          <label>Adicionar Interação / Atualização (Histórico)</label>
+          <label>Adicionar interação / atualização</label>
           <textarea name="novaInteracao" placeholder="O que foi conversado? Resumo da evolução..."></textarea>
         </div>
       </div>
 
-      <div style="display:flex; gap:10px; justify-content: flex-end; margin-top:16px;">
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
         <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
         <button type="submit" class="btn primary">${isNew ? 'Criar' : 'Salvar'}</button>
       </div>
     </form>
   `);
+
+  // Autocomplete imobiliária
   setupAutocomplete($('#neg-imob'), $('#neg-imob-list'), DB.imobiliarias.map(i=>i.nome), () => {});
-  
+
+  // Autocomplete corretor — mostra telefone ao selecionar
+  const corrNomes = DB.corretores.map(c => c.nome);
+  setupAutocomplete($('#neg-corretor'), $('#neg-corretor-list'), corrNomes, val => {
+    const c = DB.corretores.find(x => x.nome === val);
+    if (c) {
+      $('#neg-corretor-contato').textContent = [c.fone, c.imobiliaria].filter(Boolean).join(' · ');
+      if (c.imobiliaria && !$('#neg-imob').value) $('#neg-imob').value = c.imobiliaria;
+    }
+  });
+
+  // Mostrar hint CRM ao digitar telefone
+  $('#neg-fone1').addEventListener('input', e => {
+    const show = !!e.target.value.trim();
+    $('#neg-crm-hint').style.display = show ? 'block' : 'none';
+  });
+
   // Sugere proximoFollowup ao mudar status
   $('#neg-status-select').addEventListener('change', e => {
     const s = e.target.value;
@@ -2233,6 +2593,30 @@ function deleteNegocio(id) {
   updateNavBadges();
 }
 
+function quickStatusNegocio(id, newStatus) {
+  const n = DB.negocios.find(x => x.id === id); if (!n) return;
+  const old = n.status;
+  if (old === newStatus) return;
+  if (!n.historico) n.historico = [];
+  n.historico.push({ data: todayISO(), etapaDe: old, etapaPara: newStatus, obs: 'Atualização rápida', autor: CURRENT_USER?.email||'' });
+  n.status = newStatus;
+  n.dataUltimaAtualizacao = todayISO();
+  saveDB(); toast(`${newStatus} ✓`, 'success');
+  updateNavBadges();
+  if (window._reloadNegocios) _reloadNegocios();
+}
+
+function snoozeNegocio(id) {
+  const n = DB.negocios.find(x => x.id === id); if (!n) return;
+  n.proximoFollowup = addDaysISO(7);
+  n.dataUltimaAtualizacao = todayISO();
+  if (!n.historico) n.historico = [];
+  n.historico.push({ data: todayISO(), etapaDe: n.status, etapaPara: n.status, obs: 'Snooze +7 dias', autor: CURRENT_USER?.email||'' });
+  saveDB(); toast('Follow-up adiado 7 dias ✓', 'success');
+  updateNavBadges();
+  if (window._reloadNegocios) _reloadNegocios();
+}
+
 /* ============= CADASTROS ============= */
 VIEWS.cadastros = () => {
   $('#app').innerHTML = `
@@ -2257,7 +2641,7 @@ VIEWS.cadastros = () => {
         <div id="corr-list" style="max-height: 380px; overflow-y: auto;"></div>
       </div>
     </div>
-    <div class="grid grid-2">
+    <div class="grid grid-2 mb-12">
       <div class="card">
         <div class="card-title">GPIs <span class="pill">${DB.gpis.length}</span></div>
         <div style="display:flex; gap:8px; margin-bottom: 12px;"><input id="add-gpi" placeholder="Nome do GPI"/><button class="btn primary" onclick="addGpi()">+ Add</button></div>
@@ -2269,12 +2653,30 @@ VIEWS.cadastros = () => {
         <div class="chips">${DB.executivos.map(g => `<div class="chip active">${escapeHtml(g)} <span style="color:#fecaca; cursor:pointer; margin-left:6px;" onclick="removeExec('${escapeHtml(g)}')">×</span></div>`).join('')}</div>
       </div>
     </div>
+    ${isAdmin() ? `
+    <div class="card mb-12">
+      <div class="card-title">🗂️ Carteira por GPI <span class="muted small" style="font-weight:400;">(admin only)</span></div>
+      <p class="muted small" style="margin:4px 0 14px;">Defina quais imobiliárias cada GPI deve visitar. Essas imobiliárias aparecerão destacadas na tela de Visitas e Treinamentos.</p>
+      <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
+        <label style="font-weight:700;">GPI:</label>
+        <select id="carteira-gpi-sel" style="min-width:160px;">
+          ${DB.gpis.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}
+        </select>
+        <span class="muted small" id="carteira-count"></span>
+      </div>
+      <div id="carteira-imob-grid" class="carteira-grid"></div>
+      <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn sm" onclick="_carteiraSelectAll()">Selecionar tudo</button>
+        <button class="btn sm" onclick="_carteiraSelectNone()">Limpar seleção</button>
+        <button class="btn primary sm" onclick="_saveCarteira()">💾 Salvar carteira</button>
+      </div>
+    </div>` : ''}
   `;
+
   function renderImob() {
     $('#imob-list').innerHTML = DB.imobiliarias.slice().sort((a,b)=>a.nome.localeCompare(b.nome)).map(i => `
       <div style="display:flex; justify-content:space-between; padding:8px 12px; border-bottom:1px solid var(--line); align-items:center; gap:8px;">
         <div style="flex:1;"><strong>${escapeHtml(i.nome)}</strong>
-          ${i.lat ? `<span class="muted small"> · 📍 ${i.lat.toFixed(4)}, ${i.lng.toFixed(4)}</span>` : ''}
           ${i.endereco ? `<br/><span class="muted small">${escapeHtml(i.endereco)}</span>` : ''}
         </div>
         <button class="btn sm danger" onclick="removeImob('${escapeHtml(i.nome).replace(/'/g,"\\'")}')">×</button>
@@ -2289,6 +2691,46 @@ VIEWS.cadastros = () => {
   }
   renderImob(); renderCorr();
   window._reloadImob = renderImob; window._reloadCorr = renderCorr;
+
+  if (!isAdmin() || !$('#carteira-gpi-sel')) return;
+
+  function renderCarteiraGrid() {
+    const gpi = $('#carteira-gpi-sel').value;
+    const atual = DB.carteira[gpi] || [];
+    const sorted = DB.imobiliarias.slice().sort((a,b)=>a.nome.localeCompare(b.nome));
+    $('#carteira-count').textContent = `${atual.length} de ${sorted.length} selecionadas`;
+    $('#carteira-imob-grid').innerHTML = sorted.map(i => {
+      const on = atual.includes(i.nome);
+      return `<button class="carteira-btn${on?' active':''}" data-nome="${escapeHtml(i.nome)}" onclick="_toggleCarteira(this)">
+        <div class="cb-name">${escapeHtml(i.nome)}</div>
+        ${on ? '<span style="font-size:11px; color:var(--accent-2);">✓ na carteira</span>' : '<span style="font-size:11px; color:var(--muted);">fora da carteira</span>'}
+      </button>`;
+    }).join('');
+  }
+  renderCarteiraGrid();
+  $('#carteira-gpi-sel').addEventListener('change', renderCarteiraGrid);
+
+  window._toggleCarteira = (btn) => {
+    btn.classList.toggle('active');
+    const gpi = $('#carteira-gpi-sel').value;
+    const count = $$('#carteira-imob-grid .carteira-btn.active').length;
+    $('#carteira-count').textContent = `${count} de ${DB.imobiliarias.length} selecionadas`;
+  };
+  window._carteiraSelectAll = () => {
+    $$('#carteira-imob-grid .carteira-btn').forEach(b => b.classList.add('active'));
+    $('#carteira-count').textContent = `${DB.imobiliarias.length} de ${DB.imobiliarias.length} selecionadas`;
+  };
+  window._carteiraSelectNone = () => {
+    $$('#carteira-imob-grid .carteira-btn').forEach(b => b.classList.remove('active'));
+    $('#carteira-count').textContent = `0 de ${DB.imobiliarias.length} selecionadas`;
+  };
+  window._saveCarteira = () => {
+    const gpi = $('#carteira-gpi-sel').value;
+    const selected = [...$$('#carteira-imob-grid .carteira-btn.active')].map(b => b.dataset.nome);
+    DB.carteira[gpi] = selected;
+    saveDB(); toast(`Carteira de ${gpi} salva ✓ (${selected.length} imobiliárias)`, 'success');
+    renderCarteiraGrid();
+  };
 };
 
 function addImob() {

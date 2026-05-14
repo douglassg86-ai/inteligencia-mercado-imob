@@ -148,6 +148,8 @@ input, select, textarea { font-family: inherit; }
   .sidebar.open { transform: translateX(0); }
   .main { max-width: 100vw; padding: 14px 12px 110px; }
   .topbar.mobile { display: flex; }
+  #hamburger { width: 46px; height: 46px; font-size: 20px; border-radius: 14px; }
+  .topbar.mobile { padding: 8px 12px 8px 10px; }
   .topbar.desktop { display: none; }
   .scrim { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index: 90; }
   .scrim.show { display:block; }
@@ -555,7 +557,7 @@ tbody tr:last-child td { border-bottom: 0; }
   <div class="login-card">
     <div class="logo">GPI</div>
     <h1>GPI GUIDE</h1>
-    <div class="tagline">Plataforma de gestão comercial para GPIs e Executivos</div>
+    <div class="tagline">Plataforma de gestão comercial para GPIs</div>
     <form id="login-form" class="form">
       <div><label>Email</label><input type="email" name="email" required autocomplete="username"/></div>
       <div><label>Senha</label><input type="password" name="password" required autocomplete="current-password"/></div>
@@ -676,11 +678,8 @@ const stageSlug = e => ({
 })[e] || 'interessados';
 
 const SEED_ADMIN = { email:'do.goncalves@vanguard.com.br', password:'g57tQwZ4WwfY', nome:'Douglas Gonçalves', role:'admin' };
-/* Admins adicionais (executivos com poderes de admin) */
-const SEED_ADMIN_USERS = [
-  { email:'p.peano@vanguard.com.br',     password:'uXETwjAWfg3n', nome:'Peano',   role:'admin', executivoAssoc:'Peano'   },
-  { email:'r.bernhardt@vanguard.com.br', password:'RLfJQgBrexod', nome:'Rodrigo', role:'admin', executivoAssoc:'Rodrigo' },
-];
+/* Sem admins adicionais por enquanto */
+const SEED_ADMIN_USERS = [];
 /* Usuários iniciais por GPI — devem trocar a senha no primeiro acesso */
 const SEED_GPI_USERS = [
   { email:'r.nishi@vanguard.com.br',   password:'PzZoYgjb5hex', nome:'Nishi',   role:'viewer', gpiAssoc:'Nishi'   },
@@ -690,7 +689,8 @@ const SEED_GPI_USERS = [
 ];
 /* Emails antigos que devem ser removidos do localStorage de usuários que rodaram versões anteriores. */
 const DEPRECATED_EMAILS = [
-  'nishi@vanguard.com.br','renato@vanguard.com.br','raffael@vanguard.com.br','jardim@vanguard.com.br'
+  'nishi@vanguard.com.br','renato@vanguard.com.br','raffael@vanguard.com.br','jardim@vanguard.com.br',
+  'p.peano@vanguard.com.br','r.bernhardt@vanguard.com.br'
 ];
 
 /* ----- STATE ----- */
@@ -831,7 +831,7 @@ function loadLocalDB() {
     corretores: [],
     carteira: {},
     gpis: ['Nishi','Renato','Raffael','Jardim'],
-    executivos: ['Aline','Gisiely','Peano','Rodrigo','Douglas'],
+    executivos: [],
     metaMes: { gpiContatos: 4000, execProspeccao: 10000 },
     users: [SEED_ADMIN, ...SEED_ADMIN_USERS, ...SEED_GPI_USERS],
     invites: [],
@@ -942,7 +942,7 @@ function showApp() {
   // user info
   $('#user-avatar').textContent = initials(CURRENT_USER.nome);
   $('#user-name').textContent = CURRENT_USER.nome;
-  const assoc = CURRENT_USER.gpiAssoc ? `GPI · ${CURRENT_USER.gpiAssoc}` : (CURRENT_USER.executivoAssoc ? `Exec · ${CURRENT_USER.executivoAssoc}` : '');
+  const assoc = CURRENT_USER.gpiAssoc ? `GPI · ${CURRENT_USER.gpiAssoc}` : '';
   const roleTxt = CURRENT_USER.role === 'admin' ? '👑 Administrador' : '👁 Visualizador';
   $('#user-role').textContent = assoc ? `${roleTxt} · ${assoc}` : roleTxt;
   // hide admin-only nav for viewers
@@ -1109,11 +1109,10 @@ VIEWS.dashboard = () => {
           <button data-p="custom">Personalizado</button>
         </div>
         <div class="spacer" style="flex:1;"></div>
-        <select id="dash-gpi" style="min-width: 170px;">
-          <option value="">Todos GPIs/Executivos</option>
-          <optgroup label="GPIs">${DB.gpis.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}</optgroup>
-          <optgroup label="Executivos">${DB.executivos.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}</optgroup>
-        </select>
+        ${isAdmin() ? `<select id="dash-gpi" style="min-width: 170px;">
+          <option value="">Todos GPIs</option>
+          ${DB.gpis.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}
+        </select>` : `<span class="badge gold" style="align-self:center;">${escapeHtml(CURRENT_USER?.gpiAssoc||'')}</span>`}
       </div>
       <div id="dash-custom" style="display:none; margin-top: 10px; gap: 10px; flex-wrap: wrap; align-items: center;">
         <div><label>De</label><input type="date" id="dash-from"/></div>
@@ -1124,15 +1123,9 @@ VIEWS.dashboard = () => {
 
     <div class="grid grid-kpis mb-12" id="dash-kpis"></div>
     <div id="dash-leads-alert"></div>
-    <div class="grid grid-2 mb-12">
-      <div class="card">
-        <div class="card-title">Funil GPIs <span class="pill" id="funil-gpi-pill"></span></div>
-        <div id="funil-gpi-cont"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Funil Executivos <span class="pill" id="funil-exec-pill"></span></div>
-        <div id="funil-exec-cont"></div>
-      </div>
+    <div class="card mb-12">
+      <div class="card-title">Funil GPIs <span class="pill" id="funil-gpi-pill"></span></div>
+      <div id="funil-gpi-cont"></div>
     </div>
     <div class="grid grid-3 mb-12">
       <div class="card"><div class="card-title">🏆 Ranking · VGV <span class="pill" id="title-period-rank"></span></div><div id="rank-gpi"></div></div>
@@ -1156,7 +1149,12 @@ VIEWS.dashboard = () => {
     $('#dash-custom').style.display = b.dataset.p === 'custom' ? 'flex' : 'none';
     if (b.dataset.p !== 'custom') renderDash();
   });
-  $('#dash-gpi').addEventListener('change', e => { DASH_FILTER.gpi = e.target.value; renderDash(); });
+  const _dashMyGpi = CURRENT_USER?.gpiAssoc || null;
+  if (!isAdmin() && _dashMyGpi) {
+    DASH_FILTER.gpi = _dashMyGpi;
+  } else if (isAdmin()) {
+    $('#dash-gpi').addEventListener('change', e => { DASH_FILTER.gpi = e.target.value; renderDash(); });
+  }
 
   renderDash();
 };
@@ -1202,7 +1200,7 @@ function renderDash() {
   const periodLabel = (from || to) ? (DASH_FILTER.period === 'mes' ? 'Este Mês' : DASH_FILTER.period === 'hoje' ? 'Hoje' : `${from||'…'} → ${to||'…'}`) : 'Todo o período';
   
   // Atualiza títulos dinâmicos
-  ['#title-period-rank', '#title-period-imob', '#title-period-mix', '#funil-gpi-pill', '#funil-exec-pill'].forEach(sel => {
+  ['#title-period-rank', '#title-period-imob', '#title-period-mix', '#funil-gpi-pill'].forEach(sel => {
     const el = $(sel); if (el) el.textContent = periodLabel;
   });
 
@@ -1249,17 +1247,20 @@ function renderDash() {
   </div>` : '');
 
   $('#funil-gpi-pill').textContent = periodLabel;
-  $('#funil-exec-pill').textContent = periodLabel;
-  renderFunil('funil-gpi-cont', FUNIL_GPI, META_GPI, DB.metaMes.gpiContatos, 'GPI');
-  renderFunil('funil-exec-cont', FUNIL_EXEC, META_EXEC, DB.metaMes.execProspeccao, 'EXEC');
 
-  // Ranking by VGV
+  renderFunil('funil-gpi-cont', FUNIL_GPI, META_GPI, DB.metaMes.gpiContatos, 'GPI');
+
+  // Ranking by VGV — sem filtro de GPI para todos verem (gamificação)
+  const [_rFrom, _rTo] = periodRange(DASH_FILTER.period);
+  const vendasRank = DB.negocios.filter(n => n.status === 'VENDA' && inPeriod(n.dataAssinatura||n.data, [_rFrom, _rTo]));
   const byResp = {};
-  vendas.forEach(v => { const k = v.responsavel || '—'; byResp[k] = byResp[k] || { vendas:0, vgv:0 }; byResp[k].vendas++; byResp[k].vgv += Number(v.vgv)||0; });
+  vendasRank.forEach(v => { const k = v.responsavel || '—'; byResp[k] = byResp[k] || { vendas:0, vgv:0 }; byResp[k].vendas++; byResp[k].vgv += Number(v.vgv)||0; });
+  const myRankGpi = CURRENT_USER?.gpiAssoc || null;
   const rankGpi = Object.entries(byResp).map(([k,v])=>({nome:k,...v})).sort((a,b)=>b.vgv-a.vgv);
   $('#rank-gpi').innerHTML = rankGpi.length ? `<div class="rank">${rankGpi.slice(0,8).map((r,i)=>`
-    <div class="rank-row"><div class="pos">#${i+1}</div>
-      <div><div class="name">${escapeHtml(r.nome)}</div><div class="meta">${r.vendas} vendas</div></div>
+    <div class="rank-row${myRankGpi && r.nome===myRankGpi ? ' style="background:var(--panel);border-radius:8px;"' : ''}">
+      <div class="pos">#${i+1}</div>
+      <div><div class="name">${escapeHtml(r.nome)}${myRankGpi && r.nome===myRankGpi ? ' 🏅' : ''}</div><div class="meta">${r.vendas} vendas</div></div>
       <div class="val">${fmtBRLk(r.vgv)}</div></div>`).join('')}</div>` : '<div class="empty">Sem vendas no período.</div>';
 
   const byCorr = {};
@@ -1283,7 +1284,7 @@ function renderFunil(containerId, etapas, metas, baseTotal, papel) {
   const realiz = {};
   etapas.forEach(e => realiz[e] = 0);
 
-  const peoplePool = papel === 'GPI' ? DB.gpis : DB.executivos;
+  const peoplePool = DB.gpis;
   const inPapel = (resp) => DASH_FILTER.gpi ? (resp === DASH_FILTER.gpi && peoplePool.includes(resp)) : peoplePool.includes(resp);
 
   dashFilter(DB.funil, f => f.data, f => f.pessoa).filter(f => f.papel === papel).forEach(f => {
@@ -1524,37 +1525,28 @@ VIEWS.visita = () => {
     const carteira = getCarteira(selGpi);
     const programadas = getProgramadas(selGpi);
 
-    // Programadas como atalhos rápidos no topo
-    const progBtns = programadas.length
-      ? `<div style="margin-bottom:10px;">
-           <div class="muted small" style="margin-bottom:6px;">📅 Programadas para hoje:</div>
-           <div style="display:flex; gap:6px; flex-wrap:wrap;">${programadas.map(nome => {
-             const isActive = selImob?.nome === nome;
-             return `<button class="carteira-btn programada${isActive?' active':''}" data-nome="${escapeHtml(nome)}"
-               style="padding:8px 12px; min-width:0; flex:0 0 auto;"
-               onclick="_visitSelectImob(this.dataset.nome)">
-               <div class="cb-name" style="font-size:13px;">${escapeHtml(nome)}</div>
-             </button>`;
-           }).join('')}</div>
-         </div>`
+    // Programadas primeiro, resto em ordem alfabética
+    const sorted = [
+      ...programadas,
+      ...[...carteira].filter(n => !programadas.includes(n)).sort((a,b) => a.localeCompare(b))
+    ];
+    if (!sorted.length) {
+      $('#carteira-list').innerHTML = '<div class="muted small">Nenhuma imobiliária na carteira. Configure em Cadastros → Carteira por GPI.</div>';
+      return;
+    }
+    const header = programadas.length
+      ? `<div class="muted small" style="margin-bottom:4px; padding:0 2px;">📅 Programadas aparecem primeiro — somem após a visita</div>`
       : '';
-
-    // Restante da carteira em container com scroll
-    const resto = [...carteira].filter(n => !programadas.includes(n)).sort((a,b)=>a.localeCompare(b));
-    const restoBtns = resto.length
-      ? `<div style="max-height:200px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:6px;">
-           <div class="carteira-grid" style="gap:6px;">${resto.map(nome => {
-             const isActive = selImob?.nome === nome;
-             return `<button class="carteira-btn${isActive?' active':''}" data-nome="${escapeHtml(nome)}"
-               style="padding:8px 10px;"
-               onclick="_visitSelectImob(this.dataset.nome)">
-               <div class="cb-name" style="font-size:12px;">${escapeHtml(nome)}</div>
-             </button>`;
-           }).join('')}</div>
-         </div>`
-      : (!carteira.length ? '<div class="muted small">Nenhuma imobiliária na carteira. Configure em Cadastros → Carteira por GPI.</div>' : '');
-
-    $('#carteira-list').innerHTML = progBtns + restoBtns;
+    const btns = sorted.map(nome => {
+      const isProg = programadas.includes(nome);
+      const isActive = selImob?.nome === nome;
+      return `<button class="carteira-btn${isProg ? ' programada' : ''}${isActive ? ' active' : ''}" data-nome="${escapeHtml(nome)}"
+        style="padding:8px 10px;"
+        onclick="_visitSelectImob(this.dataset.nome)">
+        <div class="cb-name" style="font-size:12px;">${isProg ? '📅 ' : ''}${escapeHtml(nome)}</div>
+      </button>`;
+    }).join('');
+    $('#carteira-list').innerHTML = header + `<div style="max-height:220px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:6px;"><div class="carteira-grid" style="gap:6px;">${btns}</div></div>`;
   }
   renderCarteira();
 
@@ -1898,31 +1890,27 @@ function checkTreinamentosPendentes() {
 
 /* ============= FUNIL GPI ============= */
 VIEWS.funil = () => {
-  // Não-admins ficam travados na própria atribuição (CURRENT_USER.gpiAssoc / executivoAssoc)
   const myGpi  = CURRENT_USER?.gpiAssoc || null;
-  const myExec = CURRENT_USER?.executivoAssoc || null;
-  const lockPessoa = !isAdmin() && (myGpi || myExec);
-  const initialPapel = (!isAdmin() && myExec && !myGpi) ? 'EXEC' : 'GPI';
+  const lockPessoa = !isAdmin() && !!myGpi;
 
   $('#app').innerHTML = `
     <div class="page-head">
       <div><h1>Funil GPI · Entrada Rápida</h1>
         <p>${lockPessoa
-            ? `Lançando como <b>${escapeHtml(myGpi||myExec)}</b> (${myGpi?'GPI':'Executivo'}). <span class="muted">CONTATOS EFETIVOS = contagem rápida. INTERESSADOS+ abrem o cadastro de cliente.</span>`
+            ? `Lançando como <b>${escapeHtml(myGpi)}</b>. <span class="muted">CONTATOS EFETIVOS = contagem rápida. INTERESSADOS+ abrem o cadastro de cliente.</span>`
             : 'Toque para incrementar. <span class="muted">CONTATOS EFETIVOS = contagem rápida. INTERESSADOS+ abrem o cadastro de cliente para gerar lead.</span>'}</p>
       </div>
-      ${lockPessoa ? '' : '<div class="seg" id="funil-papel"><button data-r="GPI" class="active">GPIs</button><button data-r="EXEC">Executivos</button></div>'}
     </div>
     ${lockPessoa ? '' : '<div class="card mb-12"><div class="card-title">Pessoa</div><div class="chips" id="funil-pessoa"></div></div>'}
     <div class="card mb-12"><div class="card-title" id="funil-stage-title">Funil de Vendas</div><div class="funnel-container" id="funil-stages"></div></div>
     <div class="card"><div class="card-title">Últimos lançamentos</div><div id="funil-log"></div></div>
   `;
-  let papel = lockPessoa ? (myGpi ? 'GPI' : 'EXEC') : (_funilState.papel || initialPapel);
-  let pessoa = lockPessoa ? (myGpi || myExec) : _funilState.pessoa;
+  let papel = 'GPI';
+  let pessoa = lockPessoa ? myGpi : _funilState.pessoa;
 
   function renderPessoas() {
     if (lockPessoa) return;
-    const list = papel === 'GPI' ? DB.gpis : DB.executivos;
+    const list = DB.gpis;
     pessoa = pessoa && list.includes(pessoa) ? pessoa : list[0];
     _funilState.pessoa = pessoa; _funilState.papel = papel;
     $('#funil-pessoa').innerHTML = list.map(p => `<div class="chip ${p===pessoa?'active':''}" data-p="${escapeHtml(p)}">${escapeHtml(p)}</div>`).join('');
@@ -1932,7 +1920,7 @@ VIEWS.funil = () => {
     }));
   }
   function renderStages() {
-    const etapas = papel === 'GPI' ? FUNIL_GPI : FUNIL_EXEC;
+    const etapas = FUNIL_GPI;
     const today = todayISO();
     const counts = {};
     etapas.forEach(e => { 
@@ -2005,7 +1993,7 @@ VIEWS.funil = () => {
     deleteFunil(b.dataset.del);
   });
   if (!lockPessoa) {
-    $('#funil-papel').addEventListener('click', e => {
+    if ($('#funil-papel')) $('#funil-papel').addEventListener('click', e => {
       const b = e.target.closest('button[data-r]'); if (!b) return;
       papel = b.dataset.r; _funilState.papel = papel; _funilState.pessoa = null;
       $$('#funil-papel button').forEach(x=>x.classList.toggle('active', x===b));
@@ -2373,9 +2361,9 @@ VIEWS.negocios = () => {
     </div>
     <div class="toolbar">
       <input id="neg-search" placeholder="Buscar cliente, imobiliária, produto..."/>
-      <select id="neg-status"><option value="">Status (todos)</option>${FUNIL_EXEC.map(s=>`<option>${s}</option>`).join('')}</select>
+      <select id="neg-status"><option value="">Status (todos)</option>${FUNIL_GPI.map(s=>`<option>${s}</option>`).join('')}</select>
       <select id="neg-produto"><option value="">Produto (todos)</option>${PRODUTOS.map(p=>`<option>${p}</option>`).join('')}</select>
-      ${!gpiMode ? `<select id="neg-resp"><option value="">Responsável</option>${[...DB.gpis, ...DB.executivos].map(r=>`<option>${r}</option>`).join('')}</select>
+      ${!gpiMode ? `<select id="neg-resp"><option value="">Responsável</option>${DB.gpis.map(r=>`<option>${r}</option>`).join('')}</select>
       <select id="neg-estr"><option value="">Estrutura</option>${ESTRUTURAS.map(e=>`<option>${e}</option>`).join('')}</select>` : ''}
       <div class="spacer"></div>
       <span class="muted small" id="neg-count"></span>
@@ -2408,7 +2396,7 @@ VIEWS.negocios = () => {
     $('#neg-count').textContent = `${list.length} negócio${list.length!==1?'s':''}`;
     if (!list.length) { $('#neg-table').innerHTML = '<div class="empty"><div class="icon-big">🏠</div>Nenhum negócio encontrado.</div>'; return; }
 
-    const statusOpts = FUNIL_EXEC.map(s => `<option value="${s}">${s}</option>`).join('');
+    const statusOpts = FUNIL_GPI.map(s => `<option value="${s}">${s}</option>`).join('');
     if (gpiMode) {
       // TABELA SIMPLIFICADA PARA GPI
       $('#neg-table').innerHTML = `<table>
@@ -2546,7 +2534,7 @@ function editNegocio(id) {
         <div><label>Responsável</label>
           <select name="responsavel" ${lockGpi?'disabled':''}>
             <option value="">—</option>
-            ${[...DB.gpis, ...DB.executivos].map(r=>`<option ${n.responsavel===r?'selected':''}>${r}</option>`).join('')}
+            ${DB.gpis.map(r=>`<option ${n.responsavel===r?'selected':''}>${r}</option>`).join('')}
           </select>
           ${lockGpi?`<input type="hidden" name="responsavel" value="${escapeHtml(myGpi)}"/>`:''}
         </div>
@@ -2701,7 +2689,7 @@ function snoozeNegocio(id) {
 /* ============= CADASTROS ============= */
 VIEWS.cadastros = () => {
   $('#app').innerHTML = `
-    <div class="page-head"><div><h1>Cadastros</h1><p>Imobiliárias, corretores, GPIs e Executivos.</p></div></div>
+    <div class="page-head"><div><h1>Cadastros</h1><p>Imobiliárias, corretores e GPIs.</p></div></div>
     <div class="grid grid-2 mb-12">
       <div class="card">
         <div class="card-title">Imobiliárias <span class="pill">${DB.imobiliarias.length}</span></div>
@@ -2729,9 +2717,7 @@ VIEWS.cadastros = () => {
         <div class="chips">${DB.gpis.map(g => `<div class="chip active">${escapeHtml(g)} <span style="color:#fecaca; cursor:pointer; margin-left:6px;" onclick="removeGpi('${escapeHtml(g)}')">×</span></div>`).join('')}</div>
       </div>
       <div class="card">
-        <div class="card-title">Executivos <span class="pill">${DB.executivos.length}</span></div>
-        <div style="display:flex; gap:8px; margin-bottom: 12px;"><input id="add-exec" placeholder="Nome do executivo"/><button class="btn primary" onclick="addExec()">+ Add</button></div>
-        <div class="chips">${DB.executivos.map(g => `<div class="chip active">${escapeHtml(g)} <span style="color:#fecaca; cursor:pointer; margin-left:6px;" onclick="removeExec('${escapeHtml(g)}')">×</span></div>`).join('')}</div>
+        <!-- Executivos removidos — apenas GPIs -->
       </div>
     </div>
     ${isAdmin() ? `
@@ -2837,8 +2823,7 @@ function removeCorr(idx) {
 }
 function addGpi() { const v = $('#add-gpi').value.trim(); if (!v) return; if (!DB.gpis.includes(v)) DB.gpis.push(v); saveDB(); VIEWS.cadastros(); }
 function removeGpi(n) { if (!isAdmin()) return; DB.gpis = DB.gpis.filter(x => x !== n); saveDB(); VIEWS.cadastros(); }
-function addExec() { const v = $('#add-exec').value.trim(); if (!v) return; if (!DB.executivos.includes(v)) DB.executivos.push(v); saveDB(); VIEWS.cadastros(); }
-function removeExec(n) { if (!isAdmin()) return; DB.executivos = DB.executivos.filter(x => x !== n); saveDB(); VIEWS.cadastros(); }
+// addExec/removeExec removidos
 
 /* ============= USUÁRIOS ============= */
 VIEWS.usuarios = () => {
@@ -2862,14 +2847,14 @@ VIEWS.usuarios = () => {
               ${DB.gpis.map(g => `<option value="${escapeHtml(g)}" ${u.gpiAssoc===g?'selected':''}>${escapeHtml(g)}</option>`).join('')}
             </select>
             <select class="sm" onchange="setUserAssoc(${i}, 'exec', this.value)">
-              <option value="">— Executivo —</option>
-              ${DB.executivos.map(g => `<option value="${escapeHtml(g)}" ${u.executivoAssoc===g?'selected':''}>${escapeHtml(g)}</option>`).join('')}
+
+              <!-- executivoAssoc removido -->
             </select>
           </td>
           <td><span class="muted small">••••••</span> <button class="btn sm" onclick="resetUserPwd(${i})">↻</button></td>
           <td>${u.email !== SEED_ADMIN.email ? `<button class="btn sm danger" onclick="removeUser(${i})">×</button>` : '<span class="muted small">Admin principal</span>'}</td>
         </tr>`).join('')}</tbody></table></div>
-      <div class="muted small mt-12">A <b>atribuição</b> define quem o usuário representa. Quando ele logar, todos os lançamentos de Funil/Visita serão automaticamente em nome do GPI/Executivo atribuído.</div>
+      <div class="muted small mt-12">A <b>atribuição</b> define quem o usuário representa. Quando ele logar, todos os lançamentos de Funil/Visita serão automaticamente em nome do GPI atribuído.</div>
     </div>
 
     <div class="card">
@@ -2929,7 +2914,7 @@ function setUserAssoc(i, kind, value) {
   if (!isAdmin()) return toast('Apenas admin','error');
   const u = DB.users[i]; if (!u) return;
   if (kind === 'gpi')  u.gpiAssoc = value || null;
-  if (kind === 'exec') u.executivoAssoc = value || null;
+  // executivoAssoc removido
   saveDB();
   toast(`Atribuição atualizada para ${u.nome}`, 'success');
   // Se o admin mudou a si próprio, refresca o sidebar
@@ -3148,7 +3133,6 @@ VIEWS.config = () => {
         <div class="card-title">🎯 Metas mensais</div>
         <div class="form-row">
           <div><label>GPI · Contatos efetivos</label><input type="number" id="meta-gpi" value="${DB.metaMes.gpiContatos}"/></div>
-          <div><label>Executivo · Prospecção</label><input type="number" id="meta-exec" value="${DB.metaMes.execProspeccao}"/></div>
         </div>
         <button class="btn primary mt-12" onclick="saveMetas()">Salvar metas</button>
       </div>
@@ -3219,7 +3203,6 @@ function saveCloudCfg() {
 }
 function saveMetas() {
   DB.metaMes.gpiContatos = Number($('#meta-gpi').value)||4000;
-  DB.metaMes.execProspeccao = Number($('#meta-exec').value)||10000;
   saveDB(); toast('Metas salvas ✓','success');
 }
 function resetVisitas() { if (confirm('Apagar TODAS as visitas?')) { DB.visitas=[]; saveDB(); VIEWS.config(); } }

@@ -1605,10 +1605,8 @@ VIEWS.visita = () => {
       criadoPor: CURRENT_USER.email,
     };
     DB.visitas.unshift(v);
-    DB.funil.push({ id: uid(), data: v.data, papel:'GPI', pessoa: gpi, etapa: 'CONTATOS EFETIVOS', qtd: 1, obs: 'Visita: '+imobObj.nome, ref: v.id });
-    if (corretores > 0) {
-      DB.funil.push({ id: uid(), data: v.data, papel:'GPI', pessoa: gpi, etapa: 'INTERESSADOS', qtd: corretores, obs: 'Corretores em '+imobObj.nome, ref: v.id });
-    }
+    // Corretores na imobiliária = CONTATOS EFETIVOS; mínimo 1 (a própria visita)
+    DB.funil.push({ id: uid(), data: v.data, papel:'GPI', pessoa: gpi, etapa: 'CONTATOS EFETIVOS', qtd: corretores > 0 ? corretores : 1, obs: 'Visita: '+imobObj.nome, ref: v.id });
     DB.visitas_programadas = DB.visitas_programadas.filter(p => !(p.gpi === gpi && p.imobiliaria === imobObj.nome && p.data === today));
     _pendingVisit = null;
     saveDB(); closeModal(); toast('Visita registrada ✓', 'success');

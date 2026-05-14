@@ -586,6 +586,7 @@ tbody tr:last-child td { border-bottom: 0; }
       <button data-view="treinamento">📚 &nbsp; Treinamentos</button>
       <button data-view="funil">⚡ &nbsp; Funil GPI</button>
       <button data-view="negocios">🏠 &nbsp; Negócios <span id="nav-negocios-badge" class="nav-badge" style="display:none;">0</span></button>
+      <button data-view="minhacarteira">🗂️ &nbsp; Minha Carteira</button>
       <button data-view="cadastros" data-admin="1">👥 &nbsp; Cadastros</button>
       <button data-view="usuarios" data-admin="1">🔐 &nbsp; Usuários</button>
       <button data-view="metricas" data-admin="1">📊 &nbsp; Métricas GPI</button>
@@ -965,6 +966,8 @@ function showApp() {
   $('#user-role').textContent = assoc ? `${roleTxt} · ${assoc}` : roleTxt;
   // hide admin-only nav for viewers
   $$('#nav button[data-admin]').forEach(b => { b.style.display = isAdmin() ? '' : 'none'; });
+  // hide Minha Carteira for admins (eles usam Cadastros)
+  $$('#nav button[data-view="minhacarteira"]').forEach(b => { b.style.display = isAdmin() ? 'none' : ''; });
   goto('dashboard');
   // alertas ao abrir o app
   setTimeout(() => {
@@ -1016,6 +1019,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 function openMoreMenu() {
   const items = [];
   if (isAdmin()) items.push(['cadastros','👥 Cadastros'], ['usuarios','🔐 Usuários'], ['metricas','📊 Métricas GPI'], ['config','⚙️ Configurações']);
+  items.push(['minhacarteira','🗂️ Minha Carteira']);
   items.push(['__pwd','🔑 Trocar minha senha']);
   items.push(['__theme', '🌓 Alternar tema'], ['__logout','🚪 Sair']);
   openModal(`<h2>Mais opções</h2>
@@ -2731,6 +2735,118 @@ function snoozeNegocio(id) {
 }
 
 /* ============= CADASTROS ============= */
+
+/* ============= MINHA CARTEIRA (auto-atribuição) ============= */
+VIEWS.minhacarteira = () => {
+  const myGpi = CURRENT_USER?.gpiAssoc;
+  // Admins vão para Cadastros → Carteira por GPI
+  if (isAdmin()) return goto('cadastros');
+  if (!myGpi) return goto('dashboard');
+
+  const renderView = () => {
+    const allImobs = DB.imobiliarias.slice().sort((a,b) => a.nome.localeCompare(b.nome));
+    const myCarteira = new Set(DB.carteira[myGpi] || []);
+
+    // Mapa de reivindicações: imob.nome -> [gpi, ...]
+    const claimsMap = {};
+    allImobs.forEach(i => { claimsMap[i.nome] = []; });
+    Object.entries(DB.carteira).forEach(([gpi, imobs]) => {
+      (imobs || []).forEach(n => { if (claimsMap[n]) claimsMap[n].push(gpi); });
+    });
+
+    const total = allImobs.length;
+    const mine  = myCarteira.size;
+    const conflicts = allImobs.filter(i => claimsMap[i.nome].length > 1 && myCarteira.has(i.nome)).length;
+
+    $('#app').innerHTML = `
+      <div class="page-head">
+        <div>
+          <h1>Minha Carteira · ${escapeHtml(myGpi)}</h1>
+          <p>Clique para reivindicar imobiliárias da sua carteira. Outros GPIs também podem reivindicar — conflitos ficam visíveis para os admins resolverem.</p>
+        </div>
+        <span class="badge gold">${mine} de ${total}</span>
+      </div>
+      ${conflicts ? `<div class="alert-banner mb-12" style="border-color:rgba(245,158,11,.4);">
+        <div class="ico">⚠️</div>
+        <div class="body"><b>${conflicts} imobiliária${conflicts===1?'':' s'} com disputa</b><br><span class="muted small">Marcadas em laranja — outro GPI também a reivindicou. Os admins vão resolver.</span></div>
+      </div>` : ''}
+      <div class="card mb-12" style="padding:12px 16px;">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <input id="cart-search" placeholder="🔍 Buscar imobiliária..." style="flex:1; min-width:180px;"/>
+          <span class="muted small" id="cart-count">${mine} selecionadas</span>
+        </div>
+      </div>
+      <div class="card" style="padding:12px;">
+        <div id="cart-grid" class="carteira-grid" style="gap:6px;"></div>
+      </div>
+    `;
+
+    let searchVal = '';
+    function renderGrid() {
+      const myC = new Set(DB.carteira[myGpi] || []);
+      const filtered = allImobs.filter(i => !searchVal || i.nome.toLowerCase().includes(searchVal));
+      $('#cart-grid').innerHTML = filtered.map(i => {
+        const isMine = myC.has(i.nome);
+        const claims = claimsMap[i.nome];
+        const othersAlso = claims.filter(g => g !== myGpi);
+        const isConflict = isMine && othersAlso.length > 0;
+        const othersOnly = !isMine && othersAlso.length > 0;
+
+        let borderColor = 'var(--line)';
+        let bg = '';
+        let badge = '';
+        if (isConflict) {
+          borderColor = 'rgba(245,158,11,.7)';
+          bg = 'background:rgba(245,158,11,.08);';
+          badge = `<div style="font-size:10px; color:#f59e0b; margin-top:3px;">⚠️ tbm: ${othersAlso.join(', ')}</div>`;
+        } else if (isMine) {
+          borderColor = 'var(--accent)';
+          bg = 'background:rgba(212,176,106,.08);';
+          badge = `<div style="font-size:10px; color:var(--accent-2); margin-top:3px;">✓ na minha carteira</div>`;
+        } else if (othersOnly) {
+          borderColor = 'rgba(99,102,241,.4)';
+          bg = 'background:rgba(99,102,241,.04);';
+          badge = `<div style="font-size:10px; color:var(--muted); margin-top:3px;">reivindicada: ${othersAlso.join(', ')}</div>`;
+        }
+
+        return `<button class="carteira-btn${isMine?' active':''}" data-nome="${escapeHtml(i.nome)}"
+          style="padding:8px 10px; border-color:${borderColor}; ${bg} text-align:left;"
+          onclick="window._toggleMinha(this.dataset.nome)">
+          <div class="cb-name" style="font-size:12px;">${escapeHtml(i.nome)}</div>
+          ${badge}
+        </button>`;
+      }).join('');
+      const count = DB.carteira[myGpi]?.length || 0;
+      const el = $('#cart-count'); if (el) el.textContent = `${count} selecionadas`;
+    }
+
+    renderGrid();
+
+    $('#cart-search').addEventListener('input', e => {
+      searchVal = e.target.value.toLowerCase().trim();
+      renderGrid();
+    });
+
+    window._toggleMinha = (nome) => {
+      DB.carteira[myGpi] = DB.carteira[myGpi] || [];
+      const idx = DB.carteira[myGpi].indexOf(nome);
+      if (idx >= 0) {
+        DB.carteira[myGpi].splice(idx, 1);
+        // atualiza claimsMap local
+        claimsMap[nome] = claimsMap[nome].filter(g => g !== myGpi);
+      } else {
+        DB.carteira[myGpi].push(nome);
+        if (!claimsMap[nome]) claimsMap[nome] = [];
+        if (!claimsMap[nome].includes(myGpi)) claimsMap[nome].push(myGpi);
+      }
+      saveDB();
+      renderGrid();
+    };
+  };
+
+  renderView();
+};
+
 VIEWS.cadastros = () => {
   $('#app').innerHTML = `
     <div class="page-head"><div><h1>Cadastros</h1><p>Imobiliárias, corretores e GPIs.</p></div></div>
@@ -2766,8 +2882,8 @@ VIEWS.cadastros = () => {
     </div>
     ${isAdmin() ? `
     <div class="card mb-12">
-      <div class="card-title">🗂️ Carteira por GPI <span class="muted small" style="font-weight:400;">(admin only)</span></div>
-      <p class="muted small" style="margin:4px 0 14px;">Defina quais imobiliárias cada GPI deve visitar. Essas imobiliárias aparecerão destacadas na tela de Visitas e Treinamentos.</p>
+      <div class="card-title">🗂️ Carteira por GPI</div>
+      <p class="muted small" style="margin:4px 0 14px;">GPIs podem reivindicar imobiliárias pela tela <b>Minha Carteira</b>. Use esta visão para confirmar ou corrigir conflitos. Imobs marcadas em <span style="color:#f59e0b;">laranja</span> foram reivindicadas por mais de um GPI.</p>
       <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
         <label style="font-weight:700;">GPI:</label>
         <select id="carteira-gpi-sel" style="min-width:160px;">
@@ -2810,11 +2926,24 @@ VIEWS.cadastros = () => {
     const atual = DB.carteira[gpi] || [];
     const sorted = DB.imobiliarias.slice().sort((a,b)=>a.nome.localeCompare(b.nome));
     $('#carteira-count').textContent = `${atual.length} de ${sorted.length} selecionadas`;
+    // mapa de claims por imob (para mostrar conflitos)
+    const claimsMap = {};
+    sorted.forEach(i => { claimsMap[i.nome] = []; });
+    Object.entries(DB.carteira).forEach(([g, imobs]) => {
+      (imobs || []).forEach(n => { if (claimsMap[n]) claimsMap[n].push(g); });
+    });
     $('#carteira-imob-grid').innerHTML = sorted.map(i => {
       const on = atual.includes(i.nome);
-      return `<button class="carteira-btn${on?' active':''}" data-nome="${escapeHtml(i.nome)}" onclick="_toggleCarteira(this)">
-        <div class="cb-name">${escapeHtml(i.nome)}</div>
-        ${on ? '<span style="font-size:11px; color:var(--accent-2);">✓ na carteira</span>' : '<span style="font-size:11px; color:var(--muted);">fora da carteira</span>'}
+      const others = claimsMap[i.nome].filter(g => g !== gpi);
+      const conflict = on && others.length > 0;
+      const othersOnly = !on && others.length > 0;
+      let border = ''; let sub = '';
+      if (conflict) { border = ' style="border-color:rgba(245,158,11,.7); background:rgba(245,158,11,.06);"'; sub = `<span style="font-size:10px; color:#f59e0b;">⚠️ tbm: ${others.join(', ')}</span>`; }
+      else if (on)   { sub = `<span style="font-size:11px; color:var(--accent-2);">✓ na carteira</span>`; }
+      else if (othersOnly) { border = ' style="border-color:rgba(99,102,241,.4);"'; sub = `<span style="font-size:10px; color:var(--muted);">${others.join(', ')}</span>`; }
+      else           { sub = `<span style="font-size:11px; color:var(--muted);">fora da carteira</span>`; }
+      return `<button class="carteira-btn${on?' active':''}"${border} data-nome="${escapeHtml(i.nome)}" onclick="_toggleCarteira(this)">
+        <div class="cb-name">${escapeHtml(i.nome)}</div>${sub}
       </button>`;
     }).join('');
   }

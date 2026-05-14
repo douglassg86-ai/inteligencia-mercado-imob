@@ -678,19 +678,22 @@ const stageSlug = e => ({
 })[e] || 'interessados';
 
 const SEED_ADMIN = { email:'do.goncalves@vanguard.com.br', password:'g57tQwZ4WwfY', nome:'Douglas Gonçalves', role:'admin' };
-/* Sem admins adicionais por enquanto */
-const SEED_ADMIN_USERS = [];
+/* Admins adicionais */
+const SEED_ADMIN_USERS = [
+  { email:'p.peano@vanguard.com.br',     password:'1234', nome:'Peano',   role:'admin', mustChangePassword:true },
+  { email:'r.bernhardt@vanguard.com.br', password:'1234', nome:'Rodrigo', role:'admin', mustChangePassword:true },
+];
 /* Usuários iniciais por GPI — devem trocar a senha no primeiro acesso */
 const SEED_GPI_USERS = [
   { email:'r.nishi@vanguard.com.br',   password:'PzZoYgjb5hex', nome:'Nishi',   role:'viewer', gpiAssoc:'Nishi'   },
-  { email:'re.santos@vanguard.com.br', password:'xaNdBWLFoQK3', nome:'Renato',  role:'viewer', gpiAssoc:'Renato'  },
+  { email:'re.santos@vanguard.com.br', password:'1234',          nome:'Renato',  role:'viewer', gpiAssoc:'Renato',  mustChangePassword:true },
   { email:'r.vieira@vanguard.com.br',  password:'JjPqdcvGJcgi', nome:'Raffael', role:'viewer', gpiAssoc:'Raffael' },
-  { email:'r.jardim@vanguard.com.br',  password:'9TWQWnZGGSso', nome:'Jardim',  role:'viewer', gpiAssoc:'Jardim'  },
+  { email:'r.jardim@vanguard.com.br',  password:'1234',          nome:'Jardim',  role:'viewer', gpiAssoc:'Jardim',  mustChangePassword:true },
+  { email:'c.braga@vanguard.com.br',   password:'1234',          nome:'Braga',   role:'viewer', gpiAssoc:'Braga',   mustChangePassword:true },
 ];
 /* Emails antigos que devem ser removidos do localStorage de usuários que rodaram versões anteriores. */
 const DEPRECATED_EMAILS = [
-  'nishi@vanguard.com.br','renato@vanguard.com.br','raffael@vanguard.com.br','jardim@vanguard.com.br',
-  'p.peano@vanguard.com.br','r.bernhardt@vanguard.com.br'
+  'nishi@vanguard.com.br','renato@vanguard.com.br','raffael@vanguard.com.br','jardim@vanguard.com.br'
 ];
 
 /* ----- STATE ----- */
@@ -788,6 +791,21 @@ function ensureSeedUsers(db) {
   db.visitas_programadas = db.visitas_programadas || [];
   db.carteira = db.carteira || {};
 
+  // One-time migration v3: limpar negócios, carteiras e garantir GPIs
+  if (!db._migV3) {
+    db.negocios = [];
+    db.carteira = {};
+    db.gpis = db.gpis || [];
+    if (!db.gpis.includes('Braga')) db.gpis.push('Braga');
+    db._migV3 = true;
+  }
+
+  // Garantir imobiliária "Autonomo" para corretores independentes
+  db.imobiliarias = db.imobiliarias || [];
+  if (!db.imobiliarias.find(i => i.nome.toLowerCase() === 'autonomo')) {
+    db.imobiliarias.unshift({ nome: 'Autonomo', lat: null, lng: null, endereco: '' });
+  }
+
   // MIGRAR LEADS ANTIGOS PARA NEGÓCIOS
   db.negocios = db.negocios || [];
   if (db.leads && db.leads.length > 0) {
@@ -830,7 +848,7 @@ function loadLocalDB() {
     imobiliarias: (seed.imobiliarias || []).map(normImob),
     corretores: [],
     carteira: {},
-    gpis: ['Nishi','Renato','Raffael','Jardim'],
+    gpis: ['Nishi','Renato','Raffael','Jardim','Braga'],
     executivos: [],
     metaMes: { gpiContatos: 4000, execProspeccao: 10000 },
     users: [SEED_ADMIN, ...SEED_ADMIN_USERS, ...SEED_GPI_USERS],
@@ -957,6 +975,10 @@ function showApp() {
     else if (due) toast(`📅 ${due} follow-up${due>1?'s':''} nos próximos dias.`,'success');
     // verificar treinamentos pendentes de confirmação (passaram 1h do horário)
     checkTreinamentosPendentes();
+    // hint de primeiro acesso — senha temporária
+    if (CURRENT_USER?.mustChangePassword) {
+      setTimeout(() => toast('🔑 Você está usando uma senha temporária. Clique no ícone 🔑 na barra lateral para alterá-la.', 'error'), 1200);
+    }
   }, 600);
 }
 
@@ -1229,6 +1251,12 @@ function renderDash() {
   const stale = staleNegociosForScope();
   const due   = dueNegociosForScope();
   const ativos = negociosForCurrentScope().filter(isNegocioAtivo);
+  if (isAdmin()) {
+    const unlinkedAlert = document.createElement('div');
+    unlinkedAlert.innerHTML = checkUnlinkedAssets();
+    const alertZone = $('#dash-leads-alert');
+    if (alertZone) alertZone.insertAdjacentHTML('afterend', unlinkedAlert.innerHTML);
+  }
   $('#dash-leads-alert').innerHTML = (stale.length || due.length) ? `
     <div class="alert-banner mb-12">
       <div class="ico">🏠</div>
@@ -1276,6 +1304,22 @@ function renderDash() {
   renderChartMonthly(DB.negocios.filter(n => n.status === 'VENDA' && (!DASH_FILTER.gpi || n.responsavel === DASH_FILTER.gpi)));
   renderChartVisitas(visitas);
   renderChartAtividade();
+}
+
+function checkUnlinkedAssets() {
+  if (!isAdmin()) return '';
+  const allImobs = DB.imobiliarias.map(i => i.nome);
+  const linked = new Set(Object.values(DB.carteira).flat());
+  const unlinked = allImobs.filter(n => !linked.has(n));
+  if (!unlinked.length) return '';
+  return `<div class="alert-banner mb-12" style="border-color:rgba(245,158,11,.4);">
+    <div class="ico">⚠️</div>
+    <div class="body">
+      <b>${unlinked.length} imobiliária${unlinked.length===1?'':' s'} sem GPI atribuído</b>
+      <br><span class="muted small">Acesse Cadastros → Carteira por GPI para vincular: ${unlinked.slice(0,5).map(n=>`<b>${escapeHtml(n)}</b>`).join(', ')}${unlinked.length>5?' …':''}</span>
+    </div>
+    <button class="btn sm" onclick="goto('cadastros')">Configurar Carteiras</button>
+  </div>`;
 }
 
 function renderFunil(containerId, etapas, metas, baseTotal, papel) {

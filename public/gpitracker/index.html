@@ -697,6 +697,7 @@ const DEPRECATED_EMAILS = [
 let DB = null;
 let CURRENT_USER = null;
 let GPS_POSITION = null; // {lat, lng, accuracy}
+let _funilState = { papel: 'GPI', pessoa: null }; // persiste seleção entre navegações
 
 const SUPABASE_URL = 'https://zgdhydvxqikpcnygjbwg.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_88ApQ7LJNJrcs0UgInUJOQ_vuiC5Oks';
@@ -1619,13 +1620,15 @@ VIEWS.visita = () => {
     const gpi = selGpi || (lockGpi ? myGpi : DB.gpis[0]);
     const jaProgram = DB.visitas_programadas.filter(p => p.gpi === gpi && p.data === tomorrowISO).map(p => p.imobiliaria);
     if (!carteira.length) { $('#program-list').innerHTML = '<div class="muted small">Nenhuma imobiliária na carteira.</div>'; return; }
-    $('#program-list').innerHTML = `<div class="carteira-grid">${carteira.sort((a,b)=>a.localeCompare(b)).map(nome => {
-      const on = jaProgram.includes(nome);
-      return `<button class="carteira-btn${on?' programada active':''}" onclick="_toggleProgramar('${escapeHtml(nome).replace(/'/g,"\\'")}')">
-        <div class="cb-name">${escapeHtml(nome)}</div>
-        ${on ? `<span class="programada-badge">✓ Programada</span>` : '<span style="font-size:11px; color:var(--muted);">Toque para programar</span>'}
-      </button>`;
-    }).join('')}</div>`;
+    $('#program-list').innerHTML = `<div style="max-height:220px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:6px;">
+      <div class="carteira-grid" style="gap:6px;">${carteira.sort((a,b)=>a.localeCompare(b)).map(nome => {
+        const on = jaProgram.includes(nome);
+        return `<button class="carteira-btn${on?' programada active':''}" data-nome="${escapeHtml(nome)}" style="padding:8px 10px;" onclick="_toggleProgramar(this.dataset.nome)">
+          <div class="cb-name" style="font-size:12px;">${escapeHtml(nome)}</div>
+          ${on ? `<span class="programada-badge" style="font-size:10px;">✓</span>` : ''}
+        </button>`;
+      }).join('')}</div>
+    </div>`;
   }
   renderProgramList();
 
@@ -1706,11 +1709,16 @@ VIEWS.treinamento = () => {
              </select></div>`
         }
 
-        <div><label>Imobiliária</label>
-          <div class="autocomplete">
-            <input id="trein-imob" placeholder="Selecione a imobiliária..." autocomplete="off"/>
-            <div id="trein-imob-list" class="autocomplete-list"></div>
-          </div>
+        <div>
+          <label>Imobiliária <span id="trein-imob-sel-label" class="muted small"></span></label>
+          <div id="trein-imob-grid" style="max-height:180px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:6px; margin-bottom:6px;"></div>
+          <details>
+            <summary style="cursor:pointer; color:var(--muted); font-size:12px;">🔍 Buscar outra</summary>
+            <div class="autocomplete" style="margin-top:6px;">
+              <input id="trein-imob" placeholder="Digite o nome..." autocomplete="off"/>
+              <div id="trein-imob-list" class="autocomplete-list"></div>
+            </div>
+          </details>
         </div>
 
         <div class="form-row mt-8">
@@ -1741,17 +1749,41 @@ VIEWS.treinamento = () => {
     </div>
   `;
 
-  const gpiForCarteira = lockGpi ? myGpi : ($('#trein-gpi')?.value || DB.gpis[0]);
-  const carteira = (DB.carteira[gpiForCarteira] && DB.carteira[gpiForCarteira].length)
-    ? DB.carteira[gpiForCarteira]
-    : DB.imobiliarias.map(i => i.nome);
-  setupAutocomplete($('#trein-imob'), $('#trein-imob-list'), carteira, val => { $('#trein-imob').value = val; });
+  let _treinImobSel = '';
+
+  function getCarteiraTrein(gpi) {
+    const a = DB.carteira[gpi];
+    return (a && a.length) ? a : DB.imobiliarias.map(i => i.nome);
+  }
+
+  function renderTreinImobGrid(gpi) {
+    const carteira = getCarteiraTrein(gpi).slice().sort((a,b)=>a.localeCompare(b));
+    $('#trein-imob-grid').innerHTML = `<div class="carteira-grid" style="gap:6px;">${carteira.map(nome => {
+      const sel = _treinImobSel === nome;
+      return `<button type="button" class="carteira-btn${sel?' active':''}" data-nome="${escapeHtml(nome)}"
+        style="padding:8px 10px;" onclick="_treinSelImob(this.dataset.nome)">
+        <div class="cb-name" style="font-size:12px;">${escapeHtml(nome)}</div>
+      </button>`;
+    }).join('')}</div>`;
+    $('#trein-imob-sel-label').textContent = _treinImobSel ? `· ${_treinImobSel}` : '';
+  }
+
+  window._treinSelImob = (nome) => {
+    _treinImobSel = nome;
+    $('#trein-imob').value = nome;
+    $$('#trein-imob-grid .carteira-btn').forEach(b => b.classList.toggle('active', b.dataset.nome === nome));
+    $('#trein-imob-sel-label').textContent = `· ${nome}`;
+  };
+
+  const _initGpi = lockGpi ? myGpi : ($('#trein-gpi')?.value || DB.gpis[0]);
+  renderTreinImobGrid(_initGpi);
+  setupAutocomplete($('#trein-imob'), $('#trein-imob-list'), DB.imobiliarias.map(i=>i.nome), val => { window._treinSelImob(val); });
 
   if (!lockGpi) {
     $('#trein-gpi')?.addEventListener('change', () => {
-      const gpi = $('#trein-gpi').value;
-      const cart = (DB.carteira[gpi] && DB.carteira[gpi].length) ? DB.carteira[gpi] : DB.imobiliarias.map(i => i.nome);
-      setupAutocomplete($('#trein-imob'), $('#trein-imob-list'), cart, val => { $('#trein-imob').value = val; });
+      _treinImobSel = ''; $('#trein-imob').value = '';
+      renderTreinImobGrid($('#trein-gpi').value);
+      setupAutocomplete($('#trein-imob'), $('#trein-imob-list'), DB.imobiliarias.map(i=>i.nome), val => { window._treinSelImob(val); });
     });
   }
 
@@ -1875,15 +1907,19 @@ VIEWS.funil = () => {
     <div class="card mb-12"><div class="card-title" id="funil-stage-title">Funil de Vendas</div><div class="funnel-container" id="funil-stages"></div></div>
     <div class="card"><div class="card-title">Últimos lançamentos</div><div id="funil-log"></div></div>
   `;
-  let papel = lockPessoa ? (myGpi ? 'GPI' : 'EXEC') : initialPapel;
-  let pessoa = lockPessoa ? (myGpi || myExec) : null;
+  let papel = lockPessoa ? (myGpi ? 'GPI' : 'EXEC') : (_funilState.papel || initialPapel);
+  let pessoa = lockPessoa ? (myGpi || myExec) : _funilState.pessoa;
 
   function renderPessoas() {
     if (lockPessoa) return;
     const list = papel === 'GPI' ? DB.gpis : DB.executivos;
     pessoa = pessoa && list.includes(pessoa) ? pessoa : list[0];
+    _funilState.pessoa = pessoa; _funilState.papel = papel;
     $('#funil-pessoa').innerHTML = list.map(p => `<div class="chip ${p===pessoa?'active':''}" data-p="${escapeHtml(p)}">${escapeHtml(p)}</div>`).join('');
-    $$('#funil-pessoa .chip').forEach(c => c.addEventListener('click', () => { pessoa = c.dataset.p; renderPessoas(); renderStages(); }));
+    $$('#funil-pessoa .chip').forEach(c => c.addEventListener('click', () => {
+      pessoa = c.dataset.p; _funilState.pessoa = pessoa;
+      renderPessoas(); renderStages();
+    }));
   }
   function renderStages() {
     const etapas = papel === 'GPI' ? FUNIL_GPI : FUNIL_EXEC;
@@ -1961,7 +1997,7 @@ VIEWS.funil = () => {
   if (!lockPessoa) {
     $('#funil-papel').addEventListener('click', e => {
       const b = e.target.closest('button[data-r]'); if (!b) return;
-      papel = b.dataset.r;
+      papel = b.dataset.r; _funilState.papel = papel; _funilState.pessoa = null;
       $$('#funil-papel button').forEach(x=>x.classList.toggle('active', x===b));
       renderPessoas(); renderStages();
     });

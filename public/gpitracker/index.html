@@ -840,9 +840,9 @@ function ensureSeedUsers(db) {
     (db.visitas||[]).forEach(v => { if (v.imobiliaria) v.imobiliaria = up(v.imobiliaria); });
     // visitas_programadas
     (db.visitas_programadas||[]).forEach(p => { if (p.imobiliaria) p.imobiliaria = up(p.imobiliaria); });
-    // corretores: uppercase imob + fallback AUTONOMO
+    // corretores: uppercase imob + fallback AUTÔNOMO
     (db.corretores||[]).forEach(c => {
-      c.imobiliaria = c.imobiliaria ? up(c.imobiliaria) : 'AUTONOMO';
+      c.imobiliaria = c.imobiliaria ? up(c.imobiliaria) : 'AUTÔNOMO';
     });
     db._migV4 = true;
   }
@@ -863,10 +863,31 @@ function ensureSeedUsers(db) {
     db._migV5 = true;
   }
 
-  // Garantir imobiliária "AUTONOMO" para corretores independentes
+  // Migration v6: padronizar AUTONOMO → AUTÔNOMO (com acento) em todo o DB
+  if (!db._migV6) {
+    const fixAuto = s => s === 'AUTONOMO' ? 'AUTÔNOMO' : (s||s);
+    db.imobiliarias = (db.imobiliarias||[]).map(i => ({ ...i, nome: fixAuto(i.nome) }));
+    (db.corretores||[]).forEach(c => { c.imobiliaria = fixAuto(c.imobiliaria); });
+    (db.negocios||[]).forEach(n => { if (n.imobiliaria) n.imobiliaria = fixAuto(n.imobiliaria); });
+    (db.visitas||[]).forEach(v => { if (v.imobiliaria) v.imobiliaria = fixAuto(v.imobiliaria); });
+    (db.visitas_programadas||[]).forEach(p => { if (p.imobiliaria) p.imobiliaria = fixAuto(p.imobiliaria); });
+    Object.keys(db.carteira||{}).forEach(g => {
+      db.carteira[g] = (db.carteira[g]||[]).map(fixAuto);
+    });
+    // Garantir AUTÔNOMO na carteira de todos os GPIs
+    (db.gpis||[]).forEach(g => {
+      db.carteira[g] = db.carteira[g] || [];
+      if (!db.carteira[g].includes('AUTÔNOMO')) db.carteira[g].push('AUTÔNOMO');
+    });
+    db._migV6 = true;
+  }
+
+  // Garantir imobiliária "AUTÔNOMO" para corretores independentes
   db.imobiliarias = db.imobiliarias || [];
-  if (!db.imobiliarias.find(i => i.nome === 'AUTONOMO')) {
-    db.imobiliarias.unshift({ nome: 'AUTONOMO', lat: null, lng: null, endereco: '' });
+  if (!db.imobiliarias.find(i => i.nome === 'AUTÔNOMO')) {
+    // remove versão sem acento se ainda existir
+    db.imobiliarias = db.imobiliarias.filter(i => i.nome !== 'AUTONOMO');
+    db.imobiliarias.unshift({ nome: 'AUTÔNOMO', lat: null, lng: null, endereco: '' });
   }
 
   // MIGRAR LEADS ANTIGOS PARA NEGÓCIOS
@@ -919,6 +940,12 @@ function loadLocalDB() {
     leads: [],
   };
 }
+// Escopo de imobiliárias de um GPI: carteira dele + sempre AUTÔNOMO (pode estar em múltiplas carteiras)
+function gpiImobScope(gpi) {
+  if (!gpi || isAdmin()) return DB.imobiliarias.map(i => i.nome);
+  return [...new Set([...(DB.carteira[gpi] || []), 'AUTÔNOMO'])].sort((a, b) => a.localeCompare(b));
+}
+
 async function saveDB() {
   DB._savedAt = new Date().toISOString();
   const snapshot = JSON.parse(JSON.stringify(DB));
@@ -1708,7 +1735,7 @@ VIEWS.visita = () => {
     updateStatus();
   };
 
-  const _acImobs = (lockGpi && myGpi) ? (DB.carteira[myGpi]||[]) : DB.imobiliarias.map(i => i.nome);
+  const _acImobs = gpiImobScope(lockGpi ? myGpi : null);
   setupAutocomplete($('#visit-imob'), $('#visit-imob-list'), _acImobs, val => {
     window._visitSelectImob(val);
   });
@@ -1906,8 +1933,7 @@ VIEWS.treinamento = () => {
   let _treinImobSel = '';
 
   function getCarteiraTrein(gpi) {
-    const a = DB.carteira[gpi];
-    return (a && a.length) ? a : (isAdmin() ? DB.imobiliarias.map(i => i.nome) : []);
+    return gpiImobScope(isAdmin() ? null : gpi);
   }
 
   function renderTreinImobGrid(gpi) {
@@ -2345,7 +2371,7 @@ function openFunilLeadModal(papel, pessoa, etapa) {
         <select name="produto"><option value="">—</option>${PRODUTOS.map(p=>`<option>${p}</option>`).join('')}</select>
       </div>
       <div class="full"><label>Observações</label><input name="obs" placeholder="Notas rápidas (opcional)" /></div>
-      <datalist id="dl-imobs">${(isAdmin() ? DB.imobiliarias.map(i=>i.nome) : (DB.carteira[myGpi]||[])).map(n=>`<option value="${escapeHtml(n)}">`).join('')}</datalist>
+      <datalist id="dl-imobs">${gpiImobScope(myGpi).map(n=>`<option value="${escapeHtml(n)}">`).join('')}</datalist>
       <datalist id="dl-corretores">${(isAdmin() ? DB.corretores : DB.corretores.filter(c=>c.gpiAssoc===myGpi)).map(c=>`<option value="${escapeHtml(c.nome||c)}">`).join('')}</datalist>
       <div class="full" style="display:flex; gap:8px; justify-content:flex-end;">
         <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
@@ -2477,7 +2503,7 @@ function openLeadCreateModal() {
         <select name="gpi" ${lockGpi?'disabled':''}>${DB.gpis.map(g=>`<option ${g===myGpi?'selected':''}>${escapeHtml(g)}</option>`).join('')}</select>
       </div>
       <div class="full"><label>Observações</label><input name="obs" /></div>
-      <datalist id="dl-imobs2">${(isAdmin() ? DB.imobiliarias.map(i=>i.nome) : (DB.carteira[myGpi]||[])).map(n=>`<option value="${escapeHtml(n)}">`).join('')}</datalist>
+      <datalist id="dl-imobs2">${gpiImobScope(myGpi).map(n=>`<option value="${escapeHtml(n)}">`).join('')}</datalist>
       <datalist id="dl-corretores2">${(isAdmin() ? DB.corretores : DB.corretores.filter(c=>c.gpiAssoc===myGpi)).map(c=>`<option value="${escapeHtml(c.nome||c)}">`).join('')}</datalist>
       <div class="full" style="display:flex; gap:8px; justify-content:flex-end;">
         <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
@@ -2841,7 +2867,7 @@ function editNegocio(id) {
       </form>
     `);
 
-    const _negImobList = isAdmin() ? DB.imobiliarias.map(i=>i.nome) : (DB.carteira[myGpi]||[]);
+    const _negImobList = gpiImobScope(myGpi);
     setupAutocomplete($('#neg-imob'), $('#neg-imob-list'), _negImobList, () => {});
     const corrNomes = isAdmin() ? DB.corretores.map(c=>c.nome) : DB.corretores.filter(c=>c.gpiAssoc===myGpi).map(c=>c.nome);
     setupAutocomplete($('#neg-corretor'), $('#neg-corretor-list'), corrNomes, val => {
@@ -3435,7 +3461,7 @@ VIEWS.minhacarteira = () => {
   window._addMinhaCorr = () => {
     const nome = $('#mc-nome').value.trim();
     const fone = $('#mc-fone').value.trim();
-    const imob = ($('#mc-imob').value.trim().toUpperCase()) || 'AUTONOMO';
+    const imob = ($('#mc-imob').value.trim().toUpperCase()) || 'AUTÔNOMO';
     if (!nome) return toast('Informe o nome do corretor','error');
 
     const dup = DB.corretores.find(c => c.nome.toLowerCase() === nome.toLowerCase());
@@ -3738,10 +3764,12 @@ VIEWS.cadastros = () => {
     $('#carteira-imob-grid').innerHTML = sorted.map(i => {
       const on = atual.includes(i.nome);
       const others = claimsMap[i.nome].filter(g => g !== gpi);
-      const conflict = on && others.length > 0;
+      const isAutonomo = i.nome === 'AUTÔNOMO';
+      const conflict = on && others.length > 0 && !isAutonomo;
       const othersOnly = !on && others.length > 0;
       let border = ''; let sub = '';
-      if (conflict) { border = ' style="border-color:rgba(245,158,11,.7); background:rgba(245,158,11,.06);"'; sub = `<span style="font-size:10px; color:#f59e0b;">⚠️ tbm: ${others.join(', ')}</span>`; }
+      if (isAutonomo && on) { sub = `<span style="font-size:10px; color:var(--accent-2);">✓ compartilhada</span>`; }
+      else if (conflict) { border = ' style="border-color:rgba(245,158,11,.7); background:rgba(245,158,11,.06);"'; sub = `<span style="font-size:10px; color:#f59e0b;">⚠️ tbm: ${others.join(', ')}</span>`; }
       else if (on)   { sub = `<span style="font-size:11px; color:var(--accent-2);">✓ na carteira</span>`; }
       else if (othersOnly) { border = ' style="border-color:rgba(99,102,241,.4);"'; sub = `<span style="font-size:10px; color:var(--muted);">${others.join(', ')}</span>`; }
       else           { sub = `<span style="font-size:11px; color:var(--muted);">fora da carteira</span>`; }
@@ -3794,7 +3822,7 @@ function addCorr() {
   if (!isAdmin()) return toast('Apenas admin pode adicionar corretores aqui','error');
   const nome = $('#add-corr-nome').value.trim(); if (!nome) return;
   const fone = $('#add-corr-fone').value.trim();
-  const imob = ($('#add-corr-imob').value.trim().toUpperCase()) || 'AUTONOMO';
+  const imob = ($('#add-corr-imob').value.trim().toUpperCase()) || 'AUTÔNOMO';
   if (DB.corretores.some(c => c.nome.toLowerCase() === nome.toLowerCase())) {
     toast('Corretor já cadastrado','error'); return;
   }

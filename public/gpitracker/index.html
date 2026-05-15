@@ -1564,9 +1564,9 @@ VIEWS.visita = () => {
   }
 
   function getCarteira(gpi) {
-    if (!gpi) return DB.imobiliarias.map(i => i.nome);
+    if (!gpi) return isAdmin() ? DB.imobiliarias.map(i => i.nome) : [];
     const assigned = DB.carteira[gpi];
-    return (assigned && assigned.length) ? assigned : DB.imobiliarias.map(i => i.nome);
+    return (assigned && assigned.length) ? assigned : [];
   }
 
   function getProgramadas(gpi) {
@@ -1812,7 +1812,7 @@ VIEWS.treinamento = () => {
 
   function getCarteiraTrein(gpi) {
     const a = DB.carteira[gpi];
-    return (a && a.length) ? a : DB.imobiliarias.map(i => i.nome);
+    return (a && a.length) ? a : (isAdmin() ? DB.imobiliarias.map(i => i.nome) : []);
   }
 
   function renderTreinImobGrid(gpi) {
@@ -2250,8 +2250,8 @@ function openFunilLeadModal(papel, pessoa, etapa) {
         <select name="produto"><option value="">—</option>${PRODUTOS.map(p=>`<option>${p}</option>`).join('')}</select>
       </div>
       <div class="full"><label>Observações</label><input name="obs" placeholder="Notas rápidas (opcional)" /></div>
-      <datalist id="dl-imobs">${DB.imobiliarias.map(i => `<option value="${escapeHtml(i.nome||i)}">`).join('')}</datalist>
-      <datalist id="dl-corretores">${DB.corretores.map(c => `<option value="${escapeHtml(c.nome||c)}">`).join('')}</datalist>
+      <datalist id="dl-imobs">${(isAdmin() ? DB.imobiliarias.map(i=>i.nome) : (DB.carteira[myGpi]||[])).map(n=>`<option value="${escapeHtml(n)}">`).join('')}</datalist>
+      <datalist id="dl-corretores">${(isAdmin() ? DB.corretores : DB.corretores.filter(c=>c.gpiAssoc===myGpi)).map(c=>`<option value="${escapeHtml(c.nome||c)}">`).join('')}</datalist>
       <div class="full" style="display:flex; gap:8px; justify-content:flex-end;">
         <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
         <button type="submit" class="btn primary">Cadastrar lead</button>
@@ -2382,8 +2382,8 @@ function openLeadCreateModal() {
         <select name="gpi" ${lockGpi?'disabled':''}>${DB.gpis.map(g=>`<option ${g===myGpi?'selected':''}>${escapeHtml(g)}</option>`).join('')}</select>
       </div>
       <div class="full"><label>Observações</label><input name="obs" /></div>
-      <datalist id="dl-imobs2">${DB.imobiliarias.map(i => `<option value="${escapeHtml(i.nome||i)}">`).join('')}</datalist>
-      <datalist id="dl-corretores2">${DB.corretores.map(c => `<option value="${escapeHtml(c.nome||c)}">`).join('')}</datalist>
+      <datalist id="dl-imobs2">${(isAdmin() ? DB.imobiliarias.map(i=>i.nome) : (DB.carteira[myGpi]||[])).map(n=>`<option value="${escapeHtml(n)}">`).join('')}</datalist>
+      <datalist id="dl-corretores2">${(isAdmin() ? DB.corretores : DB.corretores.filter(c=>c.gpiAssoc===myGpi)).map(c=>`<option value="${escapeHtml(c.nome||c)}">`).join('')}</datalist>
       <div class="full" style="display:flex; gap:8px; justify-content:flex-end;">
         <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
         <button type="submit" class="btn primary">Cadastrar</button>
@@ -2686,11 +2686,12 @@ function editNegocio(id) {
     </form>
   `);
 
-  // Autocomplete imobiliária
-  setupAutocomplete($('#neg-imob'), $('#neg-imob-list'), DB.imobiliarias.map(i=>i.nome), () => {});
+  // Autocomplete imobiliária — restrito à carteira do GPI
+  const _negImobList = isAdmin() ? DB.imobiliarias.map(i=>i.nome) : (DB.carteira[myGpi]||[]);
+  setupAutocomplete($('#neg-imob'), $('#neg-imob-list'), _negImobList, () => {});
 
-  // Autocomplete corretor — mostra telefone ao selecionar
-  const corrNomes = DB.corretores.map(c => c.nome);
+  // Autocomplete corretor — restrito à carteira do GPI
+  const corrNomes = isAdmin() ? DB.corretores.map(c=>c.nome) : DB.corretores.filter(c=>c.gpiAssoc===myGpi).map(c=>c.nome);
   setupAutocomplete($('#neg-corretor'), $('#neg-corretor-list'), corrNomes, val => {
     const c = DB.corretores.find(x => x.nome === val);
     if (c) {

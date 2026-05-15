@@ -749,8 +749,8 @@ async function refreshDB(silent = false) {
     const { data, error } = await supabaseClient.from('gpi_estado').select('state_json').eq('id', 1).single();
     if (error || !data?.state_json) return;
     const fresh = ensureSeedUsers(mergeSeedCoords(data.state_json, loadSeed()));
-    // Só atualiza se realmente há dados novos
-    if (fresh._savedAt && fresh._savedAt === DB._savedAt) return;
+    // Só atualiza se Supabase tem dados mais recentes que o estado atual em memória
+    if (!fresh._savedAt || fresh._savedAt <= (DB._savedAt || '0')) return;
     DB = fresh;
     safeLocal.setItem(STORAGE_KEY, JSON.stringify(DB));
     // Re-renderiza a view atual
@@ -2643,22 +2643,138 @@ function editNegocio(id) {
     return;
   }
 
-  const hasCRM = !!n.fone1;
+  // ── STATUS PILL (existing only) ──────────────────────────────────────────
+  const STATUS_COLORS = {
+    'INTERESSADOS':  '#6366f1',
+    'AGENDAMENTOS':  '#f59e0b',
+    'ATENDIMENTOS':  '#3b82f6',
+    'PROPOSTA':      '#8b5cf6',
+    'VENDA':         '#22c55e',
+    'CONTATOS EFETIVOS': '#64748b'
+  };
+  const pillColor = STATUS_COLORS[n.status] || '#64748b';
+  const statusPill = isNew ? '' : `
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+      <span style="background:${pillColor}22; color:${pillColor}; border:1px solid ${pillColor}55;
+        border-radius:20px; padding:4px 14px; font-size:12px; font-weight:700; letter-spacing:.5px;">
+        ${escapeHtml(n.status)}
+      </span>
+    </div>`;
 
-  openModal(`
-    <h2>${isNew ? '+ Novo Negócio' : 'Editar Negócio'}</h2>
-    ${hasCRM ? `<div class="crm-flag" style="margin-bottom:12px; font-size:12px; padding:8px 12px; border-radius:10px; width:fit-content;">
-      🔗 Negócio com contato do cliente — trabalhar no <b>CRM Dynamics</b>
-    </div>` : ''}
-    <form id="neg-form" class="form">
+  // ── PENDING AGENDAMENTO ──────────────────────────────────────────────────
+  const pendingAg = (n.agendamentos||[]).find(a => a.status === 'pendente');
 
-      <div style="background:rgba(212,176,106,.08); border:1px solid rgba(212,176,106,.3); border-radius:10px; padding:14px; margin-bottom:14px;">
-        <div style="font-size:11px; font-weight:800; color:var(--accent-2); letter-spacing:.5px; margin-bottom:10px;">CAMPOS OBRIGATÓRIOS</div>
+  // ── CONTEXTUAL NEXT-ACTION PANEL ────────────────────────────────────────
+  let contextualPanel = '';
+  if (!isNew) {
+    if (n.status === 'INTERESSADOS') {
+      contextualPanel = `
+        <div id="wizard-panel-agendar" style="background:var(--panel-2); padding:14px; border-radius:12px; border:1px solid var(--line); margin-top:16px;">
+          <div class="card-title" style="margin-bottom:12px;">📅 Agendar visita</div>
+          <div class="form-row">
+            <div><label>Data <span style="color:var(--red);">*</span></label>
+              <input type="date" id="wz-ag-data" value="${addDaysISO(1)}"/>
+            </div>
+            <div><label>Hora <span style="color:var(--red);">*</span></label>
+              <input type="time" id="wz-ag-hora" value="09:00"/>
+            </div>
+          </div>
+          <div><label>Obs do agendamento</label>
+            <textarea id="wz-ag-obs" placeholder="Local, tipo de atendimento..." rows="2"></textarea>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:12px; justify-content:flex-end;">
+            <button type="button" class="btn sm" id="wz-btn-salvar-base">💾 Salvar sem agendar</button>
+            <button type="button" class="btn primary sm" id="wz-btn-agendar">📅 Salvar e Agendar</button>
+          </div>
+        </div>`;
+    } else if (n.status === 'AGENDAMENTOS') {
+      const agInfo = pendingAg
+        ? `<div class="muted small" style="margin-bottom:12px;">Agendamento pendente: <b>${pendingAg.data}${pendingAg.hora?' às '+pendingAg.hora:''}</b>${pendingAg.obs?' — '+escapeHtml(pendingAg.obs):''}</div>`
+        : `<div class="muted small" style="margin-bottom:12px;">Nenhum agendamento pendente encontrado.</div>`;
+      contextualPanel = `
+        <div id="wizard-panel-confirmacao" style="background:var(--panel-2); padding:14px; border-radius:12px; border:1px solid var(--line); margin-top:16px;">
+          <div class="card-title" style="margin-bottom:8px;">✅ Confirmar atendimento</div>
+          ${agInfo}
+          <div style="display:flex; gap:10px; margin-bottom:12px;">
+            <button type="button" class="btn primary sm" style="flex:1;" id="wz-btn-aconteceu">✅ Aconteceu</button>
+            <button type="button" class="btn sm" style="flex:1;" id="wz-btn-nao-aconteceu">❌ Não aconteceu</button>
+          </div>
+          <div id="wz-aconteceu-fields" style="display:none;">
+            <div><label>Unidade</label><input type="text" id="wz-at-unidade" value="${escapeHtml(n.unidade||'')}" placeholder="Ex: 305, Torre A..."/></div>
+            <div style="margin-top:8px;"><label>Obs do atendimento</label>
+              <textarea id="wz-at-obs" placeholder="O que foi conversado?" rows="2"></textarea>
+            </div>
+            <div style="margin-top:10px; text-align:right;">
+              <button type="button" class="btn primary sm" id="wz-btn-salvar-atendimento">💾 Salvar atendimento</button>
+            </div>
+          </div>
+          <div id="wz-nao-aconteceu-fields" style="display:none;">
+            <div><label>Motivo</label>
+              <textarea id="wz-reagendar-motivo" placeholder="Por que não aconteceu?" rows="2"></textarea>
+            </div>
+            <div class="form-row" style="margin-top:8px;">
+              <div><label>Nova data</label><input type="date" id="wz-reagendar-data" value="${addDaysISO(2)}"/></div>
+              <div><label>Hora</label><input type="time" id="wz-reagendar-hora" value="09:00"/></div>
+            </div>
+            <div style="margin-top:10px; text-align:right;">
+              <button type="button" class="btn primary sm" id="wz-btn-reagendar">🔄 Reagendar</button>
+            </div>
+          </div>
+          <div style="margin-top:8px; text-align:right;">
+            <button type="button" class="btn sm" id="wz-btn-salvar-base">💾 Salvar campos base</button>
+          </div>
+        </div>`;
+    } else if (n.status === 'ATENDIMENTOS') {
+      contextualPanel = n._crm_locked ? `
+        <div style="background:rgba(34,197,94,.07); border:1px solid rgba(34,197,94,.35); border-radius:10px; padding:14px; margin-top:14px;">
+          <div style="font-weight:700; color:#22c55e; margin-bottom:4px;">✅ Ficha preenchida · Cadastrado no CRM</div>
+          <div class="muted small">Este negócio está em acompanhamento no CRM empresarial externo.</div>
+        </div>` : `
+        <div id="wizard-panel-proposta" style="background:var(--panel-2); padding:14px; border-radius:12px; border:1px solid rgba(99,102,241,.3); margin-top:16px;">
+          <div class="card-title" style="margin-bottom:8px;">📋 Proposta / CRM</div>
+          <div class="muted small" style="margin-bottom:12px;">Marque quando o corretor entregar a ficha preenchida e o cadastro for feito no CRM empresarial.</div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px;">
+              <input type="checkbox" id="chk-ficha" onchange="window._updatePropostaBtn()" style="width:18px; height:18px;"/>
+              Ficha de proposta preenchida pelo corretor
+            </label>
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px;">
+              <input type="checkbox" id="chk-crm" onchange="window._updatePropostaBtn()" style="width:18px; height:18px;"/>
+              Cadastrado no CRM empresarial
+            </label>
+          </div>
+          <button type="button" id="btn-proposta-save" class="btn primary sm" style="margin-top:12px; display:none;" onclick="window._salvarFichaCRM('${n.id}')">
+            💾 Salvar e avançar para PROPOSTA
+          </button>
+          <div style="margin-top:10px; text-align:right;">
+            <button type="button" class="btn sm" id="wz-btn-salvar-base">💾 Salvar campos base</button>
+          </div>
+        </div>`;
+    } else if (n.status === 'PROPOSTA') {
+      contextualPanel = `
+        <div style="background:rgba(34,197,94,.07); border:1px solid rgba(34,197,94,.35); border-radius:10px; padding:14px; margin-top:14px;">
+          <div style="font-weight:700; color:#22c55e; margin-bottom:4px;">✅ Ficha preenchida · Cadastrado no CRM</div>
+          <div class="muted small">Este negócio está em acompanhamento no CRM empresarial externo.</div>
+        </div>`;
+    } else if (n.status === 'VENDA') {
+      contextualPanel = `
+        <div style="background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.4); border-radius:10px; padding:14px; margin-top:14px;">
+          <div style="font-weight:700; color:#22c55e; margin-bottom:4px;">🏆 VENDA REALIZADA</div>
+          <div class="muted small">Este negócio foi convertido em venda.</div>
+        </div>`;
+    }
+  }
+
+  // ── NEW NEGÓCIO: minimal form ────────────────────────────────────────────
+  if (isNew) {
+    openModal(`
+      <h2>+ Novo Negócio</h2>
+      <form id="neg-form" class="form">
         <div class="form-row">
           <div>
             <label>Corretor <span style="color:var(--red);">*</span></label>
             <div class="autocomplete">
-              <input name="corretor" id="neg-corretor" value="${escapeHtml(n.corretor||'')}" autocomplete="off" required/>
+              <input name="corretor" id="neg-corretor" value="" autocomplete="off" required/>
               <div id="neg-corretor-list" class="autocomplete-list"></div>
             </div>
             <div id="neg-corretor-contato" class="muted small mt-4"></div>
@@ -2666,7 +2782,7 @@ function editNegocio(id) {
           <div>
             <label>Imobiliária <span style="color:var(--red);">*</span></label>
             <div class="autocomplete">
-              <input name="imobiliaria" id="neg-imob" value="${escapeHtml(n.imobiliaria||'')}" autocomplete="off" required/>
+              <input name="imobiliaria" id="neg-imob" value="" autocomplete="off" required/>
               <div id="neg-imob-list" class="autocomplete-list"></div>
             </div>
           </div>
@@ -2675,101 +2791,118 @@ function editNegocio(id) {
           <div><label>Produto <span style="color:var(--red);">*</span></label>
             <select name="produto" required>
               <option value="">— Selecione —</option>
-              ${PRODUTOS.map(p=>`<option ${n.produto===p?'selected':''}>${p}</option>`).join('')}
-            </select>
-          </div>
-          <div><label>Status / Etapa</label>
-            <select name="status" id="neg-status-select">
-              ${FUNIL_GPI.filter(s => isAdmin() || s !== 'VENDA').map(s=>`<option value="${s}" ${n.status===s?'selected':''}>${s}</option>`).join('')}
+              ${PRODUTOS.map(p=>`<option>${p}</option>`).join('')}
             </select>
           </div>
         </div>
-      </div>
+        <div class="form-row">
+          <div><label>Cliente — Nome</label><input name="cliente1" value="" /></div>
+          <div><label>Telefone / WhatsApp</label><input name="fone1" value="" /></div>
+        </div>
+        <div><label>Observações</label><textarea name="observacoes"></textarea></div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+          <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
+          <button type="submit" class="btn primary">Criar</button>
+        </div>
+      </form>
+    `);
 
+    const _negImobList = isAdmin() ? DB.imobiliarias.map(i=>i.nome) : (DB.carteira[myGpi]||[]);
+    setupAutocomplete($('#neg-imob'), $('#neg-imob-list'), _negImobList, () => {});
+    const corrNomes = isAdmin() ? DB.corretores.map(c=>c.nome) : DB.corretores.filter(c=>c.gpiAssoc===myGpi).map(c=>c.nome);
+    setupAutocomplete($('#neg-corretor'), $('#neg-corretor-list'), corrNomes, val => {
+      const c = DB.corretores.find(x => x.nome === val);
+      if (c) {
+        $('#neg-corretor-contato').textContent = [c.fone, c.imobiliaria].filter(Boolean).join(' · ');
+        if (c.imobiliaria && !$('#neg-imob').value) $('#neg-imob').value = c.imobiliaria;
+      }
+    });
+
+    $('#neg-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const obj = Object.fromEntries(fd.entries());
+      if (!obj.corretor?.trim()) return toast('Informe o corretor','error');
+      if (!obj.imobiliaria?.trim()) return toast('Informe a imobiliária','error');
+      if (!obj.produto) return toast('Selecione o produto','error');
+      Object.assign(n, obj);
+      n.status = 'INTERESSADOS';
+      if (!n.historico) n.historico = [];
+      n.historico.push({ data: todayISO(), autor: CURRENT_USER?.email||'', gpi: n.responsavel||'',
+        etapaDe: '—', etapaPara: 'INTERESSADOS', obs: 'Negócio cadastrado' });
+      n.dataUltimaAtualizacao = todayISO();
+      if (n.imobiliaria && !DB.imobiliarias.some(i => i.nome === n.imobiliaria)) {
+        DB.imobiliarias.push({ nome: n.imobiliaria, lat:null, lng:null, endereco:'' });
+      }
+      DB.negocios.push(n);
+      DB.funil.push({ id: uid(), data: todayISO(), papel:'GPI', pessoa: n.responsavel||'',
+        etapa:'INTERESSADOS', qtd:1, obs:`Novo negócio: ${obj.cliente1||obj.imobiliaria||''}`, ref: n.id });
+      saveDB(); closeModal(); toast('Negócio criado ✓','success');
+      if (window._reloadNegocios) _reloadNegocios();
+      updateNavBadges();
+    });
+    return;
+  }
+
+  // ── EXISTING NEGÓCIO: full wizard ────────────────────────────────────────
+  openModal(`
+    <h2>Editar Negócio</h2>
+    ${statusPill}
+    <form id="neg-form" class="form">
+      <div class="form-row">
+        <div>
+          <label>Corretor <span style="color:var(--red);">*</span></label>
+          <div class="autocomplete">
+            <input name="corretor" id="neg-corretor" value="${escapeHtml(n.corretor||'')}" autocomplete="off" required/>
+            <div id="neg-corretor-list" class="autocomplete-list"></div>
+          </div>
+          <div id="neg-corretor-contato" class="muted small mt-4"></div>
+        </div>
+        <div>
+          <label>Imobiliária <span style="color:var(--red);">*</span></label>
+          <div class="autocomplete">
+            <input name="imobiliaria" id="neg-imob" value="${escapeHtml(n.imobiliaria||'')}" autocomplete="off" required/>
+            <div id="neg-imob-list" class="autocomplete-list"></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div><label>Produto <span style="color:var(--red);">*</span></label>
+          <select name="produto" required>
+            <option value="">— Selecione —</option>
+            ${PRODUTOS.map(p=>`<option ${n.produto===p?'selected':''}>${p}</option>`).join('')}
+          </select>
+        </div>
+      </div>
       <div class="form-row">
         <div><label>Cliente — Nome</label><input name="cliente1" value="${escapeHtml(n.cliente1||'')}" /></div>
-        <div>
-          <label>Telefone / WhatsApp</label>
-          <input name="fone1" id="neg-fone1" value="${escapeHtml(n.fone1||'')}" placeholder="Com contato → lançar no CRM Dynamics"/>
-        </div>
-      </div>
-      <div id="neg-crm-hint" style="display:${hasCRM?'block':'none'}; margin-bottom:8px;">
-        <span class="crm-flag">🔗 Lançar no CRM Dynamics</span>
-      </div>
-
-      <div class="form-row">
-        <div><label>Unidade</label><input name="unidade" value="${escapeHtml(n.unidade||'')}" /></div>
-        <div><label>VGV (R$)</label><input name="vgv" type="number" step="0.01" value="${n.vgv||0}" /></div>
-      </div>
-      <div class="form-row">
-        <div><label>CPF</label><input name="cpf1" value="${escapeHtml(n.cpf1||'')}" /></div>
-        <div><label>Cliente 2 (opcional)</label><input name="cliente2" value="${escapeHtml(n.cliente2||'')}" /></div>
-      </div>
-      <div class="form-row">
-        <div><label>Estrutura</label><select name="estrutura">${ESTRUTURAS.map(e=>`<option ${n.estrutura===e?'selected':''}>${e}</option>`).join('')}</select></div>
-        <div><label>Responsável</label>
-          <select name="responsavel" ${lockGpi?'disabled':''}>
-            <option value="">—</option>
-            ${DB.gpis.map(r=>`<option ${n.responsavel===r?'selected':''}>${r}</option>`).join('')}
-          </select>
-          ${lockGpi?`<input type="hidden" name="responsavel" value="${escapeHtml(myGpi)}"/>`:''}
-        </div>
-      </div>
-      <div class="form-row">
-        <div><label>Data</label><input type="date" name="data" value="${escapeHtml(n.data||'')}" /></div>
-        <div><label>Data de assinatura</label><input type="date" name="dataAssinatura" value="${escapeHtml(n.dataAssinatura||'')}" /></div>
-      </div>
-      <div class="form-row">
-        <div><label>Homologado</label><select name="homologado"><option value="false" ${!n.homologado?'selected':''}>Não</option><option value="true" ${n.homologado?'selected':''}>Sim</option></select></div>
+        <div><label>Telefone / WhatsApp</label><input name="fone1" value="${escapeHtml(n.fone1||'')}" /></div>
       </div>
       <div><label>Observações</label><textarea name="observacoes">${escapeHtml(n.observacoes||'')}</textarea></div>
 
-      ${n._crm_locked ? `
-      <div style="background:rgba(34,197,94,.07); border:1px solid rgba(34,197,94,.35); border-radius:10px; padding:14px; margin-top:14px;">
-        <div style="font-weight:700; color:#22c55e; margin-bottom:4px;">✅ Ficha preenchida · Cadastrado no CRM</div>
-        <div class="muted small">Este negócio está em acompanhamento no CRM empresarial externo.</div>
-      </div>` : `
-      <div style="background:var(--panel-2); padding:12px; border-radius:10px; margin-top:14px; border:1px solid rgba(99,102,241,.3);" id="proposta-box">
-        <div class="card-title" style="margin-bottom:8px;">📋 Proposta / CRM</div>
-        <div class="muted small" style="margin-bottom:12px;">Marque quando o corretor entregar a ficha preenchida e o cadastro for feito no CRM empresarial. Após salvar, este negócio fica bloqueado para edição do GPI.</div>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-          <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px;">
-            <input type="checkbox" id="chk-ficha" onchange="window._updatePropostaBtn()" style="width:18px; height:18px;"/>
-            Ficha de proposta preenchida pelo corretor
-          </label>
-          <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px;">
-            <input type="checkbox" id="chk-crm" onchange="window._updatePropostaBtn()" style="width:18px; height:18px;"/>
-            Cadastrado no CRM empresarial
-          </label>
-        </div>
-        <button type="button" id="btn-proposta-save" class="btn primary sm" style="margin-top:12px; display:none;" onclick="window._salvarFichaCRM('${n.id}')">
-          💾 Salvar e avançar para PROPOSTA
-        </button>
-      </div>`}
+      ${contextualPanel}
 
       <div style="background:var(--panel-2); padding:12px; border-radius:10px; margin-top:14px; border:1px solid var(--line);">
-        <div class="card-title" style="margin-bottom:8px;">Follow-up e Histórico</div>
+        <div class="card-title" style="margin-bottom:8px;">Follow-up</div>
         <div class="form-row">
           <div><label>Próximo Follow-up</label><input type="date" name="proximoFollowup" value="${escapeHtml(n.proximoFollowup||'')}"/></div>
         </div>
         <div>
-          <label>Adicionar interação / atualização</label>
+          <label>Nova interação / atualização</label>
           <textarea name="novaInteracao" placeholder="O que foi conversado? Resumo da evolução..."></textarea>
         </div>
       </div>
 
       <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
         <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
-        <button type="submit" class="btn primary">${isNew ? 'Criar' : 'Salvar'}</button>
+        <button type="submit" class="btn primary">💾 Salvar</button>
       </div>
     </form>
   `);
 
-  // Autocomplete imobiliária — restrito à carteira do GPI
+  // ── AUTOCOMPLETE ─────────────────────────────────────────────────────────
   const _negImobList = isAdmin() ? DB.imobiliarias.map(i=>i.nome) : (DB.carteira[myGpi]||[]);
   setupAutocomplete($('#neg-imob'), $('#neg-imob-list'), _negImobList, () => {});
-
-  // Autocomplete corretor — restrito à carteira do GPI
   const corrNomes = isAdmin() ? DB.corretores.map(c=>c.nome) : DB.corretores.filter(c=>c.gpiAssoc===myGpi).map(c=>c.nome);
   setupAutocomplete($('#neg-corretor'), $('#neg-corretor-list'), corrNomes, val => {
     const c = DB.corretores.find(x => x.nome === val);
@@ -2779,68 +2912,138 @@ function editNegocio(id) {
     }
   });
 
-  // Mostrar hint CRM ao digitar telefone
-  $('#neg-fone1').addEventListener('input', e => {
-    const show = !!e.target.value.trim();
-    $('#neg-crm-hint').style.display = show ? 'block' : 'none';
-  });
+  // ── HELPER: read base fields from form ──────────────────────────────────
+  function _readBaseFields() {
+    const fd = new FormData($('#neg-form'));
+    const obj = Object.fromEntries(fd.entries());
+    delete obj.novaInteracao;
+    return obj;
+  }
 
-  // Sugere proximoFollowup ao mudar status
-  $('#neg-status-select').addEventListener('change', e => {
-    const s = e.target.value;
-    if (s !== 'VENDA' && s !== 'DESCARTADO') {
-      const form = $('#neg-form');
-      if (!form.proximoFollowup.value) form.proximoFollowup.value = addDaysISO(3);
-    }
-  });
-
-  $('#neg-form').addEventListener('submit', e => {
-    e.preventDefault();
-    const fd = new FormData(e.target); const obj = Object.fromEntries(fd.entries());
-    obj.vgv = Number(obj.vgv)||0; obj.homologado = obj.homologado === 'true';
-    
-    // Tratamento de Histórico
-    const novaInt = (obj.novaInteracao||'').trim();
-    const etapaAntiga = n.status || '—';
-    const novaEtapa = obj.status;
-    delete obj.novaInteracao; // remove from object assignment
-
+  // ── HELPER: save base fields + optional history entry ───────────────────
+  function _saveBase(obs) {
+    const obj = _readBaseFields();
+    const novaInt = ($('#neg-form').novaInteracao?.value||'').trim();
     if (!n.historico) n.historico = [];
-    const gpiResp = obj.responsavel || n.responsavel || '';
-    const autorEntry = { data: todayISO(), autor: CURRENT_USER?.email||'', gpi: gpiResp };
-    if (isNew) {
-      n.historico.push({ ...autorEntry, etapaDe: '—', etapaPara: novaEtapa, obs: novaInt || 'Negócio cadastrado' });
-      n.dataUltimaAtualizacao = todayISO();
-    } else if (etapaAntiga !== novaEtapa || novaInt) {
-      n.historico.push({ ...autorEntry, etapaDe: etapaAntiga, etapaPara: novaEtapa, obs: novaInt });
-      n.dataUltimaAtualizacao = todayISO();
-    } else {
-      // Atualização sem mudança de etapa: registrar para contar interações
-      n.historico.push({ ...autorEntry, etapaDe: etapaAntiga, etapaPara: novaEtapa, obs: novaInt || 'Atualização' });
-      n.dataUltimaAtualizacao = todayISO();
-    }
-
-    // Detectar primeiro preenchimento de fone1 → evento CRM_FLAG
-    const foneAnterior = n.fone1 || '';
-    const foneNovo = obj.fone1 || '';
-    if (!foneAnterior && foneNovo) {
-      n.historico.push({ ...autorEntry, etapaDe: etapaAntiga, etapaPara: 'CRM_FLAG', obs: 'Contato do cliente adicionado — lançar no CRM Dynamics' });
-    }
-
-    Object.assign(n, obj);
+    n.historico.push({ data: todayISO(), autor: CURRENT_USER?.email||'', gpi: obj.responsavel||n.responsavel||'',
+      etapaDe: n.status, etapaPara: n.status, obs: obs || novaInt || 'Atualização' });
+    n.dataUltimaAtualizacao = todayISO();
+    if (obj.proximoFollowup) n.proximoFollowup = obj.proximoFollowup;
+    Object.assign(n, { corretor: obj.corretor, imobiliaria: obj.imobiliaria, produto: obj.produto,
+      cliente1: obj.cliente1, fone1: obj.fone1, observacoes: obj.observacoes });
     if (n.imobiliaria && !DB.imobiliarias.some(i => i.nome === n.imobiliaria)) {
       DB.imobiliarias.push({ nome: n.imobiliaria, lat:null, lng:null, endereco:'' });
     }
-    // Bloquear VENDA para não-admins
-    if (obj.status === 'VENDA' && !isAdmin()) {
-      obj.status = n.status || 'PROPOSTA';
-      toast('Apenas admin pode marcar como VENDA','error');
-    }
+  }
 
-    if (isNew) {
-      DB.negocios.push(n);
-      // Auto-adiciona ao funil como INTERESSADOS
-      DB.funil.push({ id: uid(), data: todayISO(), papel:'GPI', pessoa: obj.responsavel||n.responsavel||'', etapa:'INTERESSADOS', qtd:1, obs:`Novo negócio: ${obj.cliente1||obj.imobiliaria||''}`, ref: n.id });
+  // ── INTERESSADOS: agendar / salvar-sem-agendar ────────────────────────
+  if (n.status === 'INTERESSADOS') {
+    $('#wz-btn-agendar')?.addEventListener('click', () => {
+      const data = $('#wz-ag-data')?.value;
+      const hora = $('#wz-ag-hora')?.value || '';
+      if (!data) return toast('Informe a data do agendamento','error');
+      _saveBase(`Agendamento criado: ${data}${hora?' às '+hora:''}`);
+      n.agendamentos = n.agendamentos || [];
+      const agObs = $('#wz-ag-obs')?.value.trim() || '';
+      n.agendamentos.push({ id: uid(), data, hora, obs: agObs, status: 'pendente', criadoEm: todayISO() });
+      const oldStatus = n.status;
+      n.status = 'AGENDAMENTOS';
+      n.proximoFollowup = data;
+      n.historico.push({ data: todayISO(), autor: CURRENT_USER?.email||'', gpi: n.responsavel||'',
+        etapaDe: oldStatus, etapaPara: 'AGENDAMENTOS',
+        obs: `Agendado ${data}${hora?' às '+hora:''}${agObs?' — '+agObs:''}` });
+      DB.funil.push({ id: uid(), data: todayISO(), papel:'GPI', pessoa: n.responsavel||'',
+        etapa:'AGENDAMENTOS', qtd:1, obs:`Agendamento ${data}`, ref: n.id });
+      saveDB(); closeModal(); toast('Agendamento salvo ✓','success');
+      if (window._reloadNegocios) _reloadNegocios();
+      updateNavBadges();
+    });
+    $('#wz-btn-salvar-base')?.addEventListener('click', () => {
+      _saveBase();
+      saveDB(); closeModal(); toast('Salvo ✓','success');
+      if (window._reloadNegocios) _reloadNegocios();
+      updateNavBadges();
+    });
+  }
+
+  // ── AGENDAMENTOS: confirmar atendimento ───────────────────────────────
+  if (n.status === 'AGENDAMENTOS') {
+    $('#wz-btn-aconteceu')?.addEventListener('click', () => {
+      $('#wz-aconteceu-fields').style.display = 'block';
+      $('#wz-nao-aconteceu-fields').style.display = 'none';
+    });
+    $('#wz-btn-nao-aconteceu')?.addEventListener('click', () => {
+      $('#wz-nao-aconteceu-fields').style.display = 'block';
+      $('#wz-aconteceu-fields').style.display = 'none';
+    });
+    $('#wz-btn-salvar-atendimento')?.addEventListener('click', () => {
+      const obsAt = $('#wz-at-obs')?.value.trim() || '';
+      const unid  = $('#wz-at-unidade')?.value.trim() || '';
+      _saveBase(obsAt || 'Atendimento aconteceu');
+      if (pendingAg) pendingAg.status = 'aconteceu';
+      if (unid) n.unidade = unid;
+      const oldStatus = n.status;
+      n.status = 'ATENDIMENTOS';
+      n.historico.push({ data: todayISO(), autor: CURRENT_USER?.email||'', gpi: n.responsavel||'',
+        etapaDe: oldStatus, etapaPara: 'ATENDIMENTOS', obs: obsAt || 'Atendimento realizado' });
+      DB.funil.push({ id: uid(), data: todayISO(), papel:'GPI', pessoa: n.responsavel||'',
+        etapa:'ATENDIMENTOS', qtd:1, obs:`Atendimento: ${(obsAt||'').slice(0,80)}`, ref: n.id });
+      saveDB(); closeModal(); toast('Atendimento registrado ✓','success');
+      if (window._reloadNegocios) _reloadNegocios();
+      updateNavBadges();
+    });
+    $('#wz-btn-reagendar')?.addEventListener('click', () => {
+      const novaData = $('#wz-reagendar-data')?.value;
+      if (!novaData) return toast('Informe a nova data','error');
+      const novaHora = $('#wz-reagendar-hora')?.value || '';
+      const motivo   = $('#wz-reagendar-motivo')?.value.trim() || 'Reagendamento';
+      _saveBase(motivo);
+      if (pendingAg) pendingAg.status = 'nao_aconteceu';
+      n.agendamentos = n.agendamentos || [];
+      n.agendamentos.push({ id: uid(), data: novaData, hora: novaHora, obs: motivo, status: 'pendente', criadoEm: todayISO() });
+      n.proximoFollowup = novaData;
+      n.historico.push({ data: todayISO(), autor: CURRENT_USER?.email||'', gpi: n.responsavel||'',
+        etapaDe: n.status, etapaPara: 'AGENDAMENTOS',
+        obs: `Reagendado ${novaData}${novaHora?' às '+novaHora:''} — ${motivo}` });
+      n.status = 'AGENDAMENTOS';
+      DB.funil.push({ id: uid(), data: todayISO(), papel:'GPI', pessoa: n.responsavel||'',
+        etapa:'AGENDAMENTOS', qtd:1, obs:`Reagendamento ${novaData}`, ref: n.id });
+      saveDB(); closeModal(); toast('Reagendado ✓','success');
+      if (window._reloadNegocios) _reloadNegocios();
+      updateNavBadges();
+    });
+    $('#wz-btn-salvar-base')?.addEventListener('click', () => {
+      _saveBase();
+      saveDB(); closeModal(); toast('Salvo ✓','success');
+      if (window._reloadNegocios) _reloadNegocios();
+      updateNavBadges();
+    });
+  }
+
+  // ── ATENDIMENTOS: CRM / salvar base ───────────────────────────────────
+  if (n.status === 'ATENDIMENTOS' && !n._crm_locked) {
+    $('#wz-btn-salvar-base')?.addEventListener('click', () => {
+      _saveBase();
+      saveDB(); closeModal(); toast('Salvo ✓','success');
+      if (window._reloadNegocios) _reloadNegocios();
+      updateNavBadges();
+    });
+  }
+
+  // ── BASE FORM SUBMIT (follow-up / interação only) ─────────────────────
+  $('#neg-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const novaInt = ($('#neg-form').novaInteracao?.value||'').trim();
+    const obj = _readBaseFields();
+    if (!n.historico) n.historico = [];
+    n.historico.push({ data: todayISO(), autor: CURRENT_USER?.email||'', gpi: obj.responsavel||n.responsavel||'',
+      etapaDe: n.status, etapaPara: n.status, obs: novaInt || 'Atualização' });
+    n.dataUltimaAtualizacao = todayISO();
+    if (obj.proximoFollowup) n.proximoFollowup = obj.proximoFollowup;
+    Object.assign(n, { corretor: obj.corretor, imobiliaria: obj.imobiliaria, produto: obj.produto,
+      cliente1: obj.cliente1, fone1: obj.fone1, observacoes: obj.observacoes });
+    if (n.imobiliaria && !DB.imobiliarias.some(i => i.nome === n.imobiliaria)) {
+      DB.imobiliarias.push({ nome: n.imobiliaria, lat:null, lng:null, endereco:'' });
     }
     saveDB(); closeModal(); toast('Negócio salvo ✓','success');
     if (window._reloadNegocios) _reloadNegocios();

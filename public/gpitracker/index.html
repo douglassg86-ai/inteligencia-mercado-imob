@@ -1612,7 +1612,8 @@ VIEWS.visita = () => {
     updateStatus();
   };
 
-  setupAutocomplete($('#visit-imob'), $('#visit-imob-list'), DB.imobiliarias.map(i => i.nome), val => {
+  const _acImobs = (lockGpi && myGpi) ? (DB.carteira[myGpi]||[]) : DB.imobiliarias.map(i => i.nome);
+  setupAutocomplete($('#visit-imob'), $('#visit-imob-list'), _acImobs, val => {
     window._visitSelectImob(val);
   });
   $('#visit-imob').addEventListener('input', () => { selImob = null; updateStatus(); });
@@ -1702,7 +1703,8 @@ VIEWS.visita = () => {
     saveDB(); renderProgramList();
   };
 
-  const last = DB.visitas.slice(0,15);
+  const _visMyGpi = CURRENT_USER?.gpiAssoc || null;
+  const last = (_visMyGpi && !isAdmin()) ? DB.visitas.filter(v => v.gpi === _visMyGpi).slice(0,15) : DB.visitas.slice(0,15);
   $('#visit-list').innerHTML = last.length ? `<div class="table-wrap"><table>
     <thead><tr><th>Data</th><th>Hora</th><th>GPI</th><th>Imobiliária</th><th>Corretores</th><th>Obs</th>${isAdmin()?'<th></th>':''}</tr></thead>
     <tbody>${last.map(v => `<tr>
@@ -2015,7 +2017,9 @@ VIEWS.funil = () => {
     $('#funil-stages').innerHTML = html;
   }
   function renderLog() {
-    const log = DB.funil.slice().sort((a,b)=> (b.data+b.id).localeCompare(a.data+a.id)).slice(0,15);
+    const _logGpi = CURRENT_USER?.gpiAssoc || null;
+    const logAll = DB.funil.slice().sort((a,b)=> (b.data+b.id).localeCompare(a.data+a.id));
+    const log = (_logGpi && !isAdmin()) ? logAll.filter(f => f.pessoa === _logGpi).slice(0,15) : logAll.slice(0,15);
     $('#funil-log').innerHTML = log.length ? `<div class="table-wrap"><table>
       <thead><tr><th>Data</th><th>Papel</th><th>Pessoa</th><th>Etapa</th><th>Qtd</th><th>Obs</th>${isAdmin()?'<th></th>':''}</tr></thead>
       <tbody>${log.map(f => `<tr>
@@ -2455,15 +2459,16 @@ VIEWS.negocios = () => {
           const fupStr = n.proximoFollowup ? `${n.proximoFollowup.slice(8,10)}/${n.proximoFollowup.slice(5,7)}` : '—';
           const fupWarn = negocioIsStale(n) ? ' ⚠️' : negocioIsDue(n) ? ' 📅' : '';
           const crmFlag = n.fone1 ? `<span class="crm-flag">CRM</span>` : '';
+          const crmLock = n._crm_locked ? `<span class="crm-flag" style="background:rgba(99,102,241,.15); border-color:rgba(99,102,241,.4); color:#818cf8;">🔒 CRM</span>` : '';
           return `<tr>
             <td onclick="event.stopPropagation()">
-              <select class="quick-status" onchange="quickStatusNegocio('${n.id}', this.value)">
+              <select class="quick-status" onchange="quickStatusNegocio('${n.id}', this.value)" ${n._crm_locked&&!isAdmin()?'disabled':''}>
                 ${FUNIL_GPI.filter(s => isAdmin() || s !== 'VENDA').map(s=>`<option value="${s}"${n.status===s?' selected':''}>${s}</option>`).join('')}
               </select>
             </td>
             <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.produto||'—')}</td>
             <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.unidade||'—')}</td>
-            <td class="truncate" style="max-width:180px; cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.cliente1||'—')} ${crmFlag}</td>
+            <td class="truncate" style="max-width:180px; cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.cliente1||'—')} ${crmFlag}${crmLock}</td>
             <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${fupStr}${fupWarn}</td>
             <td class="truncate" style="max-width:160px; cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.imobiliaria||n.corretor||'—')}</td>
             <td onclick="event.stopPropagation()" style="white-space:nowrap;">
@@ -2482,6 +2487,7 @@ VIEWS.negocios = () => {
           const fupStr = n.proximoFollowup ? `${n.proximoFollowup.slice(8,10)}/${n.proximoFollowup.slice(5,7)}` : '—';
           const fupWarn = negocioIsStale(n) ? ' ⚠️' : negocioIsDue(n) ? ' 📅' : '';
           const crmFlag = n.fone1 ? `<span class="crm-flag">CRM</span>` : '';
+          const crmLock = n._crm_locked ? `<span class="crm-flag" style="background:rgba(99,102,241,.15); border-color:rgba(99,102,241,.4); color:#818cf8;">🔒 CRM</span>` : '';
           return `<tr>
             <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${date||'—'}</td>
             <td onclick="event.stopPropagation()">
@@ -2491,7 +2497,7 @@ VIEWS.negocios = () => {
             </td>
             <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.produto||'')}</td>
             <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.unidade||'')}</td>
-            <td class="truncate" style="max-width:160px; cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.cliente1||'')} ${crmFlag}</td>
+            <td class="truncate" style="max-width:160px; cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.cliente1||'')} ${crmFlag}${crmLock}</td>
             <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${fmtBRLk(n.vgv)}</td>
             <td style="cursor:pointer;" onclick="editNegocio('${n.id}')"><span class="badge gray">${escapeHtml(n.estrutura||'')}</span></td>
             <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.responsavel||'')}</td>
@@ -2511,6 +2517,29 @@ VIEWS.negocios = () => {
   render(); window._reloadNegocios = render;
 };
 
+
+/* Helper para botão proposta */
+window._updatePropostaBtn = () => {
+  const ok = $('#chk-ficha')?.checked && $('#chk-crm')?.checked;
+  const btn = $('#btn-proposta-save');
+  if (btn) btn.style.display = ok ? 'inline-flex' : 'none';
+};
+
+window._salvarFichaCRM = (id) => {
+  const n = DB.negocios.find(x => x.id === id); if (!n) return;
+  const oldStatus = n.status;
+  n._crm_locked = true;
+  n._propostaFunil = true;
+  n.status = 'PROPOSTA';
+  n.dataUltimaAtualizacao = todayISO();
+  if (!n.historico) n.historico = [];
+  n.historico.push({ data: todayISO(), etapaDe: oldStatus, etapaPara: 'PROPOSTA', obs: 'Ficha preenchida · Cadastrado no CRM empresarial', autor: CURRENT_USER?.email||'', gpi: n.responsavel||'' });
+  DB.funil.push({ id: uid(), data: todayISO(), papel:'GPI', pessoa: n.responsavel||'', etapa:'PROPOSTA', qtd:1, obs:'Ficha preenchida e cadastrado no CRM', ref: n.id });
+  saveDB(); closeModal(); toast('Proposta registrada ✓ Negócio agora acompanhado no CRM','success');
+  if (window._reloadNegocios) _reloadNegocios();
+  updateNavBadges();
+};
+
 function editNegocio(id) {
   const isNew = !id;
   const myGpi = CURRENT_USER?.gpiAssoc || null;
@@ -2522,6 +2551,12 @@ function editNegocio(id) {
   if (!n) return;
   const isOwner = n.responsavel === CURRENT_USER?.email || n.responsavel === myGpi;
   if (!isNew && !isAdmin() && !isOwner) return toast('Apenas admin ou responsável podem editar negócios existentes','error');
+  if (!isNew && !isAdmin() && n._crm_locked) {
+    openModal(`<h2>🔒 Negócio no CRM</h2>
+      <p>Ficha preenchida e cadastrado no CRM empresarial.<br>A partir daqui o acompanhamento é feito no <b>CRM externo</b>.<br><span class="muted small">Edição disponível apenas para admins.</span></p>
+      <div style="margin-top:16px; text-align:right;"><button class="btn" onclick="closeModal()">Fechar</button></div>`);
+    return;
+  }
 
   const hasCRM = !!n.fone1;
 
@@ -2604,20 +2639,28 @@ function editNegocio(id) {
       </div>
       <div><label>Observações</label><textarea name="observacoes">${escapeHtml(n.observacoes||'')}</textarea></div>
 
-      <div style="background:var(--panel-2); padding:12px; border-radius:10px; margin-top:14px; border:1px solid rgba(99,102,241,.3);">
-        <div class="card-title" style="margin-bottom:8px;">📋 Proposta</div>
-        <div class="muted small" style="margin-bottom:10px;">Preencher ao apresentar proposta — alimenta automaticamente o funil na etapa <b>PROPOSTA</b>.</div>
-        <div class="form-row">
-          <div><label>Valor da proposta (R$)</label><input type="number" name="proposta_valor" step="0.01" value="${n.proposta?.valor||0}"/></div>
-          <div><label>Valor da entrada (R$)</label><input type="number" name="proposta_entrada" step="0.01" value="${n.proposta?.entrada||0}"/></div>
+      ${n._crm_locked ? `
+      <div style="background:rgba(34,197,94,.07); border:1px solid rgba(34,197,94,.35); border-radius:10px; padding:14px; margin-top:14px;">
+        <div style="font-weight:700; color:#22c55e; margin-bottom:4px;">✅ Ficha preenchida · Cadastrado no CRM</div>
+        <div class="muted small">Este negócio está em acompanhamento no CRM empresarial externo.</div>
+      </div>` : `
+      <div style="background:var(--panel-2); padding:12px; border-radius:10px; margin-top:14px; border:1px solid rgba(99,102,241,.3);" id="proposta-box">
+        <div class="card-title" style="margin-bottom:8px;">📋 Proposta / CRM</div>
+        <div class="muted small" style="margin-bottom:12px;">Marque quando o corretor entregar a ficha preenchida e o cadastro for feito no CRM empresarial. Após salvar, este negócio fica bloqueado para edição do GPI.</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px;">
+            <input type="checkbox" id="chk-ficha" onchange="window._updatePropostaBtn()" style="width:18px; height:18px;"/>
+            Ficha de proposta preenchida pelo corretor
+          </label>
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px;">
+            <input type="checkbox" id="chk-crm" onchange="window._updatePropostaBtn()" style="width:18px; height:18px;"/>
+            Cadastrado no CRM empresarial
+          </label>
         </div>
-        <div class="form-row">
-          <div style="display:flex; align-items:center; gap:10px; padding-top:6px;">
-            <label style="margin:0; cursor:pointer;"><input type="checkbox" name="proposta_dacao" value="1" ${n.proposta?.dacao?'checked':''}/> Dação envolvida</label>
-            <label style="margin:0; cursor:pointer;"><input type="checkbox" name="proposta_migracao" value="1" ${n.proposta?.migracao?'checked':''}/> Migração envolvida</label>
-          </div>
-        </div>
-      </div>
+        <button type="button" id="btn-proposta-save" class="btn primary sm" style="margin-top:12px; display:none;" onclick="window._salvarFichaCRM('${n.id}')">
+          💾 Salvar e avançar para PROPOSTA
+        </button>
+      </div>`}
 
       <div style="background:var(--panel-2); padding:12px; border-radius:10px; margin-top:14px; border:1px solid var(--line);">
         <div class="card-title" style="margin-bottom:8px;">Follow-up e Histórico</div>
@@ -2702,24 +2745,6 @@ function editNegocio(id) {
     if (n.imobiliaria && !DB.imobiliarias.some(i => i.nome === n.imobiliaria)) {
       DB.imobiliarias.push({ nome: n.imobiliaria, lat:null, lng:null, endereco:'' });
     }
-    // Campos proposta
-    const propValor = Number(obj.proposta_valor)||0;
-    const propEntrada = Number(obj.proposta_entrada)||0;
-    const propDacao = !!obj.proposta_dacao;
-    const propMigracao = !!obj.proposta_migracao;
-    delete obj.proposta_valor; delete obj.proposta_entrada;
-    delete obj.proposta_dacao; delete obj.proposta_migracao;
-    if (propValor > 0) {
-      n.proposta = { valor: propValor, entrada: propEntrada, dacao: propDacao, migracao: propMigracao, data: todayISO() };
-      if (!n._propostaFunil) {
-        DB.funil.push({ id: uid(), data: todayISO(), papel:'GPI', pessoa: obj.responsavel||n.responsavel||'', etapa:'PROPOSTA', qtd:1, obs:`Proposta R$${fmtBRLk(propValor)}`, ref: n.id });
-        n._propostaFunil = true;
-      }
-      if (!obj.status || obj.status === 'INTERESSADOS' || obj.status === 'AGENDAMENTOS' || obj.status === 'ATENDIMENTOS') {
-        obj.status = 'PROPOSTA';
-      }
-    }
-
     // Bloquear VENDA para não-admins
     if (obj.status === 'VENDA' && !isAdmin()) {
       obj.status = n.status || 'PROPOSTA';

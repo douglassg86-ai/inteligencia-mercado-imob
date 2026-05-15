@@ -3592,15 +3592,29 @@ function setUserAssoc(i, kind, value) {
 }
 
 /* Accept invite via URL ?invite=token */
-function checkInviteOnLoad() {
+async function checkInviteOnLoad() {
   const params = new URLSearchParams(location.search);
   const t = params.get('invite');
   if (!t) return;
-  const inv = DB.invites.find(i => i.token === t && !i.aceito);
+
+  // Always fetch fresh from Supabase when an invite token is present.
+  // Local cache may be stale (user visited app before the invite was created).
+  let inv = DB.invites?.find(i => i.token === t && !i.aceito);
+  if (!inv && supabaseClient) {
+    try {
+      const { data } = await supabaseClient.from('gpi_estado').select('state_json').eq('id', 1).single();
+      if (data?.state_json) {
+        const fresh = ensureSeedUsers(mergeSeedCoords(data.state_json, loadSeed()));
+        inv = fresh.invites?.find(i => i.token === t && !i.aceito);
+        if (inv) DB = fresh; // update in-memory DB with fresh state
+      }
+    } catch(e) { console.warn('[Invite] Supabase fallback error', e); }
+  }
 
   // Inject registration form directly into the login screen (z-index safe)
   const loginCard = $('.login-card');
   if (!loginCard) return;
+  $('#login-screen').style.display = 'flex'; // ensure visible
 
   if (!inv) {
     loginCard.innerHTML = `

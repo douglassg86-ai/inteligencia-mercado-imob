@@ -564,7 +564,7 @@ tbody tr:last-child td { border-bottom: 0; }
       <button type="submit" class="btn primary block" style="padding: 14px; font-size: 15px;">Entrar</button>
       <div id="login-error" class="small" style="color: var(--red); text-align: center; min-height: 18px;"></div>
     </form>
-    <div class="mt-20 small muted">Esqueceu a senha? <a href="#" id="forgot-link" style="color: var(--accent-2);">Pedir reset por email</a></div>
+    <div class="mt-20 small muted">Esqueceu a senha? Entre em contato com um administrador.</div>
   </div>
 </div>
 
@@ -1065,7 +1065,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   $('#logout-btn').addEventListener('click', logout);
   $('#theme-toggle').addEventListener('click', toggleTheme);
   $('#theme-toggle-mob').addEventListener('click', toggleTheme);
-  if ($('#forgot-link')) $('#forgot-link').addEventListener('click', e => { e.preventDefault(); forgotPassword(); });
   if ($('#change-pwd-btn')) $('#change-pwd-btn').addEventListener('click', openChangePasswordModal);
   $('#hamburger').addEventListener('click', openSidebar);
   $('#scrim').addEventListener('click', closeSidebar);
@@ -1083,6 +1082,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await initCloudStorage();
   if (tryRestoreSession()) showApp(); else showLogin();
+  checkInviteOnLoad();
 });
 
 function openMoreMenu() {
@@ -1137,11 +1137,6 @@ function openChangePasswordModal() {
 }
 
 /* "Esqueci a senha" — sem backend, abrimos um mailto pro admin pedir reset. */
-function forgotPassword() {
-  const subject = encodeURIComponent('GPI GUIDE — Solicitação de reset de senha');
-  const body = encodeURIComponent('Olá Douglas,\n\nEsqueci minha senha do GPI GUIDE. Pode resetar para mim?\n\nMeu email cadastrado: \nMeu nome: \n\nObrigado.');
-  window.location.href = `mailto:do.goncalves@vanguard.com.br?subject=${subject}&body=${body}`;
-}
 
 /* ----- NAV ----- */
 function goto(view) {
@@ -3949,8 +3944,7 @@ function setupAutocomplete(input, listEl, source, onPick) {
   input.addEventListener('focus', () => { if (input.value) input.dispatchEvent(new Event('input')); });
 }
 
-/* check invite link on load */
-window.addEventListener('load', checkInviteOnLoad);
+/* invite check is called in DOMContentLoaded after initCloudStorage */
 
 /* Register Service Worker for PWA with update detection */
 let deferredPrompt;

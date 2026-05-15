@@ -723,10 +723,23 @@ async function initCloudStorage() {
         console.error('[Supabase] Erro ao carregar:', error.message, '| Code:', error.code);
         window._supabaseStatus = { ok: false, msg: error.message, code: error.code };
       } else if (data && data.state_json) {
-        // Supabase é sempre a fonte da verdade — nunca deixar cache local sobrescrever
-        DB = ensureSeedUsers(mergeSeedCoords(data.state_json, loadSeed()));
-        safeLocal.setItem(STORAGE_KEY, JSON.stringify(DB));
-        window._supabaseStatus = { ok: true, msg: 'Dados sincronizados da nuvem.' };
+        const supabaseDB = ensureSeedUsers(mergeSeedCoords(data.state_json, loadSeed()));
+        const localSavedAt  = DB._savedAt  || '0';
+        const supabaseSavedAt = supabaseDB._savedAt || '0';
+
+        if (supabaseSavedAt >= localSavedAt) {
+          // Supabase tem dados iguais ou mais recentes — tomar como verdade
+          DB = supabaseDB;
+          safeLocal.setItem(STORAGE_KEY, JSON.stringify(DB));
+          window._supabaseStatus = { ok: true, msg: 'Dados sincronizados da nuvem.' };
+        } else {
+          // Local é mais novo: o upsert anterior não chegou ao Supabase (ex: refresh rápido)
+          // Manter local e re-enviar para o Supabase agora
+          console.warn('[initCloudStorage] Local mais novo que Supabase — re-enviando.', { local: localSavedAt, sup: supabaseSavedAt });
+          safeLocal.setItem(STORAGE_KEY, JSON.stringify(DB));
+          await supabaseClient.from('gpi_estado').upsert({ id: 1, state_json: DB });
+          window._supabaseStatus = { ok: true, msg: 'Local mais novo — re-sincronizado para nuvem.' };
+        }
       } else {
         // Tabela vazia — envia estado local inicial
         window._supabaseStatus = { ok: true, msg: 'Tabela vazia — enviando estado inicial.' };
@@ -950,22 +963,31 @@ async function saveDB() {
   DB._savedAt = new Date().toISOString();
   const snapshot = JSON.parse(JSON.stringify(DB));
   safeLocal.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+  // Mostra indicador de sincronização no botão de refresh enquanto Supabase processa
+  const refreshBtn = $('#refresh-btn');
+  if (refreshBtn) refreshBtn.textContent = '⏳';
   if (supabaseClient) {
     try {
       const { error } = await supabaseClient.from('gpi_estado').upsert({ id: 1, state_json: snapshot });
       if (error) {
         console.error('[Supabase] Erro ao salvar:', error.message);
+        if (refreshBtn) refreshBtn.textContent = '⚠️';
         if (!window._supErrShown) {
           window._supErrShown = true;
-          setTimeout(() => toast('⚠️ Supabase: ' + error.message + ' — Verifique a aba Config―', 'error'), 300);
+          toast('⚠️ Erro ao salvar na nuvem: ' + error.message, 'error');
         }
       } else {
         window._supErrShown = false;
         window._supabaseStatus = { ok: true, msg: 'Salvo na nuvem.' };
+        if (refreshBtn) { refreshBtn.textContent = '✅'; setTimeout(() => { if ($('#refresh-btn')) $('#refresh-btn').textContent = '🔄'; }, 1500); }
       }
     } catch(err) {
       console.error('[Supabase] Exceção ao salvar:', err);
+      if (refreshBtn) refreshBtn.textContent = '⚠️';
+      toast('⚠️ Falha de conexão ao salvar. Tente novamente.', 'error');
     }
+  } else {
+    if (refreshBtn) { refreshBtn.textContent = '💾'; setTimeout(() => { if ($('#refresh-btn')) $('#refresh-btn').textContent = '🔄'; }, 1500); }
   }
 }
 

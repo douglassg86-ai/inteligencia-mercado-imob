@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gpi-tracker-v3.4';
+const CACHE_NAME = 'gpi-tracker-v3.5';
 const urlsToCache = [
   '/gpitracker/index.html',
   'https://cdn.jsdelivr.net/npm/chart.js',

@@ -590,6 +590,7 @@ tbody tr:last-child td { border-bottom: 0; }
       <button data-view="cadastros" data-admin="1">👥 &nbsp; Cadastros <span id="nav-req-badge" class="nav-badge" style="display:none;">0</span></button>
       <button data-view="usuarios" data-admin="1">🔐 &nbsp; Usuários</button>
       <button data-view="metricas" data-admin="1">📊 &nbsp; Métricas GPI</button>
+      <button data-view="auditlog" data-admin="1">🔍 &nbsp; Auditoria</button>
       <button data-view="config" data-admin="1">⚙️ &nbsp; Configurações</button>
     </div>
     <button id="pwa-install-btn" class="btn-install" style="display:none;">
@@ -794,6 +795,7 @@ function ensureSeedUsers(db) {
   db.visitas_programadas = db.visitas_programadas || [];
   db.carteira = db.carteira || {};
   db.pendingRequests = db.pendingRequests || [];
+  db._auditLog = db._auditLog || [];
 
   // One-time migration: rename NEGOCIAÇÃO→PROPOSTA in negócios existentes
   if (db.negocios) {
@@ -912,6 +914,40 @@ async function saveDB() {
   }
 }
 
+/* ---- AUDIT / SNAPSHOT ---- */
+const _SNAP_THROTTLE = {};
+async function saveSnapshot(trigger) {
+  if (!supabaseClient) return;
+  const key = trigger || 'MANUAL';
+  const now = Date.now();
+  if (_SNAP_THROTTLE[key] && now - _SNAP_THROTTLE[key] < 60000) return;
+  _SNAP_THROTTLE[key] = now;
+  try {
+    const snap = JSON.parse(JSON.stringify(DB));
+    delete snap._auditLog;
+    const by = CURRENT_USER ? `${CURRENT_USER.nome} (${CURRENT_USER.email})` : 'sistema';
+    await supabaseClient.from('gpi_audit_snapshots').insert({ saved_by: by, trigger_action: key, state_json: snap });
+    const { data } = await supabaseClient.from('gpi_audit_snapshots').select('id,saved_at').order('saved_at', { ascending: false });
+    if (data && data.length > 20) {
+      const ids = data.slice(20).map(r => r.id);
+      await supabaseClient.from('gpi_audit_snapshots').delete().in('id', ids);
+    }
+  } catch(err) { console.error('[Snapshot]', err); }
+}
+function logAction(action, entity, entityId, before) {
+  DB._auditLog = DB._auditLog || [];
+  DB._auditLog.unshift({
+    id: uid(),
+    ts: new Date().toISOString(),
+    user: CURRENT_USER ? `${CURRENT_USER.nome} (${CURRENT_USER.email})` : 'sistema',
+    action, entity, entityId: String(entityId||''),
+    before: before ? JSON.parse(JSON.stringify(before)) : null
+  });
+  if (DB._auditLog.length > 500) DB._auditLog.length = 500;
+  const destructive = ['DELETE_IMOB','DELETE_CORRETOR','DELETE_GPI','STATUS_VENDA','SAVE_CARTEIRA'];
+  if (destructive.includes(action)) saveSnapshot(action);
+}
+
 /* ----- HELPERS ----- */
 const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -920,6 +956,7 @@ const fmtBRLk = v => { const n = Number(v)||0; if (n>=1e6) return 'R$ '+(n/1e6).
 const fmtNum = v => (Number(v)||0).toLocaleString('pt-BR');
 const fmtPct = v => isFinite(v) ? (v*100).toFixed(1).replace('.0','')+'%' : '—';
 const todayISO = () => new Date().toISOString().slice(0,10);
+const fmtDateTime = ts => { try { const d = new Date(ts); return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); } catch(e){ return ts||''; } };
 const uid = () => 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
 const escapeHtml = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials = name => (name||'').split(/\s+/).map(p=>p[0]).join('').slice(0,2).toUpperCase() || '??';
@@ -3007,6 +3044,7 @@ function confirmVendaNegocio(id) {
   const vgv = Number($('#venda-vgv')?.value) || 0;
   if (!vgv) return toast('Informe o VGV da venda','error');
   const old = n.status;
+  logAction('STATUS_VENDA', 'negocio', n.cliente1||n.id, JSON.parse(JSON.stringify(n)));
   n.vgv = vgv;
   n.dataAssinatura = n.dataAssinatura || todayISO();
   n.status = 'VENDA';
@@ -3104,6 +3142,154 @@ VIEWS.minhacarteira = () => {
   };
 };
 
+/* ============= AUDITORIA ============= */
+VIEWS.auditlog = () => {
+  if (!isAdmin()) return goto('dashboard');
+  let activeTab = 'log';
+
+  const ACTION_META = {
+    DELETE_IMOB:    { label: 'Deletou imobiliária', color: '#ef4444' },
+    DELETE_CORRETOR:{ label: 'Deletou corretor',    color: '#ef4444' },
+    DELETE_GPI:     { label: 'Deletou GPI',          color: '#ef4444' },
+    STATUS_VENDA:   { label: 'Registrou venda',      color: '#10b981' },
+    SAVE_CARTEIRA:  { label: 'Alterou carteira',     color: '#f59e0b' },
+    RESOLVE_REQUEST:{ label: 'Resolveu solicitação', color: '#6366f1' },
+    RESTORE:        { label: 'Restaurou item',       color: '#06b6d4' },
+  };
+
+  function renderPage() {
+    const logs = DB._auditLog || [];
+    $('#app').innerHTML = `
+      <div class="page-head">
+        <div><h1>Auditoria</h1><p>Rastro completo de ações e snapshots para rollback.</p></div>
+        <button class="btn primary" onclick="window._manualSnapshot()">📦 Criar snapshot</button>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+        <button class="btn${activeTab==='log'?' primary':''}" onclick="window._auditTab('log')">📋 Log de Ações <span class="pill">${logs.length}</span></button>
+        <button class="btn${activeTab==='snaps'?' primary':''}" onclick="window._auditTab('snaps')">📦 Snapshots</button>
+      </div>
+      <div id="audit-content"></div>
+    `;
+    window._auditTab = t => { activeTab = t; renderContent(); };
+    window._manualSnapshot = async () => {
+      toast('Criando snapshot...','');
+      await saveSnapshot('MANUAL');
+      toast('Snapshot criado ✓','success');
+      if (activeTab === 'snaps') renderContent();
+    };
+    renderContent();
+  }
+
+  function renderContent() {
+    const el = $('#audit-content'); if (!el) return;
+    if (activeTab === 'log') renderLog(el); else renderSnaps(el);
+  }
+
+  function renderLog(el) {
+    const logs = DB._auditLog || [];
+    const actionKeys = [...new Set(logs.map(e => e.action))];
+    el.innerHTML = `
+      <div class="card">
+        <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+          <input id="audit-search" placeholder="🔍 Buscar..." style="flex:1; min-width:160px;"/>
+          <select id="audit-filter" style="min-width:160px;">
+            <option value="">Todas as ações</option>
+            ${actionKeys.map(k => `<option value="${k}">${(ACTION_META[k]||{label:k}).label}</option>`).join('')}
+          </select>
+        </div>
+        <div id="audit-log-list"></div>
+      </div>
+    `;
+
+    function renderList() {
+      const search = $('#audit-search').value.toLowerCase().trim();
+      const filter = $('#audit-filter').value;
+      const filtered = logs.filter(e =>
+        (!filter || e.action === filter) &&
+        (!search || JSON.stringify(e).toLowerCase().includes(search))
+      );
+      const canRestore = new Set(['DELETE_IMOB','DELETE_CORRETOR','DELETE_GPI']);
+      $('#audit-log-list').innerHTML = filtered.length === 0
+        ? '<div class="empty">Nenhum registro.</div>'
+        : filtered.map(e => {
+            const meta = ACTION_META[e.action] || { label: e.action, color: '#6b7280' };
+            return `
+              <div style="display:flex; align-items:flex-start; gap:12px; padding:10px 12px; border-bottom:1px solid var(--line); flex-wrap:wrap;">
+                <div style="flex:1; min-width:0;">
+                  <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:2px;">
+                    <span style="font-size:11px; padding:2px 8px; border-radius:99px; background:${meta.color}22; color:${meta.color}; font-weight:700; white-space:nowrap;">${meta.label}</span>
+                    <strong class="small">${escapeHtml(e.entityId)}</strong>
+                  </div>
+                  <span class="muted small">${escapeHtml(e.user)} &middot; ${fmtDateTime(e.ts)}</span>
+                </div>
+                ${canRestore.has(e.action) && e.before ? `<button class="btn sm" onclick="window._auditRestore('${e.id}')">↩ Restaurar</button>` : ''}
+              </div>`;
+          }).join('');
+    }
+
+    renderList();
+    $('#audit-search').addEventListener('input', renderList);
+    $('#audit-filter').addEventListener('change', renderList);
+
+    window._auditRestore = id => {
+      const entry = (DB._auditLog||[]).find(e => e.id === id);
+      if (!entry?.before) return;
+      if (!confirm(`Restaurar "${entry.entityId}"?`)) return;
+      if (entry.action === 'DELETE_IMOB') {
+        if (!DB.imobiliarias.some(i => i.nome === entry.before.nome)) DB.imobiliarias.push(entry.before);
+      } else if (entry.action === 'DELETE_CORRETOR') {
+        if (!DB.corretores.some(c => c.nome === entry.before.nome)) DB.corretores.push(entry.before);
+      } else if (entry.action === 'DELETE_GPI') {
+        if (!DB.gpis.includes(entry.before.nome)) DB.gpis.push(entry.before.nome);
+        if (entry.before.carteira) DB.carteira[entry.before.nome] = entry.before.carteira;
+      }
+      logAction('RESTORE', entry.entity, entry.entityId, null);
+      saveDB(); toast(`"${entry.entityId}" restaurado ✓`, 'success');
+      renderPage();
+    };
+  }
+
+  async function renderSnaps(el) {
+    el.innerHTML = `<div class="card"><div class="empty muted small">Carregando snapshots...</div></div>`;
+    if (!supabaseClient) { el.innerHTML = `<div class="card"><div class="empty">Supabase não conectado.</div></div>`; return; }
+    const { data, error } = await supabaseClient
+      .from('gpi_audit_snapshots').select('id,saved_at,saved_by,trigger_action')
+      .order('saved_at', { ascending: false }).limit(20);
+    if (error) { el.innerHTML = `<div class="card"><div class="empty">Erro: ${escapeHtml(error.message)}</div></div>`; return; }
+    if (!data?.length) { el.innerHTML = `<div class="card"><div class="empty">Nenhum snapshot ainda. Clique em "Criar snapshot" para salvar o estado atual.</div></div>`; return; }
+    el.innerHTML = `
+      <div class="card">
+        <p class="muted small" style="margin:0 0 14px;">Ao restaurar um snapshot, o estado atual é salvo como backup antes da substituição. O app será recarregado.</p>
+        ${data.map((s,i) => `
+          <div style="display:flex; align-items:center; gap:12px; padding:10px 12px; border-bottom:1px solid var(--line); flex-wrap:wrap;">
+            <div style="flex:1;">
+              ${i===0 ? '<span style="font-size:10px; padding:1px 6px; border-radius:99px; background:#10b98122; color:#10b981; font-weight:700; margin-right:6px;">mais recente</span>' : ''}
+              <strong class="small">${fmtDateTime(s.saved_at)}</strong><br/>
+              <span class="muted small">${escapeHtml(s.saved_by||'—')} &middot; ${escapeHtml(s.trigger_action||'manual')}</span>
+            </div>
+            <button class="btn sm danger" onclick="window._restoreSnapshot('${s.id}')">↩ Restaurar</button>
+          </div>`).join('')}
+      </div>
+    `;
+    window._restoreSnapshot = async id => {
+      if (!confirm('Restaurar este snapshot? O estado atual será salvo como backup antes.')) return;
+      toast('Restaurando...','');
+      await saveSnapshot('PRE_RESTORE');
+      const { data: snap, error: e2 } = await supabaseClient.from('gpi_audit_snapshots').select('state_json').eq('id', id).single();
+      if (e2 || !snap?.state_json) return toast('Erro ao carregar snapshot','error');
+      Object.keys(DB).forEach(k => { if (k !== '_savedAt') delete DB[k]; });
+      Object.assign(DB, snap.state_json);
+      DB._savedAt = new Date().toISOString();
+      await saveDB();
+      toast('Estado restaurado ✓ Recarregando...','success');
+      setTimeout(() => location.reload(), 1800);
+    };
+  }
+
+  renderPage();
+};
+
+/* ============= CADASTROS ============= */
 VIEWS.cadastros = () => {
   $('#app').innerHTML = `
     <div class="page-head"><div><h1>Cadastros</h1><p>Imobiliárias, corretores e GPIs.</p></div></div>
@@ -3265,6 +3451,7 @@ VIEWS.cadastros = () => {
   window._saveCarteira = () => {
     const gpi = $('#carteira-gpi-sel').value;
     const selected = [...$$('#carteira-imob-grid .carteira-btn.active')].map(b => b.dataset.nome);
+    logAction('SAVE_CARTEIRA', 'carteira', gpi, { gpi, before: JSON.parse(JSON.stringify(DB.carteira[gpi]||[])) });
     DB.carteira[gpi] = selected;
     saveDB(); toast(`Carteira de ${gpi} salva ✓ (${selected.length} imobiliárias)`, 'success');
     renderCarteiraGrid();
@@ -3279,6 +3466,8 @@ function addImob() {
 function removeImob(name) {
   if (!isAdmin()) return toast('Apenas admin','error');
   if (!confirm('Remover '+name+'?')) return;
+  const before = DB.imobiliarias.find(x => x.nome === name);
+  logAction('DELETE_IMOB', 'imobiliaria', name, before);
   DB.imobiliarias = DB.imobiliarias.filter(x => x.nome !== name);
   saveDB(); window._reloadImob && _reloadImob();
 }
@@ -3296,10 +3485,19 @@ function addCorr() {
 }
 function removeCorr(idx) {
   if (!isAdmin()) return toast('Apenas admin','error');
+  const before = DB.corretores[idx];
+  if (!confirm('Remover corretor ' + (before?.nome||'') + '?')) return;
+  logAction('DELETE_CORRETOR', 'corretor', before?.nome||String(idx), before);
   DB.corretores.splice(idx,1); saveDB(); window._reloadCorr && _reloadCorr();
 }
 function addGpi() { const v = $('#add-gpi').value.trim(); if (!v) return; if (!DB.gpis.includes(v)) DB.gpis.push(v); saveDB(); VIEWS.cadastros(); }
-function removeGpi(n) { if (!isAdmin()) return; DB.gpis = DB.gpis.filter(x => x !== n); saveDB(); VIEWS.cadastros(); }
+function removeGpi(n) {
+  if (!isAdmin()) return;
+  if (!confirm('Remover GPI ' + n + '? A carteira será perdida.')) return;
+  logAction('DELETE_GPI', 'gpi', n, { nome: n, carteira: JSON.parse(JSON.stringify(DB.carteira[n]||[])) });
+  DB.gpis = DB.gpis.filter(x => x !== n);
+  saveDB(); VIEWS.cadastros();
+}
 // addExec/removeExec removidos
 
 /* ============= USUÁRIOS ============= */

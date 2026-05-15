@@ -1950,9 +1950,7 @@ VIEWS.funil = () => {
   $('#app').innerHTML = `
     <div class="page-head">
       <div><h1>Funil GPI · Entrada Rápida</h1>
-        <p>${lockPessoa
-            ? `Lançando como <b>${escapeHtml(myGpi)}</b>. <span class="muted">CONTATOS EFETIVOS = contagem rápida. INTERESSADOS+ abrem o cadastro de cliente.</span>`
-            : 'Toque para incrementar. <span class="muted">CONTATOS EFETIVOS = contagem rápida. INTERESSADOS+ abrem o cadastro de cliente para gerar lead.</span>'}</p>
+        <p class="muted small">Contagens alimentadas automaticamente: CONTATOS EFETIVOS pelas visitas e treinamentos; demais etapas pelos negócios.</p>
       </div>
     </div>
     ${lockPessoa ? '' : '<div class="card mb-12"><div class="card-title">Pessoa</div><div class="chips" id="funil-pessoa"></div></div>'}
@@ -1988,8 +1986,8 @@ VIEWS.funil = () => {
       const color = STAGE_COLORS[i % STAGE_COLORS.length];
       const count = counts[e] || 0;
       
-      // Stage Box — CONTATOS EFETIVOS tem botões; demais são read-only (alimentados pelos negócios)
-      const isManual = e === 'CONTATOS EFETIVOS';
+      // Stage Box — apenas leitura; contagens vêm de visitas, treinamentos e negócios
+      const sourceLabel = e === 'CONTATOS EFETIVOS' ? 'visitas · treinamentos' : 'negócios';
       html += `
         <div class="funnel-stage" style="border-left: 4px solid ${color};">
           <div class="info">
@@ -1997,12 +1995,7 @@ VIEWS.funil = () => {
             <div class="count" style="color:${color};">${count}</div>
           </div>
           <div class="actions">
-            ${isManual ? `
-              <button class="btn sm" data-act="inc" data-d="1"  data-etapa="${escapeHtml(e)}">+1</button>
-              <button class="btn sm" data-act="inc" data-d="5"  data-etapa="${escapeHtml(e)}">+5</button>
-              <button class="btn sm" data-act="inc-n"           data-etapa="${escapeHtml(e)}">+N</button>
-              ${isAdmin()?`<button class="btn sm danger" data-act="inc" data-d="-1" data-etapa="${escapeHtml(e)}">−1</button>`:''}
-            ` : `<span class="muted small" style="font-size:11px;">via negócios</span>`}
+            <span class="muted small" style="font-size:11px;">via ${sourceLabel}</span>
           </div>
         </div>
       `;

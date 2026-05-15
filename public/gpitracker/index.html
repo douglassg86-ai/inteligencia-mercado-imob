@@ -3597,24 +3597,65 @@ function checkInviteOnLoad() {
   const t = params.get('invite');
   if (!t) return;
   const inv = DB.invites.find(i => i.token === t && !i.aceito);
-  if (!inv) return;
-  // show registration screen
-  const html = `<h2>Bem-vindo ao GPI GUIDE!</h2>
-    <p class="muted">Você foi convidado como <strong>${inv.role}</strong>. Defina uma senha para ativar seu acesso.</p>
-    <form id="reg-form" class="form mt-12">
+
+  // Inject registration form directly into the login screen (z-index safe)
+  const loginCard = $('.login-card');
+  if (!loginCard) return;
+
+  if (!inv) {
+    loginCard.innerHTML = `
+      <div class="logo">GPI</div>
+      <div class="tagline">Link inválido ou já utilizado</div>
+      <p class="muted small mt-12">Este convite não existe ou já foi aceito. Faça login normalmente ou solicite um novo convite ao administrador.</p>
+      <button class="btn primary block mt-20" onclick="location.href=location.pathname">Ir para o login</button>
+    `;
+    return;
+  }
+
+  loginCard.innerHTML = `
+    <div class="logo">GPI</div>
+    <div class="tagline" style="margin-bottom:4px;">Bem-vindo ao GPI GUIDE!</div>
+    <p class="muted small" style="margin-bottom:20px;">Você foi convidado como <strong>${escapeHtml(inv.role === 'admin' ? 'Administrador' : 'GPI / Visualizador')}</strong>. Defina sua senha para ativar o acesso.</p>
+    <form id="reg-form" class="form">
       <div><label>Nome</label><input name="nome" value="${escapeHtml(inv.nome)}" required/></div>
-      <div><label>Email</label><input value="${escapeHtml(inv.email)}" disabled/></div>
-      <div><label>Senha (mín 6)</label><input name="password" type="password" minlength="6" required/></div>
-      <button type="submit" class="btn primary block">Criar minha conta</button>
-    </form>`;
-  openModal(html);
+      <div><label>Email</label><input value="${escapeHtml(inv.email)}" disabled style="opacity:.6;"/></div>
+      <div><label>Senha (mín. 6 caracteres)</label><input id="reg-pwd" name="password" type="password" minlength="6" required autocomplete="new-password"/></div>
+      <div><label>Confirmar senha</label><input id="reg-pwd2" name="password2" type="password" minlength="6" required autocomplete="new-password"/></div>
+      <div id="reg-error" class="small" style="color:var(--red); min-height:18px; text-align:center;"></div>
+      <button type="submit" class="btn primary block" style="padding:14px; font-size:15px;">Criar minha conta</button>
+    </form>
+  `;
+
   $('#reg-form').addEventListener('submit', e => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    DB.users.push({ email: inv.email, password: fd.get('password'), nome: fd.get('nome'), role: inv.role });
-    inv.aceito = true; saveDB(); closeModal();
+    const pwd = fd.get('password');
+    const pwd2 = fd.get('password2');
+    if (pwd !== pwd2) { $('#reg-error').textContent = 'As senhas não coincidem.'; return; }
+    DB.users.push({ email: inv.email, password: pwd, nome: fd.get('nome'), role: inv.role, gpiAssoc: inv.gpiAssoc || null });
+    inv.aceito = true;
+    saveDB();
     history.replaceState({}, '', location.pathname);
-    toast('Conta criada ✓ Faça login','success');
+    // Restore normal login card and show success
+    showLogin();
+    loginCard.innerHTML = `
+      <div class="logo">GPI</div>
+      <div class="tagline">Plataforma de gestão comercial para GPIs</div>
+      <form id="login-form" class="form">
+        <div><label>Email</label><input type="email" name="email" required autocomplete="username" value="${escapeHtml(inv.email)}"/></div>
+        <div><label>Senha</label><input type="password" name="password" required autocomplete="current-password"/></div>
+        <button type="submit" class="btn primary block" style="padding:14px; font-size:15px;">Entrar</button>
+        <div id="login-error" class="small" style="color:var(--red); text-align:center; min-height:18px;">Conta criada com sucesso! Faça seu login.</div>
+      </form>
+      <div class="mt-20 small muted">Esqueceu a senha? Entre em contato com um administrador.</div>
+    `;
+    $('#login-form').addEventListener('submit', ev => {
+      ev.preventDefault();
+      const f = new FormData(ev.target);
+      const u = login(f.get('email'), f.get('password'));
+      if (u) { $('#login-error').textContent = ''; showApp(); }
+      else $('#login-error').textContent = 'Email ou senha incorretos.';
+    });
   });
 }
 

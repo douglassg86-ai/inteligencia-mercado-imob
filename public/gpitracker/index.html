@@ -615,6 +615,7 @@ tbody tr:last-child td { border-bottom: 0; }
         <div class="logo" style="width:32px;height:32px;font-size:10px;">GPI</div>
         <div><div class="title" style="font-size:14px;">GPI GUIDE</div></div>
       </div>
+      <button class="icon-btn" id="refresh-btn" title="Atualizar dados" onclick="refreshDB()">🔄</button>
       <button class="icon-btn" id="theme-toggle-mob" title="Tema">🌙</button>
     </div>
     <main class="main" id="app"></main>
@@ -713,7 +714,7 @@ async function initCloudStorage() {
   if (window.supabase) {
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   }
-  DB = loadLocalDB(); // Fallback síncrono rápido
+  DB = loadLocalDB(); // Fallback síncrono enquanto Supabase responde
 
   if (supabaseClient) {
     try {
@@ -722,21 +723,12 @@ async function initCloudStorage() {
         console.error('[Supabase] Erro ao carregar:', error.message, '| Code:', error.code);
         window._supabaseStatus = { ok: false, msg: error.message, code: error.code };
       } else if (data && data.state_json) {
-        const supaDB = ensureSeedUsers(mergeSeedCoords(data.state_json, loadSeed()));
-        const localTs = DB?._savedAt || '0';
-        const supaTs = supaDB?._savedAt || '0';
-        if (supaTs >= localTs) {
-          DB = supaDB;
-          safeLocal.setItem(STORAGE_KEY, JSON.stringify(DB));
-          window._supabaseStatus = { ok: true, msg: 'Conexão OK — dados sincronizados da nuvem.' };
-          console.log('[Supabase] Dados carregados da nuvem com sucesso.');
-        } else {
-          console.log('[Supabase] Dados locais mais recentes — sincronizando para nuvem.');
-          window._supabaseStatus = { ok: true, msg: 'Local mais recente — sincronizado para nuvem.' };
-          await supabaseClient.from('gpi_estado').upsert({ id: 1, state_json: DB });
-        }
+        // Supabase é sempre a fonte da verdade — nunca deixar cache local sobrescrever
+        DB = ensureSeedUsers(mergeSeedCoords(data.state_json, loadSeed()));
+        safeLocal.setItem(STORAGE_KEY, JSON.stringify(DB));
+        window._supabaseStatus = { ok: true, msg: 'Dados sincronizados da nuvem.' };
       } else {
-        // tabela existe mas sem linha id=1 ainda, salva o estado atual
+        // Tabela vazia — envia estado local inicial
         window._supabaseStatus = { ok: true, msg: 'Tabela vazia — enviando estado inicial.' };
         await supabaseClient.from('gpi_estado').upsert({ id: 1, state_json: DB });
       }
@@ -747,6 +739,26 @@ async function initCloudStorage() {
   } else {
     window._supabaseStatus = { ok: false, msg: 'SDK não carregado. Verifique o script CDN.' };
   }
+}
+
+// Atualiza DB do Supabase sem recarregar a página e re-renderiza a view atual
+let _currentView = 'dashboard';
+async function refreshDB(silent = false) {
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.from('gpi_estado').select('state_json').eq('id', 1).single();
+    if (error || !data?.state_json) return;
+    const fresh = ensureSeedUsers(mergeSeedCoords(data.state_json, loadSeed()));
+    // Só atualiza se realmente há dados novos
+    if (fresh._savedAt && fresh._savedAt === DB._savedAt) return;
+    DB = fresh;
+    safeLocal.setItem(STORAGE_KEY, JSON.stringify(DB));
+    // Re-renderiza a view atual
+    const fn = VIEWS[_currentView];
+    if (fn) fn();
+    updateNavBadges();
+    if (!silent) toast('Dados atualizados ✓', 'success');
+  } catch(e) { console.warn('[refreshDB]', e); }
 }
 
 function loadSeed() {
@@ -1052,6 +1064,15 @@ function showApp() {
       setTimeout(() => toast('🔑 Você está usando uma senha temporária. Clique no ícone 🔑 na barra lateral para alterá-la.', 'error'), 1200);
     }
   }, 600);
+
+  // Auto-refresh: busca dados novos do Supabase a cada 2 minutos (só quando a aba está visível)
+  if (window._autoRefreshInterval) clearInterval(window._autoRefreshInterval);
+  window._autoRefreshInterval = setInterval(() => {
+    if (!document.hidden) refreshDB(true);
+  }, 120000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshDB(true);
+  }, { once: false });
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1146,6 +1167,7 @@ function goto(view) {
   if (['cadastros','usuarios','config','metricas','auditlog'].includes(view)) {
     if (!isAdmin()) { toast('Acesso restrito a administradores','error'); return goto('dashboard'); }
   }
+  _currentView = view;
   const fn = VIEWS[view] || VIEWS.dashboard;
   fn();
   updateNavBadges();

@@ -1087,7 +1087,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function openMoreMenu() {
   const items = [];
-  if (isAdmin()) items.push(['cadastros','👥 Cadastros'], ['usuarios','🔐 Usuários'], ['metricas','📊 Métricas GPI'], ['config','⚙️ Configurações']);
+  if (isAdmin()) items.push(['cadastros','👥 Cadastros'], ['usuarios','🔐 Usuários'], ['metricas','📊 Métricas GPI'], ['auditlog','🔍 Auditoria'], ['config','⚙️ Configurações']);
   items.push(['minhacarteira','🗂️ Minha Carteira']);
   items.push(['__pwd','🔑 Trocar minha senha']);
   items.push(['__theme', '🌓 Alternar tema'], ['__logout','🚪 Sair']);
@@ -1148,7 +1148,7 @@ function goto(view) {
   $$('#nav button[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
   $$('#bottom-nav button[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
   closeSidebar();
-  if (['cadastros','usuarios','config','metricas'].includes(view)) {
+  if (['cadastros','usuarios','config','metricas','auditlog'].includes(view)) {
     if (!isAdmin()) { toast('Acesso restrito a administradores','error'); return goto('dashboard'); }
   }
   const fn = VIEWS[view] || VIEWS.dashboard;

@@ -752,9 +752,10 @@ function loadSeed() {
   return JSON.parse(document.getElementById('seed-data').textContent);
 }
 function normImob(n) {
+  const raw = typeof n === 'string' ? n : (n.nome || '');
   return typeof n === 'string'
-    ? ({ nome: n, lat: null, lng: null, endereco: '' })
-    : ({ nome: n.nome || '', lat: n.lat ?? null, lng: n.lng ?? null, endereco: n.endereco || n.addr || '' });
+    ? ({ nome: raw.trim().toUpperCase(), lat: null, lng: null, endereco: '' })
+    : ({ nome: raw.trim().toUpperCase(), lat: n.lat ?? null, lng: n.lng ?? null, endereco: n.endereco || n.addr || '' });
 }
 function mergeSeedCoords(db, seed) {
   /* Fill missing lat/lng from seed for imobiliárias the user already has cached. */
@@ -808,10 +809,34 @@ function ensureSeedUsers(db) {
     db._migV3 = true;
   }
 
-  // Garantir imobiliária "Autonomo" para corretores independentes
+  // Migration v4: uppercase all imob names + link corretores sem imobiliária ao AUTONOMO
+  if (!db._migV4) {
+    const up = s => (s||'').trim().toUpperCase();
+    db.imobiliarias = (db.imobiliarias||[]).map(i => ({ ...i, nome: up(i.nome) }));
+    // deduplica após uppercase
+    const seen4 = new Set();
+    db.imobiliarias = db.imobiliarias.filter(i => { if (seen4.has(i.nome)) return false; seen4.add(i.nome); return true; });
+    // carteira
+    Object.keys(db.carteira||{}).forEach(g => {
+      db.carteira[g] = [...new Set((db.carteira[g]||[]).map(n => up(n)))];
+    });
+    // negócios
+    (db.negocios||[]).forEach(n => { if (n.imobiliaria) n.imobiliaria = up(n.imobiliaria); });
+    // visitas
+    (db.visitas||[]).forEach(v => { if (v.imobiliaria) v.imobiliaria = up(v.imobiliaria); });
+    // visitas_programadas
+    (db.visitas_programadas||[]).forEach(p => { if (p.imobiliaria) p.imobiliaria = up(p.imobiliaria); });
+    // corretores: uppercase imob + fallback AUTONOMO
+    (db.corretores||[]).forEach(c => {
+      c.imobiliaria = c.imobiliaria ? up(c.imobiliaria) : 'AUTONOMO';
+    });
+    db._migV4 = true;
+  }
+
+  // Garantir imobiliária "AUTONOMO" para corretores independentes
   db.imobiliarias = db.imobiliarias || [];
-  if (!db.imobiliarias.find(i => i.nome.toLowerCase() === 'autonomo')) {
-    db.imobiliarias.unshift({ nome: 'Autonomo', lat: null, lng: null, endereco: '' });
+  if (!db.imobiliarias.find(i => i.nome === 'AUTONOMO')) {
+    db.imobiliarias.unshift({ nome: 'AUTONOMO', lat: null, lng: null, endereco: '' });
   }
 
   // MIGRAR LEADS ANTIGOS PARA NEGÓCIOS
@@ -3057,7 +3082,7 @@ VIEWS.minhacarteira = () => {
   window._addMinhaCorrреtor = () => {
     const nome = $('#mc-nome').value.trim();
     const fone = $('#mc-fone').value.trim();
-    const imob = $('#mc-imob').value.trim();
+    const imob = ($('#mc-imob').value.trim().toUpperCase()) || 'AUTONOMO';
     if (!nome) return toast('Informe o nome do corretor','error');
 
     // Verifica duplicata
@@ -3247,7 +3272,7 @@ VIEWS.cadastros = () => {
 };
 
 function addImob() {
-  const v = $('#add-imob').value.trim(); if (!v) return;
+  const v = $('#add-imob').value.trim().toUpperCase(); if (!v) return;
   if (!DB.imobiliarias.some(i => i.nome === v)) DB.imobiliarias.push({ nome: v, lat: null, lng: null, endereco: '' });
   $('#add-imob').value=''; saveDB(); window._reloadImob && _reloadImob();
 }
@@ -3261,11 +3286,11 @@ function addCorr() {
   if (!isAdmin()) return toast('Apenas admin pode adicionar corretores aqui','error');
   const nome = $('#add-corr-nome').value.trim(); if (!nome) return;
   const fone = $('#add-corr-fone').value.trim();
-  const imob = $('#add-corr-imob').value.trim();
+  const imob = ($('#add-corr-imob').value.trim().toUpperCase()) || 'AUTONOMO';
   if (DB.corretores.some(c => c.nome.toLowerCase() === nome.toLowerCase())) {
     toast('Corretor já cadastrado','error'); return;
   }
-  DB.corretores.push({ nome, fone: fone||'', imobiliaria: imob||'', gpiAssoc: null });
+  DB.corretores.push({ nome, fone: fone||'', imobiliaria: imob, gpiAssoc: null });
   $('#add-corr-nome').value=''; $('#add-corr-fone').value=''; $('#add-corr-imob').value='';
   saveDB(); window._reloadCorr && _reloadCorr();
 }

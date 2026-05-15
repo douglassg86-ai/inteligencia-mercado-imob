@@ -693,7 +693,7 @@ const SEED_GPI_USERS = [
   { email:'re.santos@vanguard.com.br', password:'1234',          nome:'Renato',  role:'viewer', gpiAssoc:'Renato',  mustChangePassword:true },
   { email:'r.vieira@vanguard.com.br',  password:'JjPqdcvGJcgi', nome:'Raffael', role:'viewer', gpiAssoc:'Raffael' },
   { email:'r.jardim@vanguard.com.br',  password:'1234',          nome:'Jardim',  role:'viewer', gpiAssoc:'Jardim',  mustChangePassword:true },
-  { email:'c.braga@vanguard.com.br',   password:'1234',          nome:'Braga',   role:'viewer', gpiAssoc:'Braga',   mustChangePassword:true },
+  { email:'c.braga@vanguard.com.br',   password:'1234',          nome:'Charles', role:'viewer', gpiAssoc:'Charles', mustChangePassword:true },
 ];
 /* Emails antigos que devem ser removidos do localStorage de usuários que rodaram versões anteriores. */
 const DEPRECATED_EMAILS = [
@@ -819,7 +819,7 @@ function ensureSeedUsers(db) {
     db.negocios = [];
     db.carteira = {};
     db.gpis = db.gpis || [];
-    if (!db.gpis.includes('Braga')) db.gpis.push('Braga');
+    if (!db.gpis.includes('Charles')) db.gpis.push('Charles');
     db._migV3 = true;
   }
 
@@ -845,6 +845,22 @@ function ensureSeedUsers(db) {
       c.imobiliaria = c.imobiliaria ? up(c.imobiliaria) : 'AUTONOMO';
     });
     db._migV4 = true;
+  }
+
+  // Migration v5: rename GPI Braga → Charles everywhere
+  if (!db._migV5) {
+    db.gpis = (db.gpis||[]).map(g => g === 'Braga' ? 'Charles' : g);
+    if (db.carteira && db.carteira['Braga']) {
+      db.carteira['Charles'] = db.carteira['Braga'];
+      delete db.carteira['Braga'];
+    }
+    (db.corretores||[]).forEach(c => { if (c.gpiAssoc === 'Braga') c.gpiAssoc = 'Charles'; });
+    (db.negocios||[]).forEach(n => { if (n.responsavel === 'Braga') n.responsavel = 'Charles'; });
+    (db.funil||[]).forEach(f => { if (f.pessoa === 'Braga') f.pessoa = 'Charles'; });
+    (db.visitas||[]).forEach(v => { if (v.gpi === 'Braga') v.gpi = 'Charles'; });
+    (db.visitas_programadas||[]).forEach(p => { if (p.gpi === 'Braga') p.gpi = 'Charles'; });
+    (db.users||[]).forEach(u => { if (u.gpiAssoc === 'Braga') u.gpiAssoc = 'Charles'; if (u.nome === 'Braga') u.nome = 'Charles'; });
+    db._migV5 = true;
   }
 
   // Garantir imobiliária "AUTONOMO" para corretores independentes
@@ -895,7 +911,7 @@ function loadLocalDB() {
     imobiliarias: (seed.imobiliarias || []).map(normImob),
     corretores: [],
     carteira: {},
-    gpis: ['Nishi','Renato','Raffael','Jardim','Braga'],
+    gpis: ['Nishi','Renato','Raffael','Jardim','Charles'],
     executivos: [],
     metaMes: { gpiContatos: 4000, execProspeccao: 10000 },
     users: [SEED_ADMIN, ...SEED_ADMIN_USERS, ...SEED_GPI_USERS],
@@ -2625,6 +2641,23 @@ window._salvarFichaCRM = (id) => {
   updateNavBadges();
 };
 
+window._reqImobUpdate = (nomeCorretor, imobAtual) => {
+  const myGpi = CURRENT_USER?.gpiAssoc;
+  if (!myGpi) return;
+  const novaImob = prompt(`Imobiliária atual registrada: "${imobAtual}"\n\nQual é a imobiliária correta? (deixe em branco para cancelar)`);
+  if (!novaImob || !novaImob.trim()) return;
+  DB.pendingRequests = DB.pendingRequests || [];
+  DB.pendingRequests.push({
+    id: uid(), tipo: 'corretor_imob_update', gpiSolicitante: myGpi,
+    nome: nomeCorretor, nomeImob: novaImob.trim().toUpperCase(),
+    imobAnterior: imobAtual, data: todayISO(), status: 'pendente'
+  });
+  saveDB(); updateNavBadges();
+  toast('Solicitação enviada ao admin ✓', 'success');
+  const btn = $('#neg-imob-update-btn');
+  if (btn) btn.innerHTML = '<span class="muted small">✓ Solicitação enviada</span>';
+};
+
 function editNegocio(id) {
   const isNew = !id;
   const myGpi = CURRENT_USER?.gpiAssoc || null;
@@ -2785,6 +2818,7 @@ function editNegocio(id) {
               <input name="imobiliaria" id="neg-imob" value="" autocomplete="off" required/>
               <div id="neg-imob-list" class="autocomplete-list"></div>
             </div>
+            <div id="neg-imob-update-btn"></div>
           </div>
         </div>
         <div class="form-row">
@@ -2812,10 +2846,14 @@ function editNegocio(id) {
     const corrNomes = isAdmin() ? DB.corretores.map(c=>c.nome) : DB.corretores.filter(c=>c.gpiAssoc===myGpi).map(c=>c.nome);
     setupAutocomplete($('#neg-corretor'), $('#neg-corretor-list'), corrNomes, val => {
       const c = DB.corretores.find(x => x.nome === val);
+      const btn = $('#neg-imob-update-btn');
       if (c) {
         $('#neg-corretor-contato').textContent = [c.fone, c.imobiliaria].filter(Boolean).join(' · ');
         if (c.imobiliaria && !$('#neg-imob').value) $('#neg-imob').value = c.imobiliaria;
-      }
+        if (btn && c.imobiliaria && !isAdmin()) {
+          btn.innerHTML = `<button type="button" class="btn" style="font-size:11px;padding:3px 8px;margin-top:4px;" onclick="window._reqImobUpdate('${escapeHtml(c.nome)}','${escapeHtml(c.imobiliaria||'')}')">⚠️ Imobiliária desatualizada? Solicitar atualização</button>`;
+        } else if (btn) btn.innerHTML = '';
+      } else if (btn) btn.innerHTML = '';
     });
 
     $('#neg-form').addEventListener('submit', e => {
@@ -2864,6 +2902,7 @@ function editNegocio(id) {
             <input name="imobiliaria" id="neg-imob" value="${escapeHtml(n.imobiliaria||'')}" autocomplete="off" required/>
             <div id="neg-imob-list" class="autocomplete-list"></div>
           </div>
+          <div id="neg-imob-update-btn"></div>
         </div>
       </div>
       <div class="form-row">
@@ -2906,10 +2945,14 @@ function editNegocio(id) {
   const corrNomes = isAdmin() ? DB.corretores.map(c=>c.nome) : DB.corretores.filter(c=>c.gpiAssoc===myGpi).map(c=>c.nome);
   setupAutocomplete($('#neg-corretor'), $('#neg-corretor-list'), corrNomes, val => {
     const c = DB.corretores.find(x => x.nome === val);
+    const btn = $('#neg-imob-update-btn');
     if (c) {
       $('#neg-corretor-contato').textContent = [c.fone, c.imobiliaria].filter(Boolean).join(' · ');
       if (c.imobiliaria && !$('#neg-imob').value) $('#neg-imob').value = c.imobiliaria;
-    }
+      if (btn && c.imobiliaria && !isAdmin()) {
+        btn.innerHTML = `<button type="button" class="btn" style="font-size:11px;padding:3px 8px;margin-top:4px;" onclick="window._reqImobUpdate('${escapeHtml(c.nome)}','${escapeHtml(c.imobiliaria||'')}')">⚠️ Imobiliária desatualizada? Solicitar atualização</button>`;
+      } else if (btn) btn.innerHTML = '';
+    } else if (btn) btn.innerHTML = '';
   });
 
   // ── HELPER: read base fields from form ──────────────────────────────────
@@ -3298,12 +3341,30 @@ VIEWS.minhacarteira = () => {
 
   const myImobs = (DB.carteira[myGpi] || []).slice().sort((a,b) => a.localeCompare(b));
   const myCorretores = DB.corretores.filter(c => c.gpiAssoc === myGpi).sort((a,b) => a.nome.localeCompare(b.nome));
+  const poolCorretores = DB.corretores.filter(c => !c.gpiAssoc).sort((a,b) => a.nome.localeCompare(b.nome));
+
+  let poolSearch = '';
+
+  function renderPool() {
+    const el = $('#mc-pool-list'); if (!el) return;
+    const q = poolSearch.toLowerCase();
+    const filtered = q ? poolCorretores.filter(c => c.nome.toLowerCase().includes(q) || (c.imobiliaria||'').toLowerCase().includes(q)) : poolCorretores;
+    if (filtered.length === 0) {
+      el.innerHTML = `<div class="empty small">${q ? 'Nenhum corretor encontrado.' : 'Pool vazio — todos os corretores já têm GPI.'}</div>`;
+      return;
+    }
+    el.innerHTML = filtered.map(c => `
+      <div style="display:flex; justify-content:space-between; padding:8px 12px; border-bottom:1px solid var(--line); align-items:center; gap:8px;">
+        <div style="flex:1;"><strong>${escapeHtml(c.nome)}</strong><br/><span class="muted small">${c.imobiliaria ? escapeHtml(c.imobiliaria) : 'Sem imobiliária'}</span></div>
+        <button class="btn primary" style="font-size:12px; padding:4px 10px;" onclick="window._claimCorretor('${escapeHtml(c.nome)}')">Incluir na minha carteira</button>
+      </div>`).join('');
+  }
 
   $('#app').innerHTML = `
     <div class="page-head">
       <div>
         <h1>Minha Carteira · ${escapeHtml(myGpi)}</h1>
-        <p>Imobiliárias atribuídas pelos admins. Para adicionar corretores à sua carteira, use o formulário abaixo.</p>
+        <p>Imobiliárias atribuídas pelos admins e seus corretores.</p>
       </div>
       <span class="badge gold">${myImobs.length} imob${myImobs.length===1?'':'s'}</span>
     </div>
@@ -3323,27 +3384,60 @@ VIEWS.minhacarteira = () => {
         <input id="mc-fone" placeholder="Telefone" style="flex:1; min-width:120px;"/>
         <input id="mc-imob" placeholder="Imobiliária" list="mc-imob-list" style="flex:1; min-width:140px;"/>
         <datalist id="mc-imob-list">${myImobs.map(n=>`<option value="${escapeHtml(n)}">`).join('')}</datalist>
-        <button class="btn primary" onclick="window._addMinhaCorrреtor()">+ Add</button>
+        <button class="btn primary" onclick="window._addMinhaCorr()">+ Add</button>
       </div>
       <div id="mc-corr-list">
         ${myCorretores.length === 0
           ? `<div class="empty small">Nenhum corretor na sua carteira ainda.</div>`
-          : myCorretores.map((c,i) => `
+          : myCorretores.map(c => `
             <div style="display:flex; justify-content:space-between; padding:8px 12px; border-bottom:1px solid var(--line); align-items:center; gap:8px;">
               <div style="flex:1;"><strong>${escapeHtml(c.nome)}</strong><br/><span class="muted small">${escapeHtml(c.fone||'')}${c.imobiliaria?' · '+escapeHtml(c.imobiliaria):''}</span></div>
             </div>`).join('')
         }
       </div>
     </div>
+
+    <div class="card mb-12">
+      <div class="card-title">🔍 Pool de Corretores <span class="pill">${poolCorretores.length}</span></div>
+      <p class="muted small" style="margin-bottom:10px;">Corretores sem GPI responsável. Você pode incluí-los na sua carteira.</p>
+      <input id="mc-pool-search" placeholder="Buscar por nome ou imobiliária…" style="width:100%; margin-bottom:10px;" oninput="window._poolSearch(this.value)"/>
+      <div id="mc-pool-list"></div>
+    </div>
   `;
 
-  window._addMinhaCorrреtor = () => {
+  renderPool();
+
+  window._poolSearch = (v) => { poolSearch = v; renderPool(); };
+
+  window._claimCorretor = (nome) => {
+    const c = DB.corretores.find(x => x.nome === nome);
+    if (!c) return toast('Corretor não encontrado', 'error');
+    if (c.gpiAssoc) return toast(`Este corretor já pertence a ${c.gpiAssoc}`, 'error');
+    c.gpiAssoc = myGpi;
+    // remove from pool array reference
+    const idx = poolCorretores.findIndex(x => x.nome === nome);
+    if (idx !== -1) poolCorretores.splice(idx, 1);
+    myCorretores.push(c);
+    myCorretores.sort((a,b) => a.nome.localeCompare(b.nome));
+    saveDB();
+    toast(`${nome} adicionado à sua carteira ✓`, 'success');
+    // update counters
+    const poolPill = document.querySelector('.card-title .pill:last-child');
+    $('#mc-pool-list') && renderPool();
+    // refresh my list
+    const myList = $('#mc-corr-list');
+    if (myList) myList.innerHTML = myCorretores.map(co => `
+      <div style="display:flex; justify-content:space-between; padding:8px 12px; border-bottom:1px solid var(--line); align-items:center; gap:8px;">
+        <div style="flex:1;"><strong>${escapeHtml(co.nome)}</strong><br/><span class="muted small">${escapeHtml(co.fone||'')}${co.imobiliaria?' · '+escapeHtml(co.imobiliaria):''}</span></div>
+      </div>`).join('');
+  };
+
+  window._addMinhaCorr = () => {
     const nome = $('#mc-nome').value.trim();
     const fone = $('#mc-fone').value.trim();
     const imob = ($('#mc-imob').value.trim().toUpperCase()) || 'AUTONOMO';
     if (!nome) return toast('Informe o nome do corretor','error');
 
-    // Verifica duplicata
     const dup = DB.corretores.find(c => c.nome.toLowerCase() === nome.toLowerCase());
     if (dup) {
       const dono = dup.gpiAssoc || 'sem carteira';
@@ -3353,7 +3447,6 @@ VIEWS.minhacarteira = () => {
       toast(`Corretor já existe (${dono}). Solicitação enviada ao admin.`, 'error');
       return;
     }
-    // Verifica imob duplicada (quando GPI tenta cadastrar imob como nome de corretor — não aplicável, mas verifica se a imob já existe e não é da carteira)
     DB.corretores.push({ nome, fone: fone||'', imobiliaria: imob||'', gpiAssoc: myGpi });
     ['mc-nome','mc-fone','mc-imob'].forEach(id => { const el = $('#'+id); if (el) el.value=''; });
     saveDB();
@@ -3595,9 +3688,9 @@ VIEWS.cadastros = () => {
       <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--line); gap:8px; flex-wrap:wrap;">
         <div style="flex:1;">
           <strong>${escapeHtml(r.nome)}</strong>
-          <span class="muted small"> · ${r.tipo === 'corretor' ? '👤 Corretor' : '🏢 Imobiliária'}</span><br/>
-          <span class="muted small">Solicitado por <b>${escapeHtml(r.gpiSolicitante)}</b>${r.gpiAtual && r.gpiAtual !== 'sem carteira' ? ` · atual: <b>${escapeHtml(r.gpiAtual)}</b>` : ' · sem carteira'} · ${escapeHtml(r.data)}</span>
-          ${r.nomeImob ? `<br/><span class="muted small">Imob: ${escapeHtml(r.nomeImob)}</span>` : ''}
+          <span class="muted small"> · ${r.tipo === 'corretor_imob_update' ? '🔄 Atualizar Imobiliária' : r.tipo === 'corretor' ? '👤 Corretor' : '🏢 Imobiliária'}</span><br/>
+          <span class="muted small">Solicitado por <b>${escapeHtml(r.gpiSolicitante)}</b>${r.tipo === 'corretor_imob_update' ? '' : (r.gpiAtual && r.gpiAtual !== 'sem carteira' ? ` · atual: <b>${escapeHtml(r.gpiAtual)}</b>` : ' · sem carteira')} · ${escapeHtml(r.data)}</span>
+          ${r.tipo === 'corretor_imob_update' ? `<br/><span class="muted small">De: <b>${escapeHtml(r.imobAnterior||'?')}</b> → Para: <b>${escapeHtml(r.nomeImob||'?')}</b></span>` : (r.nomeImob ? `<br/><span class="muted small">Imob: ${escapeHtml(r.nomeImob)}</span>` : '')}
         </div>
         <div style="display:flex; gap:6px;">
           <button class="btn sm primary" onclick="window._resolveRequest('${r.id}','aprovar')">✓ Aprovar</button>
@@ -3610,17 +3703,23 @@ VIEWS.cadastros = () => {
   window._resolveRequest = (id, acao) => {
     const req = (DB.pendingRequests || []).find(r => r.id === id); if (!req) return;
     req.status = acao === 'aprovar' ? 'aprovado' : 'rejeitado';
-    if (acao === 'aprovar' && req.tipo === 'corretor') {
-      const existing = DB.corretores.find(c => c.nome.toLowerCase() === req.nome.toLowerCase());
-      if (existing) {
-        existing.gpiAssoc = req.gpiSolicitante;
-        if (req.nomeImob) existing.imobiliaria = req.nomeImob;
-      } else {
-        DB.corretores.push({ nome: req.nome, fone: '', imobiliaria: req.nomeImob||'', gpiAssoc: req.gpiSolicitante });
+    if (acao === 'aprovar') {
+      if (req.tipo === 'corretor') {
+        const existing = DB.corretores.find(c => c.nome.toLowerCase() === req.nome.toLowerCase());
+        if (existing) {
+          existing.gpiAssoc = req.gpiSolicitante;
+          if (req.nomeImob) existing.imobiliaria = req.nomeImob;
+        } else {
+          DB.corretores.push({ nome: req.nome, fone: '', imobiliaria: req.nomeImob||'', gpiAssoc: req.gpiSolicitante });
+        }
+      } else if (req.tipo === 'corretor_imob_update') {
+        const c = DB.corretores.find(x => x.nome.toLowerCase() === req.nome.toLowerCase());
+        if (c && req.nomeImob) c.imobiliaria = req.nomeImob;
       }
     }
+    logAction('RESOLVE_REQUEST', req.tipo, req.id, req);
     saveDB(); updateNavBadges(); renderPendingRequests(); renderCorr();
-    toast(acao === 'aprovar' ? `${req.nome} aprovado e atribuído a ${req.gpiSolicitante} ✓` : `Solicitação rejeitada`, acao === 'aprovar' ? 'success' : 'error');
+    toast(acao === 'aprovar' ? `${req.nome} aprovado ✓` : `Solicitação rejeitada`, acao === 'aprovar' ? 'success' : 'error');
   };
 
   if (!isAdmin() || !$('#carteira-gpi-sel')) return;

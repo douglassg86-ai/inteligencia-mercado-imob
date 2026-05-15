@@ -662,20 +662,20 @@ const safeSession = {
 const PRODUTOS = ['SHIFT','EDITION','VERDANT','MOOD','YUNA','ORBITALE','SYNTHĒ','WAVE','TREND HOME','TREND NANO','TREND OFFICE','TREND LOJAS','AVULSO'];
 const ESTRUTURAS = ['PARCERIAS', 'DIRETA', 'TGD'];
 const FUNIL_EXEC = ['PROSPECÇÃO','CONTATOS EFETIVOS','INTERESSADOS','AGENDAMENTOS','ATENDIMENTOS','NEGOCIAÇÃO','VENDA'];
-const FUNIL_GPI  = ['CONTATOS EFETIVOS','INTERESSADOS','AGENDAMENTOS','ATENDIMENTOS','NEGOCIAÇÃO','VENDA'];
+const FUNIL_GPI  = ['CONTATOS EFETIVOS','INTERESSADOS','AGENDAMENTOS','ATENDIMENTOS','PROPOSTA','VENDA'];
 const META_EXEC = { 'PROSPECÇÃO': null, 'CONTATOS EFETIVOS': .14, 'INTERESSADOS': .20, 'AGENDAMENTOS': .20, 'ATENDIMENTOS': .45, 'NEGOCIAÇÃO': .35, 'VENDA': .25 };
-const META_GPI  = { 'CONTATOS EFETIVOS': null, 'INTERESSADOS': .10, 'AGENDAMENTOS': .35, 'ATENDIMENTOS': .40, 'NEGOCIAÇÃO': .75, 'VENDA': .65 };
+const META_GPI  = { 'CONTATOS EFETIVOS': null, 'INTERESSADOS': .10, 'AGENDAMENTOS': .35, 'ATENDIMENTOS': .40, 'PROPOSTA': .75, 'VENDA': .65 };
 const STAGE_COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#14b8a6','#22c55e','#d4b06a'];
 
 /* ----- LEADS / FOLLOW-UP ----- */
-const LEAD_STAGES   = ['INTERESSADOS','AGENDAMENTOS','ATENDIMENTOS','NEGOCIAÇÃO','VENDA'];
+const LEAD_STAGES   = ['INTERESSADOS','AGENDAMENTOS','ATENDIMENTOS','PROPOSTA','VENDA'];
 const LEAD_STALE_DAYS = 7;   // sem atualização => alerta
 const LEAD_DUE_DAYS   = 2;   // próximo follow-up dentro deste prazo => alerta
 // dias sugeridos até o próximo follow-up por etapa
-const LEAD_FOLLOWUP_DAYS = { 'INTERESSADOS': 3, 'AGENDAMENTOS': 2, 'ATENDIMENTOS': 3, 'NEGOCIAÇÃO': 5, 'VENDA': 14 };
+const LEAD_FOLLOWUP_DAYS = { 'INTERESSADOS': 3, 'AGENDAMENTOS': 2, 'ATENDIMENTOS': 3, 'PROPOSTA': 5, 'VENDA': 14 };
 const stageSlug = e => ({
   'INTERESSADOS':'interessados','AGENDAMENTOS':'agendamentos','ATENDIMENTOS':'atendimentos',
-  'NEGOCIAÇÃO':'negociacao','VENDA':'venda'
+  'PROPOSTA':'proposta','VENDA':'venda'
 })[e] || 'interessados';
 
 const SEED_ADMIN = { email:'do.goncalves@vanguard.com.br', password:'g57tQwZ4WwfY', nome:'Douglas Gonçalves', role:'admin' };
@@ -791,6 +791,11 @@ function ensureSeedUsers(db) {
   db.treinamentos = db.treinamentos || [];
   db.visitas_programadas = db.visitas_programadas || [];
   db.carteira = db.carteira || {};
+
+  // One-time migration: rename NEGOCIAÇÃO→PROPOSTA in negócios existentes
+  if (db.negocios) {
+    db.negocios.forEach(n => { if (n.status === 'NEGOCIAÇÃO') n.status = 'PROPOSTA'; });
+  }
 
   // One-time migration v3: limpar negócios, carteiras e garantir GPIs
   if (!db._migV3) {
@@ -1982,7 +1987,8 @@ VIEWS.funil = () => {
       const color = STAGE_COLORS[i % STAGE_COLORS.length];
       const count = counts[e] || 0;
       
-      // Stage Box
+      // Stage Box — CONTATOS EFETIVOS tem botões; demais são read-only (alimentados pelos negócios)
+      const isManual = e === 'CONTATOS EFETIVOS';
       html += `
         <div class="funnel-stage" style="border-left: 4px solid ${color};">
           <div class="info">
@@ -1990,10 +1996,12 @@ VIEWS.funil = () => {
             <div class="count" style="color:${color};">${count}</div>
           </div>
           <div class="actions">
-            <button class="btn sm" data-act="inc" data-d="1"  data-etapa="${escapeHtml(e)}">+1</button>
-            <button class="btn sm" data-act="inc" data-d="5"  data-etapa="${escapeHtml(e)}">+5</button>
-            <button class="btn sm" data-act="inc-n"           data-etapa="${escapeHtml(e)}">+N</button>
-            ${isAdmin()?`<button class="btn sm danger" data-act="inc" data-d="-1" data-etapa="${escapeHtml(e)}">−1</button>`:''}
+            ${isManual ? `
+              <button class="btn sm" data-act="inc" data-d="1"  data-etapa="${escapeHtml(e)}">+1</button>
+              <button class="btn sm" data-act="inc" data-d="5"  data-etapa="${escapeHtml(e)}">+5</button>
+              <button class="btn sm" data-act="inc-n"           data-etapa="${escapeHtml(e)}">+N</button>
+              ${isAdmin()?`<button class="btn sm danger" data-act="inc" data-d="-1" data-etapa="${escapeHtml(e)}">−1</button>`:''}
+            ` : `<span class="muted small" style="font-size:11px;">via negócios</span>`}
           </div>
         </div>
       `;
@@ -2456,7 +2464,7 @@ VIEWS.negocios = () => {
           return `<tr>
             <td onclick="event.stopPropagation()">
               <select class="quick-status" onchange="quickStatusNegocio('${n.id}', this.value)">
-                ${FUNIL_EXEC.map(s=>`<option value="${s}"${n.status===s?' selected':''}>${s}</option>`).join('')}
+                ${FUNIL_GPI.filter(s => isAdmin() || s !== 'VENDA').map(s=>`<option value="${s}"${n.status===s?' selected':''}>${s}</option>`).join('')}
               </select>
             </td>
             <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.produto||'—')}</td>
@@ -2464,7 +2472,11 @@ VIEWS.negocios = () => {
             <td class="truncate" style="max-width:180px; cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.cliente1||'—')} ${crmFlag}</td>
             <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${fupStr}${fupWarn}</td>
             <td class="truncate" style="max-width:160px; cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.imobiliaria||n.corretor||'—')}</td>
-            <td onclick="event.stopPropagation()"><button class="btn-snooze" onclick="snoozeNegocio('${n.id}')" title="Snooze 7 dias">+7d</button></td>
+            <td onclick="event.stopPropagation()" style="white-space:nowrap;">
+              <button class="btn-snooze" onclick="snoozeNegocio('${n.id}')" title="Snooze 7 dias">+7d</button>
+              <button class="btn sm" onclick="agendarNegocio('${n.id}')" title="Agendar">📅</button>
+              ${hasPendingAgendamento(n) ? `<button class="btn sm" style="background:rgba(245,158,11,.15); border-color:rgba(245,158,11,.5);" onclick="confirmarAgendamento('${n.id}')" title="Confirmar atendimento">⏰</button>` : ''}
+            </td>
           </tr>`;
         }).join('')}</tbody></table>`;
     } else {
@@ -2480,7 +2492,7 @@ VIEWS.negocios = () => {
             <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${date||'—'}</td>
             <td onclick="event.stopPropagation()">
               <select class="quick-status" onchange="quickStatusNegocio('${n.id}', this.value)">
-                ${FUNIL_EXEC.map(s=>`<option value="${s}"${n.status===s?' selected':''}>${s}</option>`).join('')}
+                ${FUNIL_GPI.filter(s => isAdmin() || s !== 'VENDA').map(s=>`<option value="${s}"${n.status===s?' selected':''}>${s}</option>`).join('')}
               </select>
             </td>
             <td style="cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.produto||'')}</td>
@@ -2493,6 +2505,8 @@ VIEWS.negocios = () => {
             <td class="truncate" style="max-width:160px; cursor:pointer;" onclick="editNegocio('${n.id}')">${escapeHtml(n.imobiliaria||n.corretor||'')}</td>
             <td onclick="event.stopPropagation()" style="white-space:nowrap;">
               <button class="btn-snooze" onclick="snoozeNegocio('${n.id}')" title="Snooze 7 dias">+7d</button>
+              <button class="btn sm" onclick="agendarNegocio('${n.id}')" title="Agendar">📅</button>
+              ${hasPendingAgendamento(n) ? `<button class="btn sm" style="background:rgba(245,158,11,.15); border-color:rgba(245,158,11,.5);" onclick="confirmarAgendamento('${n.id}')" title="Confirmar atendimento">⏰</button>` : ''}
               <button class="btn sm" onclick="showNegocioHistory('${n.id}')">📜</button>
               <button class="btn sm danger" onclick="deleteNegocio('${n.id}')">×</button>
             </td>
@@ -2552,7 +2566,7 @@ function editNegocio(id) {
           </div>
           <div><label>Status / Etapa</label>
             <select name="status" id="neg-status-select">
-              ${FUNIL_EXEC.map(s=>`<option ${n.status===s?'selected':''}>${s}</option>`).join('')}
+              ${FUNIL_GPI.filter(s => isAdmin() || s !== 'VENDA').map(s=>`<option value="${s}" ${n.status===s?'selected':''}>${s}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -2595,6 +2609,21 @@ function editNegocio(id) {
         <div><label>Homologado</label><select name="homologado"><option value="false" ${!n.homologado?'selected':''}>Não</option><option value="true" ${n.homologado?'selected':''}>Sim</option></select></div>
       </div>
       <div><label>Observações</label><textarea name="observacoes">${escapeHtml(n.observacoes||'')}</textarea></div>
+
+      <div style="background:var(--panel-2); padding:12px; border-radius:10px; margin-top:14px; border:1px solid rgba(99,102,241,.3);">
+        <div class="card-title" style="margin-bottom:8px;">📋 Proposta</div>
+        <div class="muted small" style="margin-bottom:10px;">Preencher ao apresentar proposta — alimenta automaticamente o funil na etapa <b>PROPOSTA</b>.</div>
+        <div class="form-row">
+          <div><label>Valor da proposta (R$)</label><input type="number" name="proposta_valor" step="0.01" value="${n.proposta?.valor||0}"/></div>
+          <div><label>Valor da entrada (R$)</label><input type="number" name="proposta_entrada" step="0.01" value="${n.proposta?.entrada||0}"/></div>
+        </div>
+        <div class="form-row">
+          <div style="display:flex; align-items:center; gap:10px; padding-top:6px;">
+            <label style="margin:0; cursor:pointer;"><input type="checkbox" name="proposta_dacao" value="1" ${n.proposta?.dacao?'checked':''}/> Dação envolvida</label>
+            <label style="margin:0; cursor:pointer;"><input type="checkbox" name="proposta_migracao" value="1" ${n.proposta?.migracao?'checked':''}/> Migração envolvida</label>
+          </div>
+        </div>
+      </div>
 
       <div style="background:var(--panel-2); padding:12px; border-radius:10px; margin-top:14px; border:1px solid var(--line);">
         <div class="card-title" style="margin-bottom:8px;">Follow-up e Histórico</div>
@@ -2679,7 +2708,35 @@ function editNegocio(id) {
     if (n.imobiliaria && !DB.imobiliarias.some(i => i.nome === n.imobiliaria)) {
       DB.imobiliarias.push({ nome: n.imobiliaria, lat:null, lng:null, endereco:'' });
     }
-    if (isNew) DB.negocios.push(n);
+    // Campos proposta
+    const propValor = Number(obj.proposta_valor)||0;
+    const propEntrada = Number(obj.proposta_entrada)||0;
+    const propDacao = !!obj.proposta_dacao;
+    const propMigracao = !!obj.proposta_migracao;
+    delete obj.proposta_valor; delete obj.proposta_entrada;
+    delete obj.proposta_dacao; delete obj.proposta_migracao;
+    if (propValor > 0) {
+      n.proposta = { valor: propValor, entrada: propEntrada, dacao: propDacao, migracao: propMigracao, data: todayISO() };
+      if (!n._propostaFunil) {
+        DB.funil.push({ id: uid(), data: todayISO(), papel:'GPI', pessoa: obj.responsavel||n.responsavel||'', etapa:'PROPOSTA', qtd:1, obs:`Proposta R$${fmtBRLk(propValor)}`, ref: n.id });
+        n._propostaFunil = true;
+      }
+      if (!obj.status || obj.status === 'INTERESSADOS' || obj.status === 'AGENDAMENTOS' || obj.status === 'ATENDIMENTOS') {
+        obj.status = 'PROPOSTA';
+      }
+    }
+
+    // Bloquear VENDA para não-admins
+    if (obj.status === 'VENDA' && !isAdmin()) {
+      obj.status = n.status || 'PROPOSTA';
+      toast('Apenas admin pode marcar como VENDA','error');
+    }
+
+    if (isNew) {
+      DB.negocios.push(n);
+      // Auto-adiciona ao funil como INTERESSADOS
+      DB.funil.push({ id: uid(), data: todayISO(), papel:'GPI', pessoa: obj.responsavel||n.responsavel||'', etapa:'INTERESSADOS', qtd:1, obs:`Novo negócio: ${obj.cliente1||obj.imobiliaria||''}`, ref: n.id });
+    }
     saveDB(); closeModal(); toast('Negócio salvo ✓','success');
     if (window._reloadNegocios) _reloadNegocios();
     updateNavBadges();
@@ -2710,15 +2767,203 @@ function deleteNegocio(id) {
   updateNavBadges();
 }
 
+
+function hasPendingAgendamento(n) {
+  return (n.agendamentos||[]).some(a => a.status === 'pendente');
+}
+
+function agendarNegocio(id) {
+  const n = DB.negocios.find(x => x.id === id); if (!n) return;
+  openModal(`
+    <h2>📅 Agendar Atendimento</h2>
+    <p class="muted small">${escapeHtml(n.cliente1||n.imobiliaria||'Negócio')}</p>
+    <div class="form mt-12">
+      <div class="form-row">
+        <div><label>Data <span style="color:var(--red);">*</span></label>
+          <input type="date" id="ag-data" value="${addDaysISO(1)}" required/>
+        </div>
+        <div><label>Hora</label>
+          <input type="time" id="ag-hora" value="09:00"/>
+        </div>
+      </div>
+      <div><label>Obs (opcional)</label>
+        <input type="text" id="ag-obs" placeholder="Local, tipo de atendimento..."/>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:16px; justify-content:flex-end;">
+        <button class="btn" onclick="closeModal()">Cancelar</button>
+        <button class="btn primary" onclick="salvarAgendamento('${id}')">Agendar</button>
+      </div>
+    </div>`);
+}
+
+function salvarAgendamento(id) {
+  const n = DB.negocios.find(x => x.id === id); if (!n) return;
+  const data = $('#ag-data')?.value;
+  if (!data) return toast('Informe a data','error');
+  const hora = $('#ag-hora')?.value || '';
+  const obs  = $('#ag-obs')?.value.trim() || '';
+  n.agendamentos = n.agendamentos || [];
+  n.agendamentos.push({ id: uid(), data, hora, obs, status: 'pendente', criadoEm: todayISO() });
+  const oldStatus = n.status;
+  n.status = 'AGENDAMENTOS';
+  n.proximoFollowup = data;
+  n.dataUltimaAtualizacao = todayISO();
+  if (!n.historico) n.historico = [];
+  n.historico.push({ data: todayISO(), etapaDe: oldStatus, etapaPara: 'AGENDAMENTOS', obs: `Agendado ${data}${hora?' às '+hora:''}${obs?' — '+obs:''}`, autor: CURRENT_USER?.email||'', gpi: n.responsavel||'' });
+  DB.funil.push({ id: uid(), data: todayISO(), papel:'GPI', pessoa: n.responsavel||'', etapa:'AGENDAMENTOS', qtd:1, obs:`Agendamento ${data}`, ref: n.id });
+  saveDB(); closeModal(); toast('Agendamento salvo ✓','success');
+  if (window._reloadNegocios) _reloadNegocios();
+  updateNavBadges();
+}
+
+function confirmarAgendamento(id) {
+  const n = DB.negocios.find(x => x.id === id); if (!n) return;
+  const ag = (n.agendamentos||[]).find(a => a.status === 'pendente');
+  if (!ag) return;
+  openModal(`
+    <h2>⏰ Confirmação de Atendimento</h2>
+    <p class="muted small">${escapeHtml(n.cliente1||n.imobiliaria||'Negócio')} · ${ag.data}${ag.hora?' às '+ag.hora:''}</p>
+    <div class="form mt-12">
+      <div style="display:flex; gap:10px; margin-bottom:16px;">
+        <button class="btn primary" style="flex:1;" onclick="atendimentoFlow('${id}','${ag.id}',true)">✅ Aconteceu</button>
+        <button class="btn" style="flex:1;" onclick="atendimentoFlow('${id}','${ag.id}',false)">❌ Não aconteceu</button>
+      </div>
+    </div>`);
+}
+
+function atendimentoFlow(negId, agId, aconteceu) {
+  const n = DB.negocios.find(x => x.id === negId); if (!n) return;
+  const ag = (n.agendamentos||[]).find(a => a.id === agId); if (!ag) return;
+  if (!aconteceu) {
+    ag.status = 'nao_aconteceu';
+    n.dataUltimaAtualizacao = todayISO();
+    if (!n.historico) n.historico = [];
+    n.historico.push({ data: todayISO(), etapaDe: n.status, etapaPara: n.status, obs: 'Atendimento não aconteceu', autor: CURRENT_USER?.email||'', gpi: n.responsavel||'' });
+    saveDB(); closeModal(); toast('Registrado ✓','success');
+    if (window._reloadNegocios) _reloadNegocios();
+    return;
+  }
+  // Aconteceu: pedir resumo
+  openModal(`
+    <h2>✅ Resumo do Atendimento</h2>
+    <div class="form mt-12">
+      <div><label>Resumo do atendimento <span style="color:var(--red);">*</span></label>
+        <textarea id="at-resumo" placeholder="O que foi conversado? Como o cliente reagiu?" rows="3" required></textarea>
+      </div>
+      <div class="form-row mt-12">
+        <div>
+          <label>Unidade definida?</label>
+          <div style="display:flex; gap:8px; margin-top:6px;">
+            <button class="btn sm" id="at-unidade-s" onclick="toggleAtField('unidade',true)">Sim</button>
+            <button class="btn sm active" id="at-unidade-n" onclick="toggleAtField('unidade',false)">Não</button>
+          </div>
+        </div>
+        <div>
+          <label>Tem contato do cliente?</label>
+          <div style="display:flex; gap:8px; margin-top:6px;">
+            <button class="btn sm" id="at-contato-s" onclick="toggleAtField('contato',true)">Sim</button>
+            <button class="btn sm active" id="at-contato-n" onclick="toggleAtField('contato',false)">Não</button>
+          </div>
+        </div>
+      </div>
+      <div id="at-contato-input" style="display:none; margin-top:10px;">
+        <label>Telefone / WhatsApp</label>
+        <input type="text" id="at-fone" value="${escapeHtml(n.fone1||'')}" placeholder="(51) 9..."/>
+      </div>
+      <div id="at-unidade-input" style="display:none; margin-top:10px;">
+        <label>Unidade de interesse</label>
+        <input type="text" id="at-unidade-val" value="${escapeHtml(n.unidade||'')}" placeholder="Ex: 305, Torre A..."/>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:16px; justify-content:flex-end;">
+        <button class="btn" onclick="closeModal()">Cancelar</button>
+        <button class="btn primary" onclick="salvarAtendimento('${negId}','${agId}')">Salvar</button>
+      </div>
+    </div>`);
+  window._atFields = { unidade: false, contato: false };
+}
+
+function toggleAtField(field, val) {
+  window._atFields = window._atFields || {};
+  window._atFields[field] = val;
+  if (field === 'unidade') {
+    $('#at-unidade-s').classList.toggle('active', val);
+    $('#at-unidade-n').classList.toggle('active', !val);
+    const el = $('#at-unidade-input'); if (el) el.style.display = val ? 'block' : 'none';
+  } else {
+    $('#at-contato-s').classList.toggle('active', val);
+    $('#at-contato-n').classList.toggle('active', !val);
+    const el = $('#at-contato-input'); if (el) el.style.display = val ? 'block' : 'none';
+  }
+}
+
+function salvarAtendimento(negId, agId) {
+  const n = DB.negocios.find(x => x.id === negId); if (!n) return;
+  const ag = (n.agendamentos||[]).find(a => a.id === agId); if (!ag) return;
+  const resumo = $('#at-resumo')?.value.trim();
+  if (!resumo) return toast('Informe o resumo do atendimento','error');
+  const fone  = window._atFields?.contato ? ($('#at-fone')?.value.trim()||'') : '';
+  const unid  = window._atFields?.unidade ? ($('#at-unidade-val')?.value.trim()||'') : n.unidade||'';
+  ag.status  = 'aconteceu';
+  ag.resumo  = resumo;
+  const oldStatus = n.status;
+  n.status   = 'ATENDIMENTOS';
+  if (fone)  { n.fone1 = fone; }
+  if (unid)  { n.unidade = unid; }
+  n.dataUltimaAtualizacao = todayISO();
+  if (!n.historico) n.historico = [];
+  n.historico.push({ data: todayISO(), etapaDe: oldStatus, etapaPara: 'ATENDIMENTOS', obs: resumo, autor: CURRENT_USER?.email||'', gpi: n.responsavel||'' });
+  DB.funil.push({ id: uid(), data: todayISO(), papel:'GPI', pessoa: n.responsavel||'', etapa:'ATENDIMENTOS', qtd:1, obs:`Atendimento: ${resumo.slice(0,80)}`, ref: n.id });
+  saveDB(); closeModal(); toast('Atendimento registrado ✓','success');
+  if (window._reloadNegocios) _reloadNegocios();
+  updateNavBadges();
+}
+
 function quickStatusNegocio(id, newStatus) {
   const n = DB.negocios.find(x => x.id === id); if (!n) return;
   const old = n.status;
   if (old === newStatus) return;
+  if (newStatus === 'VENDA' && !isAdmin()) {
+    toast('Apenas admin pode marcar como VENDA','error');
+    if (window._reloadNegocios) _reloadNegocios(); // re-render to reset select
+    return;
+  }
+  if (newStatus === 'VENDA' && isAdmin()) {
+    openModal(`
+      <h2>🏆 Confirmar Venda</h2>
+      <p class="muted small">Informe o valor final da unidade vendida para <b>${escapeHtml(n.cliente1||n.imobiliaria||'')}</b>.</p>
+      <div class="form mt-12">
+        <div><label>VGV da Venda (R$) <span style="color:var(--red);">*</span></label>
+          <input type="number" id="venda-vgv" step="0.01" value="${n.vgv||0}" style="font-size:18px; font-weight:700;" required/>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:16px; justify-content:flex-end;">
+          <button class="btn" onclick="closeModal(); if(window._reloadNegocios)_reloadNegocios();">Cancelar</button>
+          <button class="btn primary" onclick="confirmVendaNegocio('${id}')">Confirmar Venda</button>
+        </div>
+      </div>`);
+    return;
+  }
   if (!n.historico) n.historico = [];
   n.historico.push({ data: todayISO(), etapaDe: old, etapaPara: newStatus, obs: 'Atualização rápida', autor: CURRENT_USER?.email||'', gpi: n.responsavel||'' });
   n.status = newStatus;
   n.dataUltimaAtualizacao = todayISO();
   saveDB(); toast(`${newStatus} ✓`, 'success');
+  updateNavBadges();
+  if (window._reloadNegocios) _reloadNegocios();
+}
+
+function confirmVendaNegocio(id) {
+  const n = DB.negocios.find(x => x.id === id); if (!n) return;
+  const vgv = Number($('#venda-vgv')?.value) || 0;
+  if (!vgv) return toast('Informe o VGV da venda','error');
+  const old = n.status;
+  n.vgv = vgv;
+  n.dataAssinatura = n.dataAssinatura || todayISO();
+  n.status = 'VENDA';
+  n.dataUltimaAtualizacao = todayISO();
+  if (!n.historico) n.historico = [];
+  n.historico.push({ data: todayISO(), etapaDe: old, etapaPara: 'VENDA', obs: `Venda confirmada · VGV ${fmtBRLk(vgv)}`, autor: CURRENT_USER?.email||'', gpi: n.responsavel||'' });
+  DB.funil.push({ id: uid(), data: todayISO(), papel:'GPI', pessoa: n.responsavel||'', etapa:'VENDA', qtd:1, obs:`Venda: ${escapeHtml(n.cliente1||n.imobiliaria||'')}`, ref: n.id });
+  saveDB(); closeModal(); toast('Venda registrada ✓','success');
   updateNavBadges();
   if (window._reloadNegocios) _reloadNegocios();
 }

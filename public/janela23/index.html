@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JANELA 23 · Plaenge | Vanguard</title>
+  <!-- v3 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@200;300;400;600;700&family=Montserrat:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:            #111010;
+      --bg-2:          #181614;
+      --bg-card:       #1C1A18;
+      --copper:        #C9906D;
+      --copper-light:  #EAC4A8;
+      --copper-dark:   #7A4A2E;
+      --cg: linear-gradient(90deg, #5C2A1A 0%, #A86040 22%, #D49070 44%, #ECC0A0 55%, #D49070 68%, #A86040 82%, #5C2A1A 100%);
+      --white:         #FFFFFF;
+      --cream:         #F0EAE2;
+      --muted:         #807060;
+      --subtle:        #504030;
+      --border:        rgba(201,144,109,0.12);
+      --border-med:    rgba(201,144,109,0.28);
+      --border-strong: rgba(201,144,109,0.5);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: var(--bg);
+      color: var(--cream);
+      overflow-x: hidden;
+    }
+
+    /* ── UTILITY ─────────────────────────────────── */
+    .copper-text {
+      background: var(--cg);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .copper-bar {
+      height: 2px;
+      background: var(--cg);
+      width: 100%;
+    }
+
+    .copper-bar-thick {
+      height: 3px;
+      background: var(--cg);
+      width: 100%;
+    }
+
+    /* ── REVEAL ON SCROLL ─────────────────────────── */
+    .r { opacity: 0; transform: translateY(36px); transition: opacity .85s ease, transform .85s ease; }
+    .r.on { opacity: 1; transform: translateY(0); }
+    .r.d1 { transition-delay: .1s; }
+    .r.d2 { transition-delay: .2s; }
+    .r.d3 { transition-delay: .3s; }
+    .r.d4 { transition-delay: .4s; }
+    .r.d5 { transition-delay: .5s; }
+
+    /* ══════════════════════════════════════════════ */
+    /*  TICKER                                        */
+    /* ══════════════════════════════════════════════ */
+    .ticker-wrap {
+      background: var(--bg-2);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      height: 38px;
+      display: flex;
+      align-items: center;
+    }
+
+    .ticker-track {
+      display: flex;
+      gap: 0;
+      animation: ticker-scroll 28s linear infinite;
+      white-space: nowrap;
+    }
+
+    .ticker-item {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+      color: var(--copper);
+      padding: 0 40px;
+    }
+
+    .ticker-dot {
+      color: var(--subtle);
+      padding: 0 4px;
+    }
+
+    @keyframes ticker-scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  HERO                                          */
+    /* ══════════════════════════════════════════════ */
+    #hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 24px 100px;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('assets/bg.png');
+      background-size: cover;
+      background-position: center;
+      opacity: .55;
+    }
+
+    .hero-glow {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(201,144,109,.07) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 50% 80%, rgba(90,40,20,.4) 0%, transparent 70%);
+      animation: glow-pulse 5s ease-in-out infinite;
+    }
+
+    @keyframes glow-pulse {
+      0%,100% { opacity: .7; }
+      50%      { opacity: 1; }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 960px;
+      width: 100%;
+    }
+
+    .hero-eyebrow {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .55em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 36px;
+      animation: fadeUp .9s ease-out .2s both;
+    }
+
+    .hero-logo {
+      width: min(460px, 78vw);
+      margin-bottom: 36px;
+      animation: fadeUp .9s ease-out .4s both;
+      filter: drop-shadow(0 0 40px rgba(201,144,109,.15));
+    }
+
+    .hero-tagline {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(28px, 5.5vw, 68px);
+      font-weight: 800;
+      text-transform: uppercase;
+      line-height: 1.05;
+      letter-spacing: -.01em;
+      margin-bottom: 28px;
+      animation: fadeUp .9s ease-out .6s both;
+    }
+
+    .hero-sub {
+      font-size: 15px;
+      font-weight: 300;
+      letter-spacing: .25em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 56px;
+      animation: fadeUp .9s ease-out .75s both;
+    }
+
+    /* Countdown */
+    .countdown {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 52px;
+      animation: fadeUp .9s ease-out .9s both;
+    }
+
+    .cd-block {
+      text-align: center;
+      min-width: 80px;
+    }
+
+    .cd-num {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(40px, 7vw, 72px);
+      font-weight: 800;
+      line-height: 1;
+      background: var(--cg);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: block;
+      transition: all .3s;
+    }
+
+    .cd-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .35em;
+      text-transform: uppercase;
+      color: var(--subtle);
+      margin-top: 8px;
+      display: block;
+    }
+
+    .cd-sep {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 200;
+      color: var(--copper-dark);
+      padding-top: 2px;
+      line-height: 1;
+      align-self: flex-start;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--cg);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .4em;
+      text-transform: uppercase;
+      padding: 16px 40px;
+      border: none;
+      cursor: default;
+      animation: fadeUp .9s ease-out 1.1s both;
+    }
+
+    .hero-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.5); }
+
+    .hero-scroll {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      animation: arrow-bounce 2s ease-in-out infinite;
+    }
+
+    .hero-scroll svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--copper);
+      opacity: .5;
+    }
+
+    @keyframes arrow-bounce {
+      0%,100% { transform: translateX(-50%) translateY(0); }
+      50%      { transform: translateX(-50%) translateY(9px); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  INTRO SECTION                                 */
+    /* ══════════════════════════════════════════════ */
+    #intro {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 100px 28px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .55em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .eyebrow::before, .eyebrow::after {
+      content: '';
+      width: 60px;
+      height: 1px;
+      background: var(--border-med);
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(26px, 4.5vw, 52px);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .section-lead {
+      font-size: 17px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.85;
+      max-width: 640px;
+      margin: 0 auto 64px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .stat-card {
+      background: var(--bg-2);
+      padding: 52px 32px;
+      transition: background .3s;
+    }
+
+    .stat-card:hover { background: var(--bg-card); }
+
+    .stat-icon {
+      font-size: 28px;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .stat-num {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .35em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  CAMPAIGNS                                     */
+    /* ══════════════════════════════════════════════ */
+    #campanhas {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 80px 28px 100px;
+    }
+
+    .campaigns-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 20px;
+    }
+
+    .camp-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 52px 44px;
+      overflow: hidden;
+      transition: border-color .4s, transform .4s;
+    }
+
+    .camp-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--cg);
+    }
+
+    .camp-card:hover {
+      border-color: var(--border-med);
+      transform: translateY(-5px);
+    }
+
+    .camp-bg-text {
+      position: absolute;
+      bottom: -16px; right: -10px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 110px;
+      font-weight: 900;
+      color: rgba(201,144,109,.04);
+      line-height: 1;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .camp-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      object-position: center top;
+      margin-bottom: 28px;
+      border: 1px solid var(--border);
+      display: block;
+    }
+
+    .camp-trigger {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 14px;
+    }
+
+    .camp-reward {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(22px, 3.5vw, 38px);
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1.05;
+      margin-bottom: 18px;
+    }
+
+    .camp-desc {
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  BRAND HEADER                                  */
+    /* ══════════════════════════════════════════════ */
+    .brand-section {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 80px 28px 0;
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 56px;
+    }
+
+    .brand-pill {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .5em;
+      text-transform: uppercase;
+      color: var(--copper);
+      border: 1px solid var(--border-strong);
+      padding: 10px 22px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(28px, 4.5vw, 52px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  PRODUCT BLOCK                                 */
+    /* ══════════════════════════════════════════════ */
+    .product-block {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 0 28px 80px;
+    }
+
+    .product-header {
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+      margin-bottom: 36px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .product-name {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(22px, 4vw, 44px);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .product-sub {
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: .12em;
+      color: var(--subtle);
+      text-transform: uppercase;
+    }
+
+    .product-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .product-layout.flip {
+      direction: rtl;
+    }
+    .product-layout.flip > * { direction: ltr; }
+
+    /* Image */
+    .product-img-wrap {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .product-img-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(10,8,6,.65) 0%, transparent 55%);
+      pointer-events: none;
+    }
+
+    .product-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform .7s ease;
+    }
+
+    .product-img-wrap:hover .product-img { transform: scale(1.02); }
+
+    .product-img-name {
+      position: absolute;
+      bottom: 22px; left: 22px;
+      z-index: 2;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .45em;
+      text-transform: uppercase;
+      color: rgba(230,210,190,.6);
+    }
+
+    /* Price cards stack */
+    .price-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Single price card */
+    .pc {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 28px 30px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .35s, transform .35s;
+    }
+
+    .pc::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--cg);
+    }
+
+    .pc:hover {
+      border-color: var(--border-med);
+      transform: translateX(5px);
+    }
+
+    .pc-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .pc-meta {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--subtle);
+      line-height: 1.5;
+    }
+
+    .off-badge {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--cg);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      padding: 7px 18px;
+      min-width: 78px;
+    }
+
+    .pc-de {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--subtle);
+      text-decoration: line-through;
+      letter-spacing: .05em;
+      margin-bottom: 5px;
+    }
+
+    .pc-por-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .45em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 3px;
+    }
+
+    .pc-por {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(24px, 3.2vw, 38px);
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1;
+      letter-spacing: -.01em;
+    }
+
+    .pc-details {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .pc-detail {
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .pc-detail-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--subtle);
+      margin-bottom: 4px;
+    }
+
+    .pc-detail-val {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  MOTIVAÇÃO FINAL                               */
+    /* ══════════════════════════════════════════════ */
+    #motivacao {
+      position: relative;
+      padding: 130px 28px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    #motivacao::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 50%, rgba(201,144,109,.06) 0%, transparent 70%);
+      animation: glow-pulse 6s ease-in-out infinite;
+    }
+
+    .mot-lines {
+      position: relative;
+      z-index: 2;
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(22px, 4.5vw, 52px);
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1.15;
+      letter-spacing: .02em;
+      max-width: 940px;
+      margin: 0 auto 36px;
+    }
+
+    .mot-sub {
+      position: relative;
+      z-index: 2;
+      font-size: 17px;
+      font-weight: 300;
+      color: var(--muted);
+      max-width: 580px;
+      margin: 0 auto 52px;
+      line-height: 1.85;
+    }
+
+    .mot-badge {
+      position: relative;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 20px;
+      padding: 18px 44px;
+      border: 1px solid var(--copper);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .45em;
+      text-transform: uppercase;
+      color: var(--copper);
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  FOOTER                                        */
+    /* ══════════════════════════════════════════════ */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 28px 40px;
+      text-align: center;
+    }
+
+    .footer-logo {
+      height: 28px;
+      opacity: .45;
+      filter: brightness(0) invert(1);
+      margin-bottom: 22px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .footer-text {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--subtle);
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  RESPONSIVE                                    */
+    /* ══════════════════════════════════════════════ */
+    @media (max-width: 860px) {
+      .product-layout,
+      .product-layout.flip { grid-template-columns: 1fr; direction: ltr; }
+
+      .stats-grid { grid-template-columns: 1fr; }
+      .campaigns-grid { grid-template-columns: 1fr; }
+      .countdown { gap: 4px; }
+      .cd-sep { font-size: 28px; padding-top: 8px; }
+    }
+
+    @media (max-width: 540px) {
+      .brand-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ TICKER ══════════════════════════════════════════════ -->
+<div class="ticker-wrap">
+  <div class="ticker-track" aria-hidden="true">
+    <!-- repeated twice for seamless loop -->
+    <span class="ticker-item">23 de Maio</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Uma única janela</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Até 32% OFF</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Preços históricos</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Scooter Elétrica</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Cheque R$ 50 mil</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Plaenge · Vanguard</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Mobilize seus corretores</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">23 de Maio</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Uma única janela</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Até 32% OFF</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Preços históricos</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Scooter Elétrica</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Cheque R$ 50 mil</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Plaenge · Vanguard</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Mobilize seus corretores</span><span class="ticker-dot">·</span>
+  </div>
+</div>
+
+<!-- ═══ HERO ═════════════════════════════════════════════════ -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-glow"></div>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">Uma oportunidade que não se repete</p>
+
+    <img
+      src="assets/logo-campanha.png"
+      alt="Janela 23 — Plaenge | Vanguard"
+      class="hero-logo"
+    >
+
+    <h1 class="hero-tagline">
+      A janela abre.<br>
+      <span class="copper-text">Uma vez só.</span>
+    </h1>
+
+    <p class="hero-sub">23 de Maio &nbsp;·&nbsp; 2026 &nbsp;·&nbsp; Preços nunca antes praticados</p>
+
+    <div class="countdown" id="countdown">
+      <div class="cd-block">
+        <span class="cd-num" id="cd-days">06</span>
+        <span class="cd-label">Dias</span>
+      </div>
+      <div class="cd-sep">:</div>
+      <div class="cd-block">
+        <span class="cd-num" id="cd-hours">00</span>
+        <span class="cd-label">Horas</span>
+      </div>
+      <div class="cd-sep">:</div>
+      <div class="cd-block">
+        <span class="cd-num" id="cd-min">00</span>
+        <span class="cd-label">Minutos</span>
+      </div>
+      <div class="cd-sep">:</div>
+      <div class="cd-block">
+        <span class="cd-num" id="cd-sec">00</span>
+        <span class="cd-label">Segundos</span>
+      </div>
+    </div>
+
+    <div class="hero-cta">
+      <span>23 · Maio · 26</span>
+      <div class="hero-dot"></div>
+      <span>Até R$ 1 Milhão em Prêmios</span>
+    </div>
+  </div>
+
+  <div class="hero-scroll">
+    <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 5v14M5 12l7 7 7-7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+</section>
+
+<div class="copper-bar-thick"></div>
+
+<!-- ═══ INTRO ════════════════════════════════════════════════ -->
+<section id="intro">
+  <p class="eyebrow r">Sobre o evento</p>
+  <h2 class="section-title r d1">
+    Uma <span class="copper-text">janela</span> de oportunidades
+  </h2>
+  <p class="section-lead r d2">
+    No dia 23 de maio, por tempo limitado, os melhores empreendimentos da Plaenge e da Vanguard chegam com condições nunca antes praticadas pela incorporadora. Uma data. Uma chance. Resultados históricos.
+  </p>
+
+  <div class="stats-grid">
+    <div class="stat-card r">
+      <span class="stat-icon">🗓</span>
+      <span class="stat-num copper-text">23</span>
+      <span class="stat-label">Maio · 2026 · Dia Único</span>
+    </div>
+    <div class="stat-card r d2">
+      <span class="stat-icon">🏢</span>
+      <span class="stat-num copper-text">6</span>
+      <span class="stat-label">Empreendimentos com preço especial</span>
+    </div>
+    <div class="stat-card r d3">
+      <span class="stat-icon">💎</span>
+      <span class="stat-num copper-text">32%</span>
+      <span class="stat-label">De desconto máximo</span>
+    </div>
+  </div>
+</section>
+
+<div class="copper-bar-thick"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PLAENGE
+══════════════════════════════════════════════════════════════ -->
+
+<div class="brand-section">
+  <div class="brand-header r">
+    <div class="brand-pill">Plaenge</div>
+    <h2 class="brand-title">Empreendimentos <span class="copper-text">Plaenge</span></h2>
+  </div>
+</div>
+
+<!-- EDITION -->
+<div class="product-block">
+  <div class="product-header r">
+    <span class="product-name">Edition</span>
+    <span class="product-sub">3 Suítes · Plaenge</span>
+  </div>
+  <div class="product-layout">
+    <div class="product-img-wrap r">
+      <img src="assets/edition.jpg" alt="Edition" class="product-img">
+      <span class="product-img-name">Edition</span>
+    </div>
+    <div class="price-stack">
+
+      <div class="pc r">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 172,37 m² &nbsp;·&nbsp; Unid. 501/1</div>
+          <div class="off-badge">28% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 4.091.290,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 2.930.290</div>
+      </div>
+
+      <div class="pc r d1">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 146,46 m² &nbsp;·&nbsp; Unid. 502/1</div>
+          <div class="off-badge">26% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 3.377.490,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 2.489.820</div>
+      </div>
+
+      <div class="pc r d2">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 206,08 m² &nbsp;·&nbsp; Unid. 501/2</div>
+          <div class="off-badge">14% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 4.091.290,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 3.503.360</div>
+      </div>
+
+      <div class="pc r d3">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 172,03 m² &nbsp;·&nbsp; Unid. 502/2</div>
+          <div class="off-badge">26% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 3.974.110,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 2.924.510</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ORBITALE -->
+<div class="product-block">
+  <div class="product-header r">
+    <span class="product-name">Orbitale</span>
+    <span class="product-sub">3 Suítes · Plaenge</span>
+  </div>
+  <div class="product-layout flip">
+    <div class="product-img-wrap r">
+      <img src="assets/orbitale.jpg" alt="Orbitale" class="product-img">
+      <span class="product-img-name">Orbitale</span>
+    </div>
+    <div class="price-stack">
+
+      <div class="pc r" style="border-color: var(--border-med);">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 230,94 m² &nbsp;·&nbsp; Unid. 301</div>
+          <div class="off-badge">32% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 5.696.380,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por copper-text" style="font-size: clamp(30px,4vw,48px);">R$ 3.899.000</div>
+        <div style="margin-top:20px; padding:16px 20px; background:rgba(201,144,109,.06); border:1px solid var(--border); font-family:'Montserrat',sans-serif; font-size:12px; color:var(--muted); letter-spacing:.15em; text-transform:uppercase; text-align:center;">
+          Maior desconto da Plaenge nesta janela
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- VERDANT -->
+<div class="product-block">
+  <div class="product-header r">
+    <span class="product-name">Verdant</span>
+    <span class="product-sub">3 Suítes · Plaenge</span>
+  </div>
+  <div class="product-layout">
+    <div class="product-img-wrap r">
+      <img src="assets/verdant.png" alt="Verdant" class="product-img">
+      <span class="product-img-name">Verdant</span>
+    </div>
+    <div class="price-stack">
+
+      <div class="pc r">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 145,08 m² &nbsp;·&nbsp; Unid. 302</div>
+          <div class="off-badge">23% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 2.584.310,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 1.999.000</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="copper-bar-thick"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     VANGUARD
+══════════════════════════════════════════════════════════════ -->
+
+<div class="brand-section">
+  <div class="brand-header r">
+    <div class="brand-pill">Vanguard</div>
+    <h2 class="brand-title">Empreendimentos <span class="copper-text">Vanguard</span></h2>
+  </div>
+</div>
+
+<!-- TREND DOWNTOWN NANO -->
+<div class="product-block">
+  <div class="product-header r">
+    <span class="product-name">Trend Downtown Nano</span>
+    <span class="product-sub">Estúdio · Vanguard</span>
+  </div>
+  <div class="product-layout flip">
+    <div class="product-img-wrap r">
+      <img src="assets/trend-nano.jpg" alt="Trend Downtown Nano" class="product-img">
+      <span class="product-img-name">Trend Downtown Nano</span>
+    </div>
+    <div class="price-stack">
+
+      <div class="pc r">
+        <div class="pc-top">
+          <div class="pc-meta">Estúdio 32 m² &nbsp;·&nbsp; Unid. 1504</div>
+          <div class="off-badge">32% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 637.580,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 433.554</div>
+        <div class="pc-details">
+          <div class="pc-detail">
+            <div class="pc-detail-label">ATO + 4×</div>
+            <div class="pc-detail-val">R$ 17.342</div>
+          </div>
+          <div class="pc-detail">
+            <div class="pc-detail-label">Saldo</div>
+            <div class="pc-detail-val">R$ 346.843</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d1">
+        <div class="pc-top">
+          <div class="pc-meta">Estúdio 32 m² &nbsp;·&nbsp; Unid. 1021</div>
+          <div class="off-badge">32% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 595.650,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 405.042</div>
+        <div class="pc-details">
+          <div class="pc-detail">
+            <div class="pc-detail-label">ATO + 4×</div>
+            <div class="pc-detail-val">R$ 16.201</div>
+          </div>
+          <div class="pc-detail">
+            <div class="pc-detail-label">Saldo</div>
+            <div class="pc-detail-val">R$ 324.033</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d2">
+        <div class="pc-top">
+          <div class="pc-meta">Estúdio 32 m² &nbsp;·&nbsp; Unid. 323</div>
+          <div class="off-badge">32% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 565.450,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 384.506</div>
+        <div class="pc-details">
+          <div class="pc-detail">
+            <div class="pc-detail-label">ATO + 4×</div>
+            <div class="pc-detail-val">R$ 15.380</div>
+          </div>
+          <div class="pc-detail">
+            <div class="pc-detail-label">Saldo</div>
+            <div class="pc-detail-val">R$ 307.604</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MOOD -->
+<div class="product-block">
+  <div class="product-header r">
+    <span class="product-name">Mood</span>
+    <span class="product-sub">Estúdio · Vanguard</span>
+  </div>
+  <div class="product-layout">
+    <div class="product-img-wrap r">
+      <img src="assets/mood.jpg" alt="Mood" class="product-img">
+      <span class="product-img-name">Mood</span>
+    </div>
+    <div class="price-stack">
+
+      <div class="pc r">
+        <div class="pc-top">
+          <div class="pc-meta">Estúdio 29,4 m² &nbsp;·&nbsp; Unid. 609</div>
+          <div class="off-badge">26% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 474.620,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 349.000</div>
+        <div class="pc-details">
+          <div class="pc-detail">
+            <div class="pc-detail-label">ATO</div>
+            <div class="pc-detail-val">R$ 34.900</div>
+          </div>
+          <div class="pc-detail">
+            <div class="pc-detail-label">Saldo</div>
+            <div class="pc-detail-val">R$ 314.100</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d1">
+        <div class="pc-top">
+          <div class="pc-meta">Estúdio 30,07 m² &nbsp;·&nbsp; Unid. 1101</div>
+          <div class="off-badge">32% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 511.490,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 349.000</div>
+        <div class="pc-details">
+          <div class="pc-detail">
+            <div class="pc-detail-label">ATO</div>
+            <div class="pc-detail-val">R$ 34.900</div>
+          </div>
+          <div class="pc-detail">
+            <div class="pc-detail-label">Saldo</div>
+            <div class="pc-detail-val">R$ 314.100</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d2">
+        <div class="pc-top">
+          <div class="pc-meta">Estúdio 30,07 m² &nbsp;·&nbsp; Unid. 1103</div>
+          <div class="off-badge">32% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 511.490,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 349.000</div>
+        <div class="pc-details">
+          <div class="pc-detail">
+            <div class="pc-detail-label">ATO</div>
+            <div class="pc-detail-val">R$ 34.900</div>
+          </div>
+          <div class="pc-detail">
+            <div class="pc-detail-label">Saldo</div>
+            <div class="pc-detail-val">R$ 314.100</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- YUNA -->
+<div class="product-block">
+  <div class="product-header r">
+    <span class="product-name">Yuna</span>
+    <span class="product-sub">2 e 3 Dormitórios · Vanguard</span>
+  </div>
+  <div class="product-layout flip">
+    <div class="product-img-wrap r">
+      <img src="assets/yuna.jpg" alt="Yuna" class="product-img">
+      <span class="product-img-name">Yuna</span>
+    </div>
+    <div class="price-stack">
+
+      <div class="pc r">
+        <div class="pc-top">
+          <div class="pc-meta">2 Dorm. &nbsp;·&nbsp; 74,58 m² &nbsp;·&nbsp; Unid. 206</div>
+          <div class="off-badge">23% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 954.800,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 735.196</div>
+        <div class="pc-details">
+          <div class="pc-detail">
+            <div class="pc-detail-label">ATO + 18×</div>
+            <div class="pc-detail-val">R$ 7.738</div>
+          </div>
+          <div class="pc-detail">
+            <div class="pc-detail-label">Saldo</div>
+            <div class="pc-detail-val">R$ 595.795</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d1">
+        <div class="pc-top">
+          <div class="pc-meta">3 Dorm. &nbsp;·&nbsp; 88,68 m² &nbsp;·&nbsp; Unid. 201</div>
+          <div class="off-badge">23% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 1.247.050,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 960.228</div>
+        <div class="pc-details">
+          <div class="pc-detail">
+            <div class="pc-detail-label">ATO + 18×</div>
+            <div class="pc-detail-val">R$ 10.107</div>
+          </div>
+          <div class="pc-detail">
+            <div class="pc-detail-label">Saldo</div>
+            <div class="pc-detail-val">R$ 778.159</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d2">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 88,68 m² &nbsp;·&nbsp; Unid. 304</div>
+          <div class="off-badge">23% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 1.334.180,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 1.027.318</div>
+        <div class="pc-details">
+          <div class="pc-detail">
+            <div class="pc-detail-label">ATO + 18×</div>
+            <div class="pc-detail-val">R$ 10.813</div>
+          </div>
+          <div class="pc-detail">
+            <div class="pc-detail-label">Saldo</div>
+            <div class="pc-detail-val">R$ 778.160</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="copper-bar"></div>
+
+<!-- ═══ CAMPANHAS ════════════════════════════════════════════ -->
+<section id="campanhas">
+  <p class="eyebrow r">Campanhas vigentes &nbsp;·&nbsp; até 31 de maio</p>
+  <h2 class="section-title r d1" style="margin-bottom:16px;">
+    Ganhe mais por <span class="copper-text">cada venda</span>
+  </h2>
+  <p class="section-lead r d2">
+    Além dos preços históricos, duas campanhas ativas potencializam ainda mais seus resultados até o final de maio.
+  </p>
+
+  <div class="campaigns-grid">
+
+    <!-- SCOOTER -->
+    <div class="camp-card r">
+      <div class="camp-bg-text">⚡</div>
+      <img src="assets/shift.png" alt="Shift" class="camp-img">
+      <div class="camp-trigger">A cada 5 vendas do SHIFT</div>
+      <div class="camp-reward">Scooter<br><span class="copper-text">Elétrica</span></div>
+      <p class="camp-desc">
+        Cada grupo de 5 unidades vendidas do empreendimento SHIFT garante o sorteio de uma scooter elétrica. Mobilize seus corretores agora e acumule rodadas.
+      </p>
+    </div>
+
+    <!-- R$50K -->
+    <div class="camp-card r d2">
+      <div class="camp-bg-text">💰</div>
+      <div style="height:200px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); margin-bottom:28px; background:var(--bg-2);">
+        <div style="text-align:center;">
+          <div style="font-family:'Montserrat',sans-serif; font-size:13px; font-weight:700; letter-spacing:.3em; color:var(--copper); margin-bottom:12px; text-transform:uppercase;">A cada</div>
+          <div style="font-family:'Montserrat',sans-serif; font-size:clamp(36px,5vw,60px); font-weight:900; background:var(--cg); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1;">R$ 5 mi</div>
+          <div style="font-family:'Montserrat',sans-serif; font-size:12px; font-weight:600; letter-spacing:.2em; color:var(--subtle); margin-top:8px; text-transform:uppercase;">em vendas Plaenge + Vanguard</div>
+        </div>
+      </div>
+      <div class="camp-trigger">Volume combinado Plaenge + Vanguard</div>
+      <div class="camp-reward">Cheque de<br><span class="copper-text">R$ 50.000</span></div>
+      <p class="camp-desc">
+        A cada R$ 5 milhões atingidos no volume total combinado, sorteamos um cheque de R$ 50 mil. Quanto mais volume, mais sorteios. Trabalhe em equipe.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+
+<div class="copper-bar-thick"></div>
+
+<!-- ═══ MOTIVAÇÃO ════════════════════════════════════════════ -->
+<section id="motivacao">
+  <p class="eyebrow r" style="justify-content:center; max-width:440px; margin:0 auto 32px;">
+    Para o nosso time
+  </p>
+
+  <div class="mot-lines r d1">
+    Esta semana,<br>
+    <span class="copper-text">cada ligação conta.</span><br>
+    Cada reunião marca.<br>
+    <span class="copper-text">Cada agendamento é uma venda.</span>
+  </div>
+
+  <p class="mot-sub r d2">
+    O dia 23 de maio será único — um momento que não se repete. Mobilize o maior número possível de corretores, leve clientes qualificados e transforme esta semana no maior volume de agendamentos da história da equipe. <strong>A janela abre uma vez. Esteja pronto.</strong>
+  </p>
+
+  <div class="mot-badge r d3">
+    <span>23 · Maio · 2026</span>
+    <span style="width:5px; height:5px; border-radius:50%; background:var(--copper); display:inline-block; flex-shrink:0;"></span>
+    <span>A Janela Abre</span>
+  </div>
+</section>
+
+<div class="copper-bar-thick"></div>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+<footer>
+  <img
+    src="assets/logos-incorporadoras.png"
+    alt="Plaenge | Vanguard"
+    class="footer-logo"
+  >
+  <p class="footer-text">JANELA 23 &nbsp;·&nbsp; PLAENGE | VANGUARD &nbsp;·&nbsp; 23 DE MAIO DE 2026 &nbsp;·&nbsp; USO INTERNO</p>
+</footer>
+
+<!-- ═══ SCRIPTS ═══════════════════════════════════════════════ -->
+<script>
+  /* ── COUNTDOWN ──────────────────────────────────── */
+  function tick() {
+    const target = new Date('2026-05-23T09:00:00');
+    const diff   = target - new Date();
+
+    if (diff <= 0) {
+      ['cd-days','cd-hours','cd-min','cd-sec'].forEach(id =>
+        document.getElementById(id).textContent = '00'
+      );
+      return;
+    }
+
+    const pad = n => String(n).padStart(2,'0');
+    document.getElementById('cd-days').textContent  = pad(Math.floor(diff / 864e5));
+    document.getElementById('cd-hours').textContent = pad(Math.floor(diff % 864e5 / 36e5));
+    document.getElementById('cd-min').textContent   = pad(Math.floor(diff % 36e5  / 6e4));
+    document.getElementById('cd-sec').textContent   = pad(Math.floor(diff % 6e4   / 1e3));
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  /* ── SCROLL REVEAL ──────────────────────────────── */
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('on'); }),
+    { threshold: 0.08 }
+  );
+  document.querySelectorAll('.r').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

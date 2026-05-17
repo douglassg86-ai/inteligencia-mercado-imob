@@ -251,32 +251,39 @@
     /* ── SCOOTER HERO ─────────────────────────────────────── */
     .scooter-hero {
       position: relative;
-      overflow: hidden;
-      margin: -52px -44px 36px;   /* sangra até as bordas do card */
-      height: 340px;
+      overflow: visible;
+      margin: -52px -44px 0px;
+      background: #0e0c0a;
+      min-height: 280px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
     }
 
     .scooter-hero img {
       width: 100%;
+      max-width: 520px;
       height: auto;
       display: block;
       transition: transform .8s ease;
-      padding: 16px 8px 0;
+      position: relative;
+      z-index: 2;
+      margin-bottom: -8px;
     }
 
     .camp-card:hover .scooter-hero img {
-      transform: scale(1.03) translateY(-4px);
+      transform: scale(1.04) translateY(-6px);
     }
 
     /* Gradiente inferior que funde com o card */
     .scooter-hero::after {
       content: '';
       position: absolute;
-      inset: 0;
-      background: linear-gradient(160deg, #0a0806 0%, #181410 60%, #1C1A18 100%);
-      display: flex;
-      align-items: flex-end;
+      left: 0; right: 0; bottom: 0;
+      height: 60px;
+      background: linear-gradient(to top, var(--bg-card) 0%, transparent 100%);
       pointer-events: none;
+      z-index: 3;
     }
 
     /* Badge de prêmio sobreposto */

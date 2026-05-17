@@ -1,0 +1,148 @@
+<svg viewBox="0 0 800 480" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <radialGradient id="tireGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2a2a2a"/>
+      <stop offset="70%" stop-color="#111"/>
+      <stop offset="100%" stop-color="#333"/>
+    </radialGradient>
+    <radialGradient id="rimGrad" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#555"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </radialGradient>
+    <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2e2c2a"/>
+      <stop offset="100%" stop-color="#111"/>
+    </linearGradient>
+    <linearGradient id="copperGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#5C2A1A"/>
+      <stop offset="40%" stop-color="#D49070"/>
+      <stop offset="60%" stop-color="#ECC0A0"/>
+      <stop offset="100%" stop-color="#5C2A1A"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- SOMBRA NO CHÃO -->
+  <ellipse cx="400" cy="438" rx="320" ry="18" fill="#000" opacity="0.35"/>
+
+  <!-- ── RODA TRASEIRA (direita) ────────────────────────── -->
+  <!-- pneu externo -->
+  <circle cx="580" cy="340" r="118" fill="url(#tireGrad)" filter="url(#shadow)"/>
+  <!-- textura lateral do pneu -->
+  <circle cx="580" cy="340" r="118" stroke="#222" stroke-width="6" fill="none"/>
+  <circle cx="580" cy="340" r="108" stroke="#1a1a1a" stroke-width="2" fill="none"/>
+  <!-- roda/aro -->
+  <circle cx="580" cy="340" r="88" fill="url(#rimGrad)"/>
+  <circle cx="580" cy="340" r="82" stroke="#333" stroke-width="1.5" fill="none"/>
+  <!-- raios -->
+  <g stroke="#3a3a3a" stroke-width="2.5" opacity="0.7">
+    <line x1="580" y1="258" x2="580" y2="422"/>
+    <line x1="498" y1="340" x2="662" y2="340"/>
+    <line x1="522" y1="282" x2="638" y2="398"/>
+    <line x1="638" y1="282" x2="522" y2="398"/>
+    <line x1="506" y1="316" x2="654" y2="364"/>
+    <line x1="506" y1="364" x2="654" y2="316"/>
+    <line x1="556" y1="262" x2="604" y2="418"/>
+    <line x1="604" y1="262" x2="556" y2="418"/>
+  </g>
+  <!-- cubo central -->
+  <circle cx="580" cy="340" r="22" fill="#222"/>
+  <circle cx="580" cy="340" r="14" fill="url(#copperGrad)" opacity="0.8"/>
+  <circle cx="580" cy="340" r="7"  fill="#111"/>
+  <!-- reflexo no pneu -->
+  <ellipse cx="545" cy="295" rx="22" ry="10" fill="#fff" opacity="0.05" transform="rotate(-40,545,295)"/>
+
+  <!-- ── RODA DIANTEIRA (esquerda) ─────────────────────── -->
+  <circle cx="208" cy="340" r="118" fill="url(#tireGrad)" filter="url(#shadow)"/>
+  <circle cx="208" cy="340" r="118" stroke="#222" stroke-width="6" fill="none"/>
+  <circle cx="208" cy="340" r="108" stroke="#1a1a1a" stroke-width="2" fill="none"/>
+  <circle cx="208" cy="340" r="88" fill="url(#rimGrad)"/>
+  <circle cx="208" cy="340" r="82" stroke="#333" stroke-width="1.5" fill="none"/>
+  <g stroke="#3a3a3a" stroke-width="2.5" opacity="0.7">
+    <line x1="208" y1="258" x2="208" y2="422"/>
+    <line x1="126" y1="340" x2="290" y2="340"/>
+    <line x1="150" y1="282" x2="266" y2="398"/>
+    <line x1="266" y1="282" x2="150" y2="398"/>
+    <line x1="134" y1="316" x2="282" y2="364"/>
+    <line x1="134" y1="364" x2="282" y2="316"/>
+    <line x1="184" y1="262" x2="232" y2="418"/>
+    <line x1="232" y1="262" x2="184" y2="418"/>
+  </g>
+  <circle cx="208" cy="340" r="22" fill="#222"/>
+  <circle cx="208" cy="340" r="14" fill="url(#copperGrad)" opacity="0.8"/>
+  <circle cx="208" cy="340" r="7"  fill="#111"/>
+  <ellipse cx="173" cy="295" rx="22" ry="10" fill="#fff" opacity="0.05" transform="rotate(-40,173,295)"/>
+
+  <!-- ── CHASSIS / CORPO CENTRAL ───────────────────────── -->
+  <!-- plataforma baixa -->
+  <path d="M295 355 Q390 340 500 352 L506 370 Q390 382 290 372Z" fill="url(#bodyGrad)"/>
+  <!-- corpo principal -->
+  <path d="M280 355 C280 260 320 220 395 210 C440 205 480 215 510 230 C560 255 575 290 578 335 L500 352 Q390 340 295 355Z" fill="url(#bodyGrad)" filter="url(#shadow)"/>
+  <!-- linha de detalhe copper no corpo -->
+  <path d="M300 340 C310 280 340 245 395 235 C435 228 470 238 500 252" stroke="url(#copperGrad)" stroke-width="2" opacity="0.6" fill="none"/>
+  <!-- painel lateral decorativo -->
+  <path d="M340 310 C350 280 370 262 400 258 C425 255 448 264 462 278 C475 292 478 308 476 325 L340 310Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+  <!-- logo / badge no painel -->
+  <rect x="375" y="278" width="52" height="22" rx="2" fill="url(#copperGrad)" opacity="0.7"/>
+  <text x="401" y="293" font-family="Arial" font-size="9" font-weight="bold" fill="#fff" text-anchor="middle" opacity="0.9">SHIFT</text>
+
+  <!-- ── GARFO DIANTEIRO ───────────────────────────────── -->
+  <path d="M270 235 L220 280 L215 335" stroke="#2a2a2a" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <path d="M270 235 L220 280 L215 335" stroke="#3a3a3a" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- detalhe copper no garfo -->
+  <path d="M268 242 L222 284" stroke="url(#copperGrad)" stroke-width="1.5" fill="none" opacity="0.5"/>
+
+  <!-- ── GUIDÃO ─────────────────────────────────────────── -->
+  <path d="M270 235 C268 200 268 185 270 175" stroke="#222" stroke-width="16" stroke-linecap="round" fill="none"/>
+  <path d="M270 235 C268 200 268 185 270 175" stroke="#333" stroke-width="10" stroke-linecap="round" fill="none"/>
+  <!-- travessa do guidão -->
+  <line x1="222" y1="172" x2="318" y2="172" stroke="#282828" stroke-width="13" stroke-linecap="round"/>
+  <line x1="222" y1="172" x2="318" y2="172" stroke="#383838" stroke-width="7" stroke-linecap="round"/>
+  <!-- ponteiras -->
+  <rect x="210" y="165" width="18" height="16" rx="8" fill="#111"/>
+  <rect x="312" y="165" width="18" height="16" rx="8" fill="#111"/>
+  <!-- punho copper -->
+  <rect x="208" y="166" width="22" height="12" rx="6" fill="url(#copperGrad)" opacity="0.7"/>
+  <rect x="310" y="166" width="22" height="12" rx="6" fill="url(#copperGrad)" opacity="0.7"/>
+
+  <!-- ── ESPELHOS ────────────────────────────────────────── -->
+  <line x1="222" y1="172" x2="195" y2="148" stroke="#333" stroke-width="3"/>
+  <ellipse cx="190" cy="144" rx="10" ry="7" fill="#222" stroke="#444" stroke-width="1.5" transform="rotate(-20,190,144)"/>
+  <ellipse cx="190" cy="144" rx="7" ry="5" fill="#2a3a4a" transform="rotate(-20,190,144)" opacity="0.8"/>
+
+  <line x1="318" y1="172" x2="345" y2="148" stroke="#333" stroke-width="3"/>
+  <ellipse cx="350" cy="144" rx="10" ry="7" fill="#222" stroke="#444" stroke-width="1.5" transform="rotate(20,350,144)"/>
+  <ellipse cx="350" cy="144" rx="7" ry="5" fill="#2a3a4a" transform="rotate(20,350,144)" opacity="0.8"/>
+
+  <!-- ── ASSENTO ─────────────────────────────────────────── -->
+  <path d="M360 205 C380 198 430 198 460 205 C470 208 472 218 462 222 C440 228 378 228 358 220 C348 216 350 208 360 205Z" fill="#111" stroke="#2a2a2a" stroke-width="1.5"/>
+  <!-- costuras do banco -->
+  <path d="M368 210 C395 204 435 204 454 210" stroke="#2a2a2a" stroke-width="1" fill="none" stroke-dasharray="3,3"/>
+
+  <!-- ── FAROL ──────────────────────────────────────────── -->
+  <circle cx="148" cy="295" r="28" fill="#111" stroke="#333" stroke-width="2"/>
+  <circle cx="148" cy="295" r="22" fill="#0a0a0a" stroke="#2a2a2a" stroke-width="1"/>
+  <!-- anel copper do farol -->
+  <circle cx="148" cy="295" r="28" stroke="url(#copperGrad)" stroke-width="2" fill="none" opacity="0.6"/>
+  <!-- lente LED -->
+  <circle cx="148" cy="295" r="16" fill="#0d1520" opacity="0.9"/>
+  <ellipse cx="143" cy="289" rx="7" ry="5" fill="#fff" opacity="0.08" transform="rotate(-20,143,289)"/>
+  <!-- brilho DRL copper -->
+  <circle cx="148" cy="295" r="16" stroke="url(#copperGrad)" stroke-width="1.5" fill="none" opacity="0.4" filter="url(#glow)"/>
+
+  <!-- ── ESCAPE / DETALHE TRASEIRO ─────────────────────── -->
+  <path d="M540 355 L620 358 L624 368 L540 368Z" fill="#1a1a1a" stroke="#222" stroke-width="1"/>
+  <ellipse cx="624" cy="363" rx="6" ry="8" fill="#111" stroke="#333" stroke-width="1.5"/>
+
+  <!-- ── REFLEXO / HIGHLIGHT no corpo ─────────────────── -->
+  <path d="M310 295 C330 270 370 255 410 250" stroke="#fff" stroke-width="1" fill="none" opacity="0.06"/>
+
+  <!-- ── LINHA COPPER DECORATIVA INFERIOR ─────────────── -->
+  <line x1="290" y1="370" x2="510" y2="370" stroke="url(#copperGrad)" stroke-width="2" opacity="0.5"/>
+</svg>

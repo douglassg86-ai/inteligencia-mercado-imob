@@ -190,6 +190,64 @@
     .premio-slogan .gold { background: var(--cg); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
 
+
+    /* ── DINHEIRO SAINDO DO FRAME ─────────────────────────── */
+    .money-stage {
+      overflow: visible !important;
+    }
+
+    .campaigns-grid {
+      overflow: visible;
+    }
+
+    .camp-card.money-card {
+      overflow: visible;
+    }
+
+    .money-bag-out {
+      position: absolute;
+      font-size: 52px;
+      animation: float-bag-out linear infinite;
+      opacity: 0;
+      pointer-events: none;
+      user-select: none;
+      z-index: 10;
+      filter: drop-shadow(0 4px 12px rgba(201,144,109,.35));
+    }
+
+    @keyframes float-bag-out {
+      0%   { transform: translateY(80px) scale(0.7) rotate(-15deg); opacity: 0; }
+      12%  { opacity: 1; }
+      75%  { opacity: .85; }
+      100% { transform: translateY(-120px) scale(1.1) rotate(10deg); opacity: 0; }
+    }
+
+    /* R$1M section — dinheiro saindo do frame */
+    #premio-total {
+      overflow: visible;
+    }
+
+    .premio-frame {
+      overflow: visible;
+    }
+
+    .money-fly {
+      position: absolute;
+      font-size: 60px;
+      animation: money-fly-up ease-in-out infinite;
+      opacity: 0;
+      pointer-events: none;
+      user-select: none;
+      filter: drop-shadow(0 6px 16px rgba(201,144,109,.4));
+    }
+
+    @keyframes money-fly-up {
+      0%   { transform: translateY(40px) scale(.8) rotate(-8deg); opacity: 0; }
+      15%  { opacity: 1; }
+      70%  { opacity: .9; }
+      100% { transform: translateY(-160px) scale(1.2) rotate(12deg); opacity: 0; }
+    }
+
     /* ── SCOOTER HERO ─────────────────────────────────────── */
     .scooter-hero {
       position: relative;
@@ -200,16 +258,14 @@
 
     .scooter-hero img {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 60%;
+      height: auto;
       display: block;
-      filter: contrast(1.15) brightness(0.72) saturate(0.75);
       transition: transform .8s ease;
+      padding: 16px 8px 0;
     }
 
     .camp-card:hover .scooter-hero img {
-      transform: scale(1.04);
+      transform: scale(1.03) translateY(-4px);
     }
 
     /* Gradiente inferior que funde com o card */
@@ -217,12 +273,9 @@
       content: '';
       position: absolute;
       inset: 0;
-      background:
-        linear-gradient(to bottom,
-          rgba(10,8,6,.35) 0%,
-          transparent 30%,
-          transparent 55%,
-          rgba(28,26,24,1) 100%);
+      background: linear-gradient(160deg, #0a0806 0%, #181410 60%, #1C1A18 100%);
+      display: flex;
+      align-items: flex-end;
       pointer-events: none;
     }
 
@@ -1511,7 +1564,7 @@
     <div class="camp-card scooter-card r">
       <!-- Hero image com tratamento dramático -->
       <div class="scooter-hero">
-        <img src="assets/scooter.jpg" alt="Scooter Elétrica">
+        <img src="assets/scooter-ilustracao.svg" alt="Scooter Elétrica Citycoco">
         <div class="scooter-badge">Prêmio da campanha</div>
         <div class="scooter-title-overlay">
           Scooter<br><span>Elétrica</span>
@@ -1525,15 +1578,15 @@
     </div>
 
     <!-- R$50K -->
-    <div class="camp-card r d2">
+    <div class="camp-card money-card r d2">
       <div class="camp-bg-text">💰</div>
       <div class="money-stage">
-        <div class="money-bag" style="left:8%;  animation-duration:3.2s; animation-delay:0s;">💰</div>
-        <div class="money-bag" style="left:22%; animation-duration:2.8s; animation-delay:.6s;">💸</div>
-        <div class="money-bag" style="left:40%; animation-duration:3.6s; animation-delay:.2s;">🤑</div>
-        <div class="money-bag" style="left:58%; animation-duration:2.6s; animation-delay:1s;">💰</div>
-        <div class="money-bag" style="left:74%; animation-duration:3.4s; animation-delay:.4s;">💸</div>
-        <div class="money-bag" style="left:88%; animation-duration:3s;   animation-delay:.8s;">🤑</div>
+        <div class="money-bag-out" style="left:-5%;  top:80%; animation-duration:3.2s; animation-delay:0s;">💰</div>
+        <div class="money-bag-out" style="left:15%;  top:75%; animation-duration:2.6s; animation-delay:.5s;">💸</div>
+        <div class="money-bag-out" style="left:38%;  top:85%; animation-duration:3.5s; animation-delay:.2s;">🤑</div>
+        <div class="money-bag-out" style="left:60%;  top:78%; animation-duration:2.8s; animation-delay:.9s;">💰</div>
+        <div class="money-bag-out" style="left:80%;  top:82%; animation-duration:3.1s; animation-delay:.4s;">💸</div>
+        <div class="money-bag-out" style="left:100%; top:75%; animation-duration:2.9s; animation-delay:.7s;">🤑</div>
         <div class="money-center">
           <div style="font-family:'Montserrat',sans-serif; font-size:11px; font-weight:700; letter-spacing:.4em; color:var(--copper); margin-bottom:10px; text-transform:uppercase;">A cada</div>
           <div style="font-family:'Montserrat',sans-serif; font-size:clamp(36px,5vw,60px); font-weight:900; background:var(--cg); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1;">R$ 5 mi</div>
@@ -1555,6 +1608,13 @@
 
 <!-- ═══ PRÊMIO TOTAL ═════════════════════════════════════════ -->
 <section id="premio-total">
+  <!-- Dinheiro saindo do frame do prêmio -->
+  <div class="money-fly" style="left:2%;  top:60%; animation-duration:3.4s; animation-delay:0s;">💰</div>
+  <div class="money-fly" style="left:12%; top:70%; animation-duration:2.8s; animation-delay:.6s;">💸</div>
+  <div class="money-fly" style="left:78%; top:65%; animation-duration:3.2s; animation-delay:.3s;">🤑</div>
+  <div class="money-fly" style="left:88%; top:72%; animation-duration:2.6s; animation-delay:.9s;">💰</div>
+  <div class="money-fly" style="left:50%; top:68%; animation-duration:3.6s; animation-delay:.15s;">💸</div>
+
   <div class="premio-frame r">
     <div class="premio-value copper-text">R$ 1.000.000,00</div>
     <div class="premio-label">EM PRÊMIOS</div>

@@ -253,37 +253,49 @@
       position: relative;
       overflow: visible;
       margin: -52px -44px 0px;
-      background: #0e0c0a;
-      min-height: 280px;
+      background: #000;
+      min-height: 300px;
       display: flex;
       align-items: flex-end;
       justify-content: center;
     }
 
     .scooter-hero img {
-      width: 100%;
-      max-width: 520px;
+      width: 95%;
       height: auto;
       display: block;
       transition: transform .8s ease;
       position: relative;
       z-index: 2;
-      margin-bottom: -8px;
+      margin: 0 auto;
+      mix-blend-mode: lighten;
     }
 
     .camp-card:hover .scooter-hero img {
-      transform: scale(1.04) translateY(-6px);
+      transform: scale(1.05) translateY(-8px);
     }
 
-    /* Gradiente inferior que funde com o card */
+    /* Gradiente inferior suave fundindo com o card */
     .scooter-hero::after {
       content: '';
       position: absolute;
       left: 0; right: 0; bottom: 0;
-      height: 60px;
+      height: 80px;
       background: linear-gradient(to top, var(--bg-card) 0%, transparent 100%);
       pointer-events: none;
       z-index: 3;
+    }
+
+    /* Brilho copper sob a scooter */
+    .scooter-hero::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 70%;
+      height: 60px;
+      background: radial-gradient(ellipse at center bottom, rgba(201,144,109,.18) 0%, transparent 70%);
+      z-index: 1;
     }
 
     /* Badge de prêmio sobreposto */
@@ -1571,7 +1583,7 @@
     <div class="camp-card scooter-card r">
       <!-- Hero image com tratamento dramático -->
       <div class="scooter-hero">
-        <img src="assets/scooter-ilustracao.svg" alt="Scooter Elétrica Citycoco">
+        <img src="assets/scooter-produto.png" alt="Scooter Elétrica">
         <div class="scooter-badge">Prêmio da campanha</div>
         <div class="scooter-title-overlay">
           Scooter<br><span>Elétrica</span>

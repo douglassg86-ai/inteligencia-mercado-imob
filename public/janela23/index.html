@@ -1082,6 +1082,186 @@
     @media (max-width: 540px) {
       .brand-header { flex-direction: column; align-items: flex-start; gap: 16px; }
     }
+
+    /* ══════════════════════════════════════════════ */
+    /*  BOTÃO REGULAMENTO                             */
+    /* ══════════════════════════════════════════════ */
+    .btn-regulamento {
+      display: inline-block;
+      margin-top: 20px;
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      color: var(--copper);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .4em;
+      text-transform: uppercase;
+      padding: 12px 28px;
+      cursor: pointer;
+      transition: background .3s, color .3s;
+    }
+    .btn-regulamento:hover {
+      background: var(--cg);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  MODAL REGULAMENTO                             */
+    /* ══════════════════════════════════════════════ */
+    #modal-regulamento {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(10,8,6,.92);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      max-width: 680px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--cg);
+    }
+
+    .modal-header {
+      padding: 36px 36px 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .modal-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .45em;
+      text-transform: uppercase;
+      color: var(--copper);
+    }
+
+    .modal-close {
+      background: none;
+      border: 1px solid var(--border-med);
+      color: var(--muted);
+      font-size: 18px;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color .3s, color .3s;
+    }
+    .modal-close:hover { border-color: var(--copper); color: var(--copper); }
+
+    .modal-campaign-name {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(22px, 3.5vw, 36px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      color: var(--white);
+      margin-top: 12px;
+      padding: 0 36px;
+    }
+
+    .modal-body {
+      padding: 24px 36px 36px;
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 2;
+    }
+
+    .modal-body p { margin-bottom: 16px; }
+    .modal-body strong { color: var(--cream); font-weight: 600; }
+
+    .modal-meta {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--subtle);
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  SELO VIDA EM DOBRO                            */
+    /* ══════════════════════════════════════════════ */
+    .vida-dobro-seal {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 10;
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,.55));
+      animation: seal-pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes seal-pulse {
+      0%, 100% { transform: scale(1) rotate(-3deg); }
+      50%       { transform: scale(1.06) rotate(-3deg); }
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  BOTÃO DRIVE                                   */
+    /* ══════════════════════════════════════════════ */
+    .drive-btn-wrap {
+      padding: 0 28px 56px;
+      max-width: 1260px;
+      margin: 0 auto;
+      margin-top: -32px;
+    }
+
+    .drive-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: transparent;
+      border: 1px solid var(--border-med);
+      color: var(--copper);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .4em;
+      text-transform: uppercase;
+      padding: 13px 28px;
+      text-decoration: none;
+      transition: background .3s, border-color .3s, color .3s;
+    }
+
+    .drive-btn:hover {
+      background: rgba(201,144,109,.08);
+      border-color: var(--copper);
+    }
+
+    .drive-btn svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -1095,17 +1275,17 @@
     <span class="ticker-item">Até 32% OFF</span><span class="ticker-dot">·</span>
     <span class="ticker-item">Preços históricos</span><span class="ticker-dot">·</span>
     <span class="ticker-item">Scooter Elétrica</span><span class="ticker-dot">·</span>
-    <span class="ticker-item">Prêmio R$ 50 mil</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Prêmios de R$ 50 mil</span><span class="ticker-dot">·</span>
     <span class="ticker-item">Plaenge · Vanguard</span><span class="ticker-dot">·</span>
-    <span class="ticker-item">Mobilize seus corretores</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Mobilize seus clientes</span><span class="ticker-dot">·</span>
     <span class="ticker-item">23 de Maio</span><span class="ticker-dot">·</span>
     <span class="ticker-item">Uma única janela</span><span class="ticker-dot">·</span>
     <span class="ticker-item">Até 32% OFF</span><span class="ticker-dot">·</span>
     <span class="ticker-item">Preços históricos</span><span class="ticker-dot">·</span>
     <span class="ticker-item">Scooter Elétrica</span><span class="ticker-dot">·</span>
-    <span class="ticker-item">Prêmio R$ 50 mil</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Prêmios de R$ 50 mil</span><span class="ticker-dot">·</span>
     <span class="ticker-item">Plaenge · Vanguard</span><span class="ticker-dot">·</span>
-    <span class="ticker-item">Mobilize seus corretores</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Mobilize seus clientes</span><span class="ticker-dot">·</span>
   </div>
 </div>
 
@@ -1192,7 +1372,7 @@
     <div class="stat-card r d3">
       <span class="stat-icon">💎</span>
       <span class="stat-num copper-text">32%</span>
-      <span class="stat-label">De desconto máximo</span>
+      <span class="stat-label">Descontos de até</span>
     </div>
   </div>
 </section>
@@ -1266,6 +1446,12 @@
     </div>
   </div>
 </div>
+<div class="drive-btn-wrap">
+  <a class="drive-btn" href="https://drive.google.com/drive/folders/18sqHLsHkSRHUPwvF8WrCF0iteBUxvi1V?usp=drive_link" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Materiais Edition no Drive
+  </a>
+</div>
 
 <!-- ORBITALE -->
 <div class="product-block">
@@ -1296,6 +1482,12 @@
     </div>
   </div>
 </div>
+<div class="drive-btn-wrap">
+  <a class="drive-btn" href="https://drive.google.com/drive/folders/1ydGBvddrIiThoSkqu_2is21-puYe1pJH?usp=drive_link" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Materiais Orbitale no Drive
+  </a>
+</div>
 
 <!-- VERDANT -->
 <div class="product-block">
@@ -1323,6 +1515,12 @@
     </div>
   </div>
 </div>
+<div class="drive-btn-wrap">
+  <a class="drive-btn" href="https://drive.google.com/drive/folders/1CEdRNf8uLO0bYjQpeIvTxUaxO-3bHVfB?usp=drive_link" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Materiais Verdant no Drive
+  </a>
+</div>
 
 <div class="copper-bar-thick"></div>
 
@@ -1347,6 +1545,7 @@
     <div class="product-img-wrap r">
       <img src="assets/trend-nano.jpg" alt="Trend Downtown Nano" class="product-img">
       <span class="product-img-name">Trend Downtown Nano</span>
+      <img src="assets/selo-vida-em-dobro.png" alt="Vida em Dobro" class="vida-dobro-seal">
     </div>
     <div class="price-stack">
 
@@ -1413,6 +1612,12 @@
     </div>
   </div>
 </div>
+<div class="drive-btn-wrap">
+  <a class="drive-btn" href="https://drive.google.com/drive/folders/19nzRVlP4jpwoWHoWu1ZTh-yDXCYhqELj?usp=drive_link" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Materiais Trend Nano no Drive
+  </a>
+</div>
 
 <!-- MOOD -->
 <div class="product-block">
@@ -1424,6 +1629,7 @@
     <div class="product-img-wrap r">
       <img src="assets/mood.jpg" alt="Mood" class="product-img">
       <span class="product-img-name">Mood</span>
+      <img src="assets/selo-vida-em-dobro.png" alt="Vida em Dobro" class="vida-dobro-seal">
     </div>
     <div class="price-stack">
 
@@ -1489,6 +1695,12 @@
 
     </div>
   </div>
+</div>
+<div class="drive-btn-wrap">
+  <a class="drive-btn" href="https://drive.google.com/drive/folders/1ymdGniyOtl7Bjf16Q63P1QmX9jxKSgAF?usp=drive_link" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Materiais Mood no Drive
+  </a>
 </div>
 
 <!-- YUNA -->
@@ -1567,6 +1779,12 @@
     </div>
   </div>
 </div>
+<div class="drive-btn-wrap">
+  <a class="drive-btn" href="https://drive.google.com/drive/folders/1yKCCtXwGP07evK1PZ9a8PGa0dqHN1qZ3?usp=drive_link" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Materiais Yuna no Drive
+  </a>
+</div>
 
 <div class="copper-bar"></div>
 
@@ -1595,8 +1813,12 @@
 
       <div class="camp-trigger">A cada 5 vendas do SHIFT</div>
       <p class="camp-desc">
-        Cada grupo de 5 unidades vendidas do empreendimento SHIFT garante o sorteio de uma scooter elétrica. Mobilize seus corretores agora e acumule rodadas.
+        Cada grupo de 5 unidades vendidas do empreendimento SHIFT garante o sorteio de uma scooter elétrica. Leve seus clientes e acumule rodadas.
       </p>
+      <a class="drive-btn" href="https://drive.google.com/drive/folders/13IzvLW6eiY2yhgXquXcYvQ3I1uygeaXN?usp=drive_link" target="_blank" rel="noopener" style="margin-top:20px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Materiais SHIFT no Drive
+      </a>
     </div>
 
     <!-- R$50K -->
@@ -1611,15 +1833,18 @@
         <div class="money-bag-out" style="left:100%; top:75%; animation-duration:2.9s; animation-delay:.7s;">🤑</div>
         <div class="money-center">
           <div style="font-family:'Montserrat',sans-serif; font-size:11px; font-weight:700; letter-spacing:.4em; color:var(--copper); margin-bottom:10px; text-transform:uppercase;">A cada</div>
-          <div style="font-family:'Montserrat',sans-serif; font-size:clamp(36px,5vw,60px); font-weight:900; background:var(--cg); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1;">R$ 5 mi</div>
+          <div style="font-family:'Montserrat',sans-serif; font-size:clamp(30px,4.5vw,54px); font-weight:900; background:var(--cg); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1;">R$ 5 milhões</div>
           <div style="font-family:'Montserrat',sans-serif; font-size:11px; font-weight:600; letter-spacing:.2em; color:var(--subtle); margin-top:8px; text-transform:uppercase;">em vendas Plaenge + Vanguard</div>
         </div>
       </div>
-      <div class="camp-trigger">Volume combinado Plaenge + Vanguard</div>
-      <div class="camp-reward">Prêmio de<br><span class="copper-text">R$ 50.000</span></div>
+      <div class="camp-trigger">Campanha individual por corretor</div>
+      <div class="camp-reward">Prêmios de<br><span class="copper-text">R$ 50.000</span></div>
       <p class="camp-desc">
-        A cada R$ 5 milhões atingidos no volume total combinado, sorteamos um prêmio de R$ 50 mil. Quanto mais volume, mais sorteios. Trabalhe em equipe.
+        A cada <strong style="color:var(--cream);">R$ 200 mil vendidos</strong>, você recebe 1 número para concorrer a R$ 50 mil. Quanto mais você vende, mais chances acumula. Os empreendimentos com o <strong style="color:var(--copper);">selo Vida em Dobro</strong> valem o dobro de chances — cada R$ 200 mil nesses produtos gera 2 números.
       </p>
+      <button class="btn-regulamento" onclick="document.getElementById('modal-regulamento').style.display='flex'">
+        Conheça o regulamento
+      </button>
     </div>
 
   </div>
@@ -1659,19 +1884,16 @@
 
 <!-- ═══ MOTIVAÇÃO ════════════════════════════════════════════ -->
 <section id="motivacao">
-  <p class="eyebrow r" style="justify-content:center; max-width:440px; margin:0 auto 32px;">
-    Para o nosso time
-  </p>
 
   <div class="mot-lines r d1">
-    Esta semana,<br>
-    <span class="copper-text">cada ligação conta.</span><br>
-    Cada reunião marca.<br>
-    <span class="copper-text">Cada agendamento é uma venda.</span>
+    Leve seus clientes.<br>
+    <span class="copper-text">23 de maio é o dia.</span><br>
+    Condições nunca vistas.<br>
+    <span class="copper-text">A janela abre uma vez só.</span>
   </div>
 
   <p class="mot-sub r d2">
-    O dia 23 de maio será único — um momento que não se repete. Mobilize o maior número possível de corretores, leve clientes qualificados e transforme esta semana no maior volume de agendamentos da história da equipe. <strong>A janela abre uma vez. Esteja pronto.</strong>
+    Agende já seus clientes para o dia 23 de maio e aproveite os melhores preços já praticados pela Plaenge e Vanguard. Cada visita é uma oportunidade real — e cada venda acumula mais chances de prêmios. <strong>Não deixe essa janela fechar sem você.</strong>
   </p>
 
   <div class="mot-badge r d3">
@@ -1690,8 +1912,43 @@
     alt="Plaenge | Vanguard"
     class="footer-logo"
   >
-  <p class="footer-text">JANELA 23 &nbsp;·&nbsp; PLAENGE | VANGUARD &nbsp;·&nbsp; 23 DE MAIO DE 2026 &nbsp;·&nbsp; USO INTERNO</p>
+  <p class="footer-text">JANELA 23 &nbsp;·&nbsp; PLAENGE | VANGUARD &nbsp;·&nbsp; 23 DE MAIO DE 2026</p>
 </footer>
+
+<!-- ═══ MODAL REGULAMENTO ═════════════════════════════════════ -->
+<div id="modal-regulamento" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Regulamento</div>
+      <button class="modal-close" onclick="document.getElementById('modal-regulamento').style.display='none'">&times;</button>
+    </div>
+    <div class="modal-campaign-name"><span style="background:var(--cg);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Bateu, Concorreu</span></div>
+    <div class="modal-body">
+      <p>
+        A campanha promocional <strong>"Bateu, Concorreu"</strong> é destinada a corretores parceiros e será válida para vendas realizadas no período de <strong>10 de março de 2026 a 31 de maio de 2026</strong>.
+      </p>
+      <p>
+        Participam da campanha as vendas de unidades dos empreendimentos <strong>Orbitale, Verdant, Edition Moinhos, Yuna, Mood, Trend Downtown Nano e Trend Downtown Home</strong>.
+      </p>
+      <p>
+        A cada <strong>R$ 5.000.000,00 (cinco milhões de reais)</strong> em valor total de vendas efetivadas, devidamente formalizadas e reconhecidas pela incorporadora, o corretor participante fará jus a <strong>01 (um) número/cupom</strong> para participação no sorteio de <strong>R$ 50.000,00 (cinquenta mil reais)</strong>, conforme critérios estabelecidos nesta campanha.
+      </p>
+      <p>
+        Para fins de apuração, serão consideradas apenas vendas efetivamente registradas dentro do período de vigência da campanha e validadas pela empresa promotora, podendo esta realizar auditoria e conferência dos resultados.
+      </p>
+      <p>
+        Não serão consideradas para efeito de pontuação na campanha vendas que venham a ser <strong>canceladas, distratadas, rescindidas</strong> ou que apresentem inadimplência, bem como quaisquer operações que não sejam reconhecidas pela incorporadora como vendas válidas.
+      </p>
+      <p>
+        A empresa promotora reserva-se o direito de revisar, validar e consolidar os resultados, bem como deliberar sobre eventuais situações não previstas neste regulamento. A participação na campanha implica na aceitação integral das condições aqui estabelecidas.
+      </p>
+      <p>
+        Esta campanha possui caráter exclusivamente promocional e não gera qualquer obrigação adicional de remuneração além das comissões previstas em contrato.
+      </p>
+      <div class="modal-meta">Campanha válida de 10/03/2026 a 31/05/2026 &nbsp;·&nbsp; Plaenge | Vanguard</div>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ SCRIPTS ═══════════════════════════════════════════════ -->
 <script>

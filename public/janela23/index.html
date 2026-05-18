@@ -9,6 +9,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@200;300;400;600;700&family=Montserrat:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-P9MC690PM6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-P9MC690PM6', { page_path: '/janela23/' });
+  </script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -2020,6 +2029,55 @@
     { threshold: 0.08 }
   );
   document.querySelectorAll('.r').forEach(el => observer.observe(el));
+
+  /* ── GA4 EVENTOS CUSTOMIZADOS ───────────────────── */
+  // Cliques nos botões Drive
+  document.querySelectorAll('.drive-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const label = btn.textContent.trim();
+      gtag('event', 'drive_click', { event_category: 'engajamento', event_label: label });
+    });
+  });
+
+  // Abertura do modal regulamento
+  document.querySelector('.btn-regulamento').addEventListener('click', () => {
+    gtag('event', 'regulamento_aberto', { event_category: 'engajamento', event_label: 'Modal Regulamento' });
+  });
+
+  // Scroll por seção de produto
+  const prodSections = [
+    { id: 'edition',    label: 'Edition' },
+    { id: 'orbitale',   label: 'Orbitale' },
+    { id: 'verdant',    label: 'Verdant' },
+    { id: 'trend-nano', label: 'Trend Nano' },
+    { id: 'mood',       label: 'Mood' },
+    { id: 'yuna',       label: 'Yuna' },
+  ];
+  const prodObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const label = e.target.dataset.gaLabel;
+        if (label) gtag('event', 'secao_vista', { event_category: 'scroll', event_label: label });
+        prodObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  document.querySelectorAll('.product-block').forEach((block, i) => {
+    if (prodSections[i]) {
+      block.dataset.gaLabel = prodSections[i].label;
+      prodObserver.observe(block);
+    }
+  });
+
+  // Cliques nos cards de preço
+  document.querySelectorAll('.pc').forEach(card => {
+    card.addEventListener('click', () => {
+      const meta = card.querySelector('.pc-meta');
+      const label = meta ? meta.textContent.trim() : 'card';
+      gtag('event', 'preco_clicado', { event_category: 'interesse', event_label: label });
+    });
+  });
 </script>
 
 </body>

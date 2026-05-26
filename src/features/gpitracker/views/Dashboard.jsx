@@ -427,8 +427,8 @@ export default function Dashboard() {
     .sort((a, b) => b.vgv - a.vgv)
     .slice(0, 5);
 
-  const totalProjectsVGV = sortedProjectSales.reduce((sum, p) => sum + p.vgv, 0);
-  const totalProjectsCount = sortedProjectSales.reduce((sum, p) => sum + p.count, 0);
+  const totalProjectsVGV = Object.values(projectSales).reduce((sum, p) => sum + p.vgv, 0);
+  const totalProjectsCount = Object.values(projectSales).reduce((sum, p) => sum + p.count, 0);
 
   // ATIVIDADES RECENTES
   const recentVisitas = [...filteredVisitas]

@@ -392,6 +392,41 @@ export default function Dashboard() {
     .sort((a, b) => b.vgv - a.vgv || b.count - a.count)
     .slice(0, 4);
 
+  // RANKING DE VENDAS DOS GPIS (Visível para todos, global/sem filtro)
+  const gpiSalesRanking = negocios
+    .filter(n => n.status === 'VENDA')
+    .reduce((acc, n) => {
+      const gpi = n.responsavel || 'Sem Responsável';
+      const val = Number(n.vgv_contrato || n.vgv_proposta || 0);
+      if (!acc[gpi]) {
+        acc[gpi] = { name: gpi, count: 0, vgv: 0 };
+      }
+      acc[gpi].count++;
+      acc[gpi].vgv += val;
+      return acc;
+    }, {});
+
+  const sortedGpiRanking = Object.values(gpiSalesRanking)
+    .sort((a, b) => b.vgv - a.vgv || b.count - a.count);
+
+  // VGV POR EMPREENDIMENTO (Dinâmico, respeita activeGPIFilter)
+  const projectSales = filteredNegocios
+    .filter(n => n.status === 'VENDA')
+    .reduce((acc, n) => {
+      const proj = n.empreendimento || 'Sem Empreendimento';
+      const val = Number(n.vgv_contrato || n.vgv_proposta || 0);
+      if (!acc[proj]) {
+        acc[proj] = { name: proj, count: 0, vgv: 0 };
+      }
+      acc[proj].count++;
+      acc[proj].vgv += val;
+      return acc;
+    }, {});
+
+  const sortedProjectSales = Object.values(projectSales)
+    .sort((a, b) => b.vgv - a.vgv)
+    .slice(0, 5);
+
   // ATIVIDADES RECENTES
   const recentVisitas = [...filteredVisitas]
     .sort((a, b) => new Date(b.created_at || b.data) - new Date(a.created_at || a.data))
@@ -715,6 +750,79 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* SEÇÃO DE GRÁFICOS: RANKING GPIS & VGV EMPREENDIMENTOS */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* RANKING DE VENDAS DOS GPIS */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col">
+          <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
+            <Award size={18} className="text-indigo-400" />
+            🏆 Ranking de Vendas (VGV Total)
+          </h3>
+          <div className="space-y-3 flex-1 flex flex-col justify-center">
+            {sortedGpiRanking.length === 0 ? (
+              <p className="text-slate-500 text-xs text-center py-8">Nenhuma venda registrada na base.</p>
+            ) : (
+              sortedGpiRanking.map((gpi, index) => {
+                const medals = ['🥇', '🥈', '🥉'];
+                const position = index + 1;
+                return (
+                  <div key={gpi.name} className="flex items-center justify-between p-3 rounded-xl bg-slate-950/40 border border-slate-800/40 hover:border-slate-700 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 text-center text-sm font-bold text-slate-400">
+                        {medals[index] || `#${position}`}
+                      </span>
+                      <div>
+                        <div className="text-sm font-bold text-slate-200">{gpi.name}</div>
+                        <div className="text-xs text-slate-500">{gpi.count} {gpi.count === 1 ? 'venda' : 'vendas'}</div>
+                      </div>
+                    </div>
+                    <div className="text-sm font-black text-indigo-400">{formatBRL(gpi.vgv)}</div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* GRÁFICO DE BARRAS DE VGV POR EMPREENDIMENTO */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col">
+          <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
+            <BarChart3 size={18} className="text-indigo-400" />
+            🏢 Desempenho por Empreendimento (VGV)
+          </h3>
+          <div className="space-y-4 flex-1 flex flex-col justify-center">
+            {sortedProjectSales.length === 0 ? (
+              <p className="text-slate-500 text-xs text-center py-8">Nenhuma venda registrada para a seleção atual.</p>
+            ) : (
+              sortedProjectSales.map((proj) => {
+                const maxVGV = Math.max(...sortedProjectSales.map(p => p.vgv), 1);
+                const percent = Math.round((proj.vgv / maxVGV) * 100);
+                
+                return (
+                  <div key={proj.name} className="space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-bold text-slate-300">{proj.name}</span>
+                      <span className="font-black text-indigo-400">{formatBRL(proj.vgv)} <span className="text-[10px] text-slate-500 font-medium">({proj.count} {proj.count === 1 ? 'venda' : 'vendas'})</span></span>
+                    </div>
+                    <div className="w-full bg-slate-950 h-5 rounded-lg overflow-hidden relative border border-slate-850">
+                      <div 
+                        className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-indigo-600/80 to-indigo-500/40 rounded-l-lg border-r border-white/10 transition-all duration-1000 ease-out"
+                        style={{ width: `${percent}%` }}
+                      ></div>
+                      <div className="absolute inset-0 flex items-center justify-end px-3 text-[10px] font-black text-white/50">
+                        {percent}%
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
       </div>
 
       {/* SEÇÃO INFERIOR: ATIVIDADES E TREINAMENTOS RECENTES */}

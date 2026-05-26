@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import Dashboard from './views/Dashboard';
 import Negocios from './views/Negocios';
 import Visitas from './views/Visitas';
 import Treinamentos from './views/Treinamentos';
+import Corretores from './views/Corretores';
 import Login from './views/Login';
 
 export default function GPITrackerApp() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -39,6 +41,15 @@ export default function GPITrackerApp() {
     await supabase.auth.signOut();
   };
 
+  const getLinkClass = (path) => {
+    const isActive = location.pathname === path;
+    return `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all font-medium ${
+      isActive
+        ? 'bg-indigo-500/10 text-indigo-400 border-l-2 border-indigo-500'
+        : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+    }`;
+  };
+
   return (
     <div className="flex h-screen bg-slate-900 text-slate-100 font-sans">
       <aside className="w-64 border-r border-slate-800 flex flex-col bg-slate-900">
@@ -47,17 +58,20 @@ export default function GPITrackerApp() {
           <p className="text-xs text-slate-400 mt-1">Vanguard · Comercial</p>
         </div>
         <nav className="flex-1 p-4 space-y-1">
-          <Link to="/gpitracker" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-indigo-500/10 text-indigo-400 border-l-2 border-indigo-500 font-medium">
+          <Link to="/gpitracker" className={getLinkClass('/gpitracker')}>
             📊 Dashboard
           </Link>
-          <Link to="/gpitracker/visitas" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors">
+          <Link to="/gpitracker/visitas" className={getLinkClass('/gpitracker/visitas')}>
             📍 Registrar Visita
           </Link>
-          <Link to="/gpitracker/treinamentos" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors">
+          <Link to="/gpitracker/treinamentos" className={getLinkClass('/gpitracker/treinamentos')}>
             📚 Treinamentos
           </Link>
-          <Link to="/gpitracker/negocios" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors">
+          <Link to="/gpitracker/negocios" className={getLinkClass('/gpitracker/negocios')}>
             🏠 Negócios
+          </Link>
+          <Link to="/gpitracker/corretores" className={getLinkClass('/gpitracker/corretores')}>
+            👥 Carteira de Corretores
           </Link>
         </nav>
         <div className="p-4 border-t border-slate-800">
@@ -77,6 +91,7 @@ export default function GPITrackerApp() {
           <Route path="/visitas" element={<Visitas />} />
           <Route path="/treinamentos" element={<Treinamentos />} />
           <Route path="/negocios" element={<Negocios />} />
+          <Route path="/corretores" element={<Corretores />} />
         </Routes>
       </main>
     </div>

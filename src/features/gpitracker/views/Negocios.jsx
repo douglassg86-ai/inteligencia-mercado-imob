@@ -43,11 +43,27 @@ export default function Negocios({ user }) {
                   user?.email?.toLowerCase() === 'douglas.goncalves@vanguard.com.br';
 
   useEffect(() => {
-    if (user) {
-      fetchNegocios(user);
+    let active = true;
+
+    if (user && user.email) {
+      fetchNegocios(user, active);
+
+      // Inscrição em tempo real para sincronização automática no Kanban
+      const channel = supabase
+        .channel('negocios_kanban_realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'negocios' }, () => {
+          if (active) fetchNegocios(user, active);
+        })
+        .subscribe();
+
+      return () => {
+        active = false;
+        supabase.removeChannel(channel);
+      };
     } else {
       setNegocios([]);
       setLoading(false);
+      return () => { active = false; };
     }
   }, [user]);
 
@@ -116,20 +132,21 @@ export default function Negocios({ user }) {
     setShowSuggestions(false);
   };
 
-  const fetchNegocios = async (currentUser) => {
-    setLoading(true);
+  const fetchNegocios = async (currentUser, active = true) => {
     const activeUser = currentUser || user;
-    console.log("[Negocios] Iniciando busca. User:", activeUser?.email, "ID:", activeUser?.id);
-    if (!activeUser) {
-      console.warn("[Negocios] Busca cancelada: activeUser não definido.");
-      setLoading(false);
+    if (!activeUser || !activeUser.email) {
+      if (active) {
+        console.warn("[Negocios] Busca cancelada: activeUser ou email não definido.");
+        setLoading(false);
+      }
       return;
     }
+
+    if (active) setLoading(true);
+
     const currentGpiName = getGPIName(activeUser?.email);
     const currentIsAdmin = activeUser?.email?.toLowerCase() === 'do.goncalves@vanguard.com.br' || 
                           activeUser?.email?.toLowerCase() === 'douglas.goncalves@vanguard.com.br';
-
-    console.log("[Negocios] Regras - GPI:", currentGpiName, "isAdmin:", currentIsAdmin);
 
     let query = supabase.from('negocios').select('*');
     if (!currentIsAdmin) {
@@ -138,13 +155,14 @@ export default function Negocios({ user }) {
 
     const { data, error } = await query.order('created_at', { ascending: false });
 
-    if (error) {
-      console.error("[Negocios] Erro ao buscar negócios:", error);
-    } else {
-      console.log("[Negocios] Busca realizada com sucesso. Total de registros:", data?.length || 0);
-      setNegocios(data || []);
+    if (active) {
+      if (error) {
+        console.error("[Negocios] Erro ao buscar negócios:", error);
+      } else {
+        setNegocios(data || []);
+      }
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleOpenModal = (negocio = null) => {

@@ -72,37 +72,72 @@ export default function Corretores({ user }) {
                   user?.email?.toLowerCase() === 'douglas.goncalves@vanguard.com.br';
 
   useEffect(() => {
-    if (user) {
+    let active = true;
+
+    if (user && user.email) {
       setGpiName(getGPIName(user.email));
-      fetchData();
+      
+      const load = async () => {
+        setLoading(true);
+        try {
+          // Fetch corretores
+          const { data: corrData, error: corrErr } = await supabase
+            .from('corretores')
+            .select('*')
+            .order('nome', { ascending: true });
+
+          if (corrErr) throw corrErr;
+
+          // Fetch imobiliarias (for select options)
+          const { data: imobData, error: imobErr } = await supabase
+            .from('imobiliarias')
+            .select('nome')
+            .order('nome', { ascending: true });
+
+          if (imobErr) throw imobErr;
+
+          if (active) {
+            setCorretores(corrData || []);
+            const uniqueImobNames = Array.from(new Set(imobData?.map(i => i.nome) || []));
+            setImobiliarias(uniqueImobNames);
+          }
+        } catch (err) {
+          console.error("Erro ao buscar dados:", err);
+        } finally {
+          if (active) setLoading(false);
+        }
+      };
+
+      load();
+    } else {
+      setCorretores([]);
+      setLoading(false);
     }
+
+    return () => {
+      active = false;
+    };
   }, [user]);
 
   const fetchData = async () => {
+    if (!user || !user.email) return;
     setLoading(true);
     try {
-      // Fetch corretores
-      const { data: corrData, error: corrErr } = await supabase
+      const { data: corrData } = await supabase
         .from('corretores')
         .select('*')
         .order('nome', { ascending: true });
 
-      if (corrErr) throw corrErr;
-      setCorretores(corrData || []);
-
-      // Fetch imobiliarias (for select options)
-      const { data: imobData, error: imobErr } = await supabase
+      const { data: imobData } = await supabase
         .from('imobiliarias')
         .select('nome')
         .order('nome', { ascending: true });
 
-      if (imobErr) throw imobErr;
-      
-      // Get unique imob names
+      setCorretores(corrData || []);
       const uniqueImobNames = Array.from(new Set(imobData?.map(i => i.nome) || []));
       setImobiliarias(uniqueImobNames);
     } catch (err) {
-      console.error("Erro ao buscar dados:", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }

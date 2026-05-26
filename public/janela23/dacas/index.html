@@ -1,0 +1,3401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <base href="/janela23/">
+  <title>JANELA 23 · Plaenge | Vanguard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@200;300;400;600;700&family=Montserrat:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-P9MC690PM6"></script>
+  <script>
+  /* ── VIDEO POPUP ────────────────────────────────── */
+  function closeVideoModal() {
+    const modal = document.getElementById('modal-video');
+    const iframe = document.getElementById('video-iframe');
+    modal.classList.remove('fade-in');
+    setTimeout(() => {
+      modal.classList.remove('show');
+      // Stop video when closing
+      iframe.src = iframe.src.replace('&autoplay=1', '').replace('&autoplay=1', '');
+    }, 400);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (!localStorage.getItem('janela23_video_seen')) {
+      setTimeout(() => {
+        const modal = document.getElementById('modal-video');
+        const iframe = document.getElementById('video-iframe');
+        // Autoplay on show
+        if (!iframe.src.includes('autoplay=1')) {
+          iframe.src += '&autoplay=1';
+        }
+        modal.classList.add('show');
+        // small delay to allow display:flex to apply before animating opacity
+        setTimeout(() => modal.classList.add('fade-in'), 50);
+        localStorage.setItem('janela23_video_seen', 'true');
+      }, 1500); // Wait 1.5 seconds after page load
+    }
+  });
+
+</script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-P9MC690PM6', { page_path: '/janela23/' });
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:            #111010;
+      --bg-2:          #181614;
+      --bg-card:       #1C1A18;
+      --copper:        #C9906D;
+      --copper-light:  #EAC4A8;
+      --copper-dark:   #7A4A2E;
+      --cg: linear-gradient(90deg, #5C2A1A 0%, #A86040 22%, #D49070 44%, #ECC0A0 55%, #D49070 68%, #A86040 82%, #5C2A1A 100%);
+      --white:         #FFFFFF;
+      --cream:         #F0EAE2;
+      --muted:         #807060;
+      --subtle:        #504030;
+      --border:        rgba(201,144,109,0.12);
+      --border-med:    rgba(201,144,109,0.28);
+      --border-strong: rgba(201,144,109,0.5);
+    }
+
+    html, body { overflow-x: hidden; width: 100%; max-width: 100vw; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: var(--bg);
+      color: var(--cream);
+      position: relative;
+    }
+
+    /* ── UTILITY ─────────────────────────────────── */
+    .copper-text {
+      background: var(--cg);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .copper-bar {
+      height: 2px;
+      background: var(--cg);
+      width: 100%;
+    }
+
+    .copper-bar-thick {
+      height: 3px;
+      background: var(--cg);
+      width: 100%;
+    }
+
+
+    /* ── MONEY ANIMATION ──────────────────────────────────── */
+    .money-stage {
+      position: relative;
+      height: 200px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 28px;
+      background: var(--bg-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .money-center {
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .money-bag {
+      position: absolute;
+      font-size: 36px;
+      animation: float-bag linear infinite;
+      opacity: 0;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    @keyframes float-bag {
+      0%   { transform: translateY(220px) rotate(-10deg); opacity: 0; }
+      10%  { opacity: .7; }
+      80%  { opacity: .5; }
+      100% { transform: translateY(-60px) rotate(10deg); opacity: 0; }
+    }
+
+    /* ── R$1M SECTION ─────────────────────────────────────── */
+    #premio-total {
+      position: relative;
+      padding: 90px 28px;
+      overflow: hidden;
+      text-align: center;
+      background: var(--bg-2);
+    }
+
+    #premio-total::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(201,144,109,.07) 0%, transparent 70%);
+    }
+
+    .premio-frame {
+      position: relative;
+      z-index: 2;
+      max-width: 700px;
+      margin: 0 auto 52px;
+      border: 1px solid var(--border-strong);
+      padding: 52px 40px;
+    }
+
+    .premio-frame::before, .premio-frame::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      height: 3px;
+      background: var(--cg);
+    }
+    .premio-frame::before { top: 0; }
+    .premio-frame::after  { bottom: 0; }
+
+    .premio-value {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(20px, 3.5vw, 32px);
+      font-weight: 700;
+      letter-spacing: .05em;
+      margin-bottom: 4px;
+    }
+
+    .premio-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(36px, 7vw, 72px);
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1;
+      color: var(--white);
+      margin-bottom: 28px;
+    }
+
+    .premio-meta-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .4em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .premio-meta-value {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(18px, 3vw, 28px);
+      font-weight: 700;
+      color: var(--subtle);
+      letter-spacing: .02em;
+    }
+
+    .premio-desc {
+      position: relative;
+      z-index: 2;
+      max-width: 580px;
+      margin: 0 auto 44px;
+      font-size: 17px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.85;
+    }
+
+    .premio-slogan {
+      position: relative;
+      z-index: 2;
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(18px, 3.5vw, 32px);
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1.3;
+      letter-spacing: .02em;
+    }
+
+    .premio-slogan .dim  { color: var(--muted); }
+    .premio-slogan .gold { background: var(--cg); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+
+
+    /* ── DINHEIRO SAINDO DO FRAME ─────────────────────────── */
+    .money-stage {
+      overflow: visible !important;
+    }
+
+    .campaigns-grid {
+      overflow: visible;
+    }
+
+    .camp-card.money-card {
+      overflow: visible;
+    }
+
+    .money-bag-out {
+      position: absolute;
+      font-size: 52px;
+      animation: float-bag-out linear infinite;
+      opacity: 0;
+      pointer-events: none;
+      user-select: none;
+      z-index: 10;
+      filter: drop-shadow(0 4px 12px rgba(201,144,109,.35));
+    }
+
+    @keyframes float-bag-out {
+      0%   { transform: translateY(80px) scale(0.7) rotate(-15deg); opacity: 0; }
+      12%  { opacity: 1; }
+      75%  { opacity: .85; }
+      100% { transform: translateY(-120px) scale(1.1) rotate(10deg); opacity: 0; }
+    }
+
+    /* R$1M section — dinheiro saindo do frame */
+    #premio-total {
+      overflow: visible;
+    }
+
+    .premio-frame {
+      overflow: visible;
+    }
+
+    .money-fly {
+      position: absolute;
+      font-size: 60px;
+      animation: money-fly-up ease-in-out infinite;
+      opacity: 0;
+      pointer-events: none;
+      user-select: none;
+      filter: drop-shadow(0 6px 16px rgba(201,144,109,.4));
+    }
+
+    @keyframes money-fly-up {
+      0%   { transform: translateY(40px) scale(.8) rotate(-8deg); opacity: 0; }
+      15%  { opacity: 1; }
+      70%  { opacity: .9; }
+      100% { transform: translateY(-160px) scale(1.2) rotate(12deg); opacity: 0; }
+    }
+
+    /* ── SCOOTER HERO ─────────────────────────────────────── */
+    .scooter-hero {
+      position: relative;
+      overflow: visible;
+      margin: -52px -44px 0px;
+      background: #000;
+      min-height: 300px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .scooter-hero img {
+      width: 95%;
+      height: auto;
+      display: block;
+      transition: transform .8s ease;
+      position: relative;
+      z-index: 2;
+      margin: 0 auto;
+      mix-blend-mode: lighten;
+    }
+
+    .camp-card:hover .scooter-hero img {
+      transform: scale(1.05) translateY(-8px);
+    }
+
+    /* Gradiente inferior suave fundindo com o card */
+    .scooter-hero::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 80px;
+      background: linear-gradient(to top, var(--bg-card) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    /* Brilho copper sob a scooter */
+    .scooter-hero::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 70%;
+      height: 60px;
+      background: radial-gradient(ellipse at center bottom, rgba(201,144,109,.18) 0%, transparent 70%);
+      z-index: 1;
+    }
+
+    /* Badge de prêmio sobreposto */
+    .scooter-badge {
+      position: absolute;
+      top: 20px; left: 20px;
+      z-index: 2;
+      background: var(--cg);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .45em;
+      text-transform: uppercase;
+      color: #fff;
+      padding: 7px 16px;
+    }
+
+    /* Nome do prêmio sobreposto na parte de baixo da imagem */
+    .scooter-title-overlay {
+      position: absolute;
+      bottom: 20px; left: 24px; right: 24px;
+      z-index: 2;
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1.0;
+      letter-spacing: .02em;
+      color: #fff;
+      text-shadow: 0 2px 20px rgba(0,0,0,.5);
+    }
+
+    .scooter-title-overlay span {
+      background: var(--cg);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── REVEAL ON SCROLL ─────────────────────────── */
+    .r { opacity: 0; transform: translateY(36px); transition: opacity .85s ease, transform .85s ease; }
+    .r.on { opacity: 1; transform: translateY(0); }
+    .r.d1 { transition-delay: .1s; }
+    .r.d2 { transition-delay: .2s; }
+    .r.d3 { transition-delay: .3s; }
+    .r.d4 { transition-delay: .4s; }
+    .r.d5 { transition-delay: .5s; }
+
+    /* ══════════════════════════════════════════════ */
+    /*  TICKER                                        */
+    /* ══════════════════════════════════════════════ */
+    .ticker-wrap {
+      background: var(--bg-2);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      height: 38px;
+      display: flex;
+      align-items: center;
+    }
+
+    .ticker-track {
+      display: flex;
+      gap: 0;
+      animation: ticker-scroll 28s linear infinite;
+      white-space: nowrap;
+    }
+
+    .ticker-item {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+      color: var(--copper);
+      padding: 0 40px;
+    }
+
+    .ticker-dot {
+      color: var(--subtle);
+      padding: 0 4px;
+    }
+
+    @keyframes ticker-scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  HERO                                          */
+    /* ══════════════════════════════════════════════ */
+    #hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 24px 100px;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('assets/bg.jpg');
+      background-size: cover;
+      background-position: center;
+      opacity: .55;
+    }
+
+    .hero-glow {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(201,144,109,.07) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 50% 80%, rgba(90,40,20,.4) 0%, transparent 70%);
+      animation: glow-pulse 5s ease-in-out infinite;
+    }
+
+    @keyframes glow-pulse {
+      0%,100% { opacity: .7; }
+      50%      { opacity: 1; }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 960px;
+      width: 100%;
+    }
+
+    .hero-eyebrow {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .55em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 36px;
+      animation: fadeUp .9s ease-out .2s both;
+    }
+
+    .hero-logo {
+      width: min(460px, 78vw);
+      margin-bottom: 36px;
+      animation: fadeUp .9s ease-out .4s both;
+      filter: drop-shadow(0 0 40px rgba(201,144,109,.15));
+    }
+
+    .hero-tagline {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(28px, 5.5vw, 68px);
+      font-weight: 800;
+      text-transform: uppercase;
+      line-height: 1.05;
+      letter-spacing: -.01em;
+      margin-bottom: 28px;
+      animation: fadeUp .9s ease-out .6s both;
+    }
+
+    .hero-sub {
+      font-size: 15px;
+      font-weight: 300;
+      letter-spacing: .25em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 56px;
+      animation: fadeUp .9s ease-out .75s both;
+    }
+
+    /* Countdown */
+    .countdown {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 52px;
+      animation: fadeUp .9s ease-out .9s both;
+    }
+
+    .cd-block {
+      text-align: center;
+      min-width: 80px;
+    }
+
+    .cd-num {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(40px, 7vw, 72px);
+      font-weight: 800;
+      line-height: 1;
+      background: var(--cg);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: block;
+      transition: all .3s;
+    }
+
+    .cd-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .35em;
+      text-transform: uppercase;
+      color: var(--subtle);
+      margin-top: 8px;
+      display: block;
+    }
+
+    .cd-sep {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 200;
+      color: var(--copper-dark);
+      padding-top: 2px;
+      line-height: 1;
+      align-self: flex-start;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--cg);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .4em;
+      text-transform: uppercase;
+      padding: 16px 40px;
+      border: none;
+      cursor: default;
+      animation: fadeUp .9s ease-out 1.1s both;
+    }
+
+    .hero-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.5); }
+
+    .hero-scroll {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      animation: arrow-bounce 2s ease-in-out infinite;
+    }
+
+    .hero-scroll svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--copper);
+      opacity: .5;
+    }
+
+    @keyframes arrow-bounce {
+      0%,100% { transform: translateX(-50%) translateY(0); }
+      50%      { transform: translateX(-50%) translateY(9px); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  INTRO SECTION                                 */
+    /* ══════════════════════════════════════════════ */
+    #intro {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 100px 28px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .55em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .eyebrow::before, .eyebrow::after {
+      content: '';
+      width: 60px;
+      height: 1px;
+      background: var(--border-med);
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(26px, 4.5vw, 52px);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .section-lead {
+      font-size: 17px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.85;
+      max-width: 640px;
+      margin: 0 auto 64px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .stat-card {
+      background: var(--bg-2);
+      padding: 52px 32px;
+      transition: background .3s;
+    }
+
+    .stat-card:hover { background: var(--bg-card); }
+
+    .stat-icon {
+      font-size: 28px;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .stat-num {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .35em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  CAMPAIGNS                                     */
+    /* ══════════════════════════════════════════════ */
+    #campanhas {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 80px 28px 100px;
+      text-align: center;
+    }
+
+    .campaigns-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      max-width: 720px;
+      margin: 0 auto;
+      gap: 28px;
+    }
+
+    .camp-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 52px 44px;
+      overflow: hidden;
+      transition: border-color .4s, transform .4s;
+    }
+
+    .camp-card.scooter-card {
+      padding-top: 0;
+    }
+
+    .camp-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--cg);
+    }
+
+    .camp-card:hover {
+      border-color: var(--border-med);
+      transform: translateY(-5px);
+    }
+
+    .camp-bg-text {
+      position: absolute;
+      bottom: -16px; right: -10px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 110px;
+      font-weight: 900;
+      color: rgba(201,144,109,.04);
+      line-height: 1;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .camp-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin-bottom: 28px;
+      border: 1px solid var(--border);
+    }
+
+    .camp-trigger {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 14px;
+    }
+
+    .camp-reward {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(22px, 3.5vw, 38px);
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1.05;
+      margin-bottom: 18px;
+    }
+
+    .camp-desc {
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  BRAND HEADER                                  */
+    /* ══════════════════════════════════════════════ */
+    .brand-section {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 80px 28px 0;
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 56px;
+    }
+
+    .brand-pill {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .5em;
+      text-transform: uppercase;
+      color: var(--copper);
+      border: 1px solid var(--border-strong);
+      padding: 10px 22px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(28px, 4.5vw, 52px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  PRODUCT BLOCK                                 */
+    /* ══════════════════════════════════════════════ */
+    .product-block {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 0 28px 80px;
+    }
+
+    .product-header {
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+      margin-bottom: 36px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .product-name {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(22px, 4vw, 44px);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .product-sub {
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: .12em;
+      color: var(--subtle);
+      text-transform: uppercase;
+    }
+
+    .product-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .product-layout.flip {
+      direction: rtl;
+    }
+    .product-layout.flip > * { direction: ltr; }
+
+    /* Image */
+    .product-img-wrap {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .product-img-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(10,8,6,.65) 0%, transparent 55%);
+      pointer-events: none;
+    }
+
+    .product-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform .7s ease;
+    }
+
+    .product-img-wrap:hover .product-img { transform: scale(1.02); }
+
+    .product-img-name {
+      position: absolute;
+      bottom: 22px; left: 22px;
+      z-index: 2;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .45em;
+      text-transform: uppercase;
+      color: rgba(230,210,190,.6);
+    }
+
+    /* Price cards stack */
+    .price-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Single price card */
+    .pc {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 28px 30px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .35s, transform .35s;
+    }
+
+        /* ── VENDIDO STAMP (Premium Glass & Silver Cannon) ────── */
+    .sold-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+      overflow: hidden;
+    }
+    .stamp-premium {
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.0));
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      border-radius: 8px;
+      padding: 16px 40px;
+      position: relative;
+      transform: scale(0.5) translateY(-50px) rotate(-5deg);
+      opacity: 0;
+    }
+    .stamp-premium::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; width: 50%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      transform: skewX(-20deg);
+    }
+    .stamp-premium span {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      background: linear-gradient(to right, #e2e8f0, #ffffff, #94a3b8, #ffffff);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8));
+    }
+    .r.on .stamp-premium {
+      animation: stamp-appear 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .r.on .stamp-premium::before {
+      animation: light-sweep-glass 2s ease-in-out 1s infinite;
+    }
+    .r.on .stamp-premium span {
+      animation: text-shine 3s linear infinite;
+    }
+
+    @keyframes stamp-appear {
+      0% { transform: scale(0.5) translateY(-50px) rotate(-15deg); opacity: 0; }
+      100% { transform: scale(1) translateY(0) rotate(-5deg); opacity: 1; }
+    }
+    @keyframes light-sweep-glass {
+      0% { left: -100%; }
+      100% { left: 200%; }
+    }
+    @keyframes text-shine {
+      to { background-position: 200% center; }
+    }
+
+    /* ── CANHÃO DE CONFETE DE PRATA (Silver Cannon) ────── */
+    .silver-cannon {
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+    .confetti {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: var(--w, 8px);
+      height: var(--h, 16px);
+      background: linear-gradient(to bottom, #ffffff, #94a3b8);
+      border-radius: var(--br, 2px);
+      opacity: 0;
+      box-shadow: 0 0 10px rgba(255,255,255,0.8);
+      transform-origin: center;
+    }
+    .r.on .confetti {
+      animation: cannon-blast var(--dur, 2.5s) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      animation-delay: var(--delay, 0s);
+    }
+    @keyframes cannon-blast {
+      0% { 
+        transform: translate(0, 0) rotate3d(1, 1, 1, 0deg); 
+        opacity: 1; 
+      }
+      30% { 
+        transform: translate(calc(var(--tx) * 0.8), calc(var(--ty) * 0.8)) rotate3d(1, 1, 1, calc(var(--rot) / 2)); 
+        opacity: 1; 
+      }
+      100% { 
+        transform: translate(var(--tx), calc(var(--ty) + 200px)) rotate3d(1, 1, 1, var(--rot)); 
+        opacity: 0; 
+      }
+    }
+      100% { transform: scale(1.3); opacity: 0; border-width: 0px; }
+    }
+
+    .pc::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--cg);
+    }
+
+    .pc:hover {
+      border-color: var(--border-med);
+      transform: translateX(5px);
+    }
+
+    .pc-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .pc-meta {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--subtle);
+      line-height: 1.5;
+    }
+
+    .off-badge {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--cg);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      padding: 7px 18px;
+      min-width: 78px;
+    }
+
+    .pc-de {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--subtle);
+      text-decoration: line-through;
+      letter-spacing: .05em;
+      margin-bottom: 5px;
+    }
+
+    .pc-por-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .45em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 3px;
+    }
+
+    .pc-por {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(24px, 3.2vw, 38px);
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1;
+      letter-spacing: -.01em;
+    }
+
+    .pc-details {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .pc-detail {
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .pc-detail-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--subtle);
+      margin-bottom: 4px;
+    }
+
+    .pc-detail-val {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  MOTIVAÇÃO FINAL                               */
+    /* ══════════════════════════════════════════════ */
+    #motivacao {
+      position: relative;
+      padding: 130px 28px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    #motivacao::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 50%, rgba(201,144,109,.06) 0%, transparent 70%);
+      animation: glow-pulse 6s ease-in-out infinite;
+    }
+
+    .mot-lines {
+      position: relative;
+      z-index: 2;
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(22px, 4.5vw, 52px);
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1.15;
+      letter-spacing: .02em;
+      max-width: 940px;
+      margin: 0 auto 36px;
+    }
+
+    .mot-sub {
+      position: relative;
+      z-index: 2;
+      font-size: 17px;
+      font-weight: 300;
+      color: var(--muted);
+      max-width: 580px;
+      margin: 0 auto 52px;
+      line-height: 1.85;
+    }
+
+    .mot-badge {
+      position: relative;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 20px;
+      padding: 18px 44px;
+      border: 1px solid var(--copper);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .45em;
+      text-transform: uppercase;
+      color: var(--copper);
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  FOOTER                                        */
+    /* ══════════════════════════════════════════════ */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 28px 40px;
+      text-align: center;
+    }
+
+    .footer-logo {
+      height: 28px;
+      opacity: .45;
+      filter: brightness(0) invert(1);
+      margin-bottom: 22px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .footer-text {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--subtle);
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  RESPONSIVE                                    */
+    /* ══════════════════════════════════════════════ */
+    @media (max-width: 860px) {
+      .product-layout,
+      .product-layout.flip { grid-template-columns: 1fr; direction: ltr; }
+
+      .stats-grid { grid-template-columns: 1fr; }
+      .campaigns-grid { grid-template-columns: 1fr; }
+      .countdown { gap: 4px; }
+      .cd-sep { font-size: 28px; padding-top: 8px; }
+    }
+
+    @media (max-width: 540px) {
+      .brand-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  BOTÃO REGULAMENTO                             */
+    /* ══════════════════════════════════════════════ */
+    .btn-regulamento {
+      display: inline-block;
+      margin-top: 20px;
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      color: var(--copper);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .4em;
+      text-transform: uppercase;
+      padding: 12px 28px;
+      cursor: pointer;
+      transition: background .3s, color .3s;
+    }
+    .btn-regulamento:hover {
+      background: var(--cg);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  MODAL REGULAMENTO                             */
+    /* ══════════════════════════════════════════════ */
+    #modal-regulamento {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(10,8,6,.92);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      max-width: 680px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--cg);
+    }
+
+    .modal-header {
+      padding: 36px 36px 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .modal-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .45em;
+      text-transform: uppercase;
+      color: var(--copper);
+    }
+
+    .modal-close {
+      background: none;
+      border: 1px solid var(--border-med);
+      color: var(--muted);
+      font-size: 18px;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color .3s, color .3s;
+    }
+    .modal-close:hover { border-color: var(--copper); color: var(--copper); }
+
+    .modal-campaign-name {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(22px, 3.5vw, 36px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      color: var(--white);
+      margin-top: 12px;
+      padding: 0 36px;
+    }
+
+    .modal-body {
+      padding: 24px 36px 36px;
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 2;
+    }
+
+    .modal-body p { margin-bottom: 16px; }
+    .modal-body strong { color: var(--cream); font-weight: 600; }
+
+    .modal-meta {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--subtle);
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  SELO VIDA EM DOBRO                            */
+    /* ══════════════════════════════════════════════ */
+    .vida-dobro-seal {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 10;
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,.55));
+      animation: seal-pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes seal-pulse {
+      0%, 100% { transform: scale(1) rotate(-3deg); }
+      50%       { transform: scale(1.06) rotate(-3deg); }
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  BOTÃO DRIVE                                   */
+    /* ══════════════════════════════════════════════ */
+    .drive-btn-wrap {
+      padding: 0 28px 56px;
+      max-width: 1260px;
+      margin: 0 auto;
+      margin-top: -32px;
+    }
+
+    .drive-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: transparent;
+      border: 1px solid var(--border-med);
+      color: var(--copper);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .4em;
+      text-transform: uppercase;
+      padding: 13px 28px;
+      text-decoration: none;
+      transition: background .3s, border-color .3s, color .3s;
+    }
+
+    .drive-btn:hover {
+      background: rgba(201,144,109,.08);
+      border-color: var(--copper);
+    }
+
+    .drive-btn svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  PREÇO POR M²                                  */
+    /* ══════════════════════════════════════════════ */
+    .pc-sqm {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-top: 12px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      color: var(--white);
+    }
+    .pc-sqm span {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      color: var(--white);
+      opacity: 1;
+      text-transform: none;
+    }
+
+    /* ══════════════════════════════════════════════ */
+    /*  BOTÃO AGENDE VISITA                           */
+    /* ══════════════════════════════════════════════ */
+    .agende-btn-wrap {
+      padding: 0 28px 28px;
+      max-width: 1260px;
+      margin: 0 auto;
+      margin-top: -16px;
+    }
+
+    .agende-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--cg);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .4em;
+      text-transform: uppercase;
+      padding: 14px 32px;
+      text-decoration: none;
+      border: none;
+      transition: opacity .3s, transform .3s;
+    }
+
+    .agende-btn:hover {
+      opacity: .88;
+      transform: translateY(-2px);
+    }
+
+    .agende-btn svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+
+    /* Botão final grande */
+    .agende-final-wrap {
+      text-align: center;
+      padding: 0 28px 80px;
+    }
+
+    .agende-final-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--cg);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .45em;
+      text-transform: uppercase;
+      padding: 20px 52px;
+      text-decoration: none;
+      transition: opacity .3s, transform .3s;
+    }
+
+    .agende-final-btn:hover {
+      opacity: .88;
+      transform: translateY(-3px);
+    }
+
+    /* ── VIDEO MODAL (SHORTS) ───────────────────────── */
+    .video-modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .video-modal-backdrop.show {
+      display: flex;
+    }
+    .video-modal-backdrop.fade-in {
+      opacity: 1;
+    }
+    .video-modal-content {
+      background: #000;
+      border-radius: 16px;
+      padding: 0;
+      width: 90%;
+      max-width: 400px;
+      position: relative;
+      box-shadow: 0 10px 50px rgba(0,0,0,0.8);
+      overflow: hidden;
+      transform: translateY(20px);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .video-modal-backdrop.fade-in .video-modal-content {
+      transform: translateY(0);
+    }
+    .video-modal-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      font-size: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(4px);
+      transition: background 0.3s, transform 0.2s;
+    }
+    .video-modal-close:hover {
+      background: rgba(255,255,255,0.4);
+      transform: scale(1.1);
+    }
+    .video-wrapper {
+      position: relative;
+      padding-bottom: 177.78%; /* 16:9 inverted for shorts */
+      height: 0;
+    }
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+
+
+    /* ══════════════════════════════════════════════ */
+    /*  TABELAS DE FLUXO DA CÁS                       */
+    /* ══════════════════════════════════════════════ */
+    .dacas-table-container {
+      margin-top: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'Montserrat', sans-serif;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .dacas-table-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--copper-light);
+      padding: 10px 14px;
+      background: rgba(201, 144, 109, 0.06);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dacas-table-grid {
+      display: flex;
+      flex-direction: column;
+    }
+    .dacas-table-row {
+      display: grid;
+      grid-template-columns: 130px repeat(4, 1fr);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      align-items: center;
+    }
+    .dacas-table-row:last-child {
+      border-bottom: none;
+    }
+    .dacas-table-row.promotional {
+      background: rgba(201, 144, 109, 0.04);
+    }
+    .dacas-table-row.promotional .dacas-table-cell:first-child {
+      color: var(--copper);
+    }
+    .dacas-table-header-row {
+      background: rgba(255, 255, 255, 0.01);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .dacas-table-header {
+      font-weight: 700;
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .dacas-table-header:first-child {
+      text-align: left;
+    }
+    .dacas-table-cell {
+      padding: 10px 10px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      border-right: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .dacas-table-cell:first-child {
+      text-align: left;
+      font-weight: 700;
+      font-size: 9.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--white);
+    }
+    .dacas-table-cell:last-child {
+      border-right: none;
+    }
+    .dacas-brand-logo {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(201, 144, 109, 0.3);
+      display: inline-block;
+    }
+    .dacas-table-cell-val {
+      font-weight: 700;
+      color: var(--white);
+    }
+    .dacas-table-cell-label {
+      display: block;
+      font-size: 8px;
+      color: var(--muted);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    @media (max-width: 600px) {
+      .dacas-table-header-row {
+        display: none;
+      }
+      .dacas-table-row {
+        grid-template-columns: 1fr;
+        padding: 10px 14px;
+        gap: 6px;
+      }
+      .dacas-table-cell:first-child {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 6px;
+        margin-bottom: 2px;
+        width: 100%;
+      }
+      .dacas-table-cell {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        padding: 4px 0;
+        border-right: none;
+        font-size: 11px;
+      }
+      .dacas-table-cell:not(:first-child)::before {
+        content: attr(data-label);
+        font-size: 9px;
+        color: var(--muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        text-align: left;
+      }
+      .dacas-table-cell-label {
+        display: none;
+      }
+      .dacas-table-cell-val {
+        font-size: 11px;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- ═══ TICKER ══════════════════════════════════════════════ -->
+<div class="ticker-wrap">
+  <div class="ticker-track" aria-hidden="true">
+    <!-- repeated twice for seamless loop -->
+    <span class="ticker-item">23 de Maio</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Uma única janela</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Até 32% OFF</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Preços históricos</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Scooter Elétrica</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Prêmios de R$ 50 mil</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Plaenge · Vanguard</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Mobilize seus clientes</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">23 de Maio</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Uma única janela</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Até 32% OFF</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Preços históricos</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Scooter Elétrica</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Prêmios de R$ 50 mil</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Plaenge · Vanguard</span><span class="ticker-dot">·</span>
+    <span class="ticker-item">Mobilize seus clientes</span><span class="ticker-dot">·</span>
+  </div>
+</div>
+
+<!-- ═══ HERO ═════════════════════════════════════════════════ -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-glow"></div>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">Uma oportunidade que não se repete</p>
+
+    <img
+      src="assets/logo-campanha.png"
+      alt="Janela 23 — Plaenge | Vanguard"
+      class="hero-logo"
+    >
+
+    <h1 class="hero-tagline">
+      A janela está aberta.<br>
+      <span class="copper-text">Mas fechará dia 30.</span>
+    </h1>
+
+    <p class="hero-sub">Até 30 de Maio às 19h &nbsp;·&nbsp; Preços nunca antes praticados</p>
+
+    <div style="display:flex; flex-direction:column; align-items:center; gap:6px; margin-bottom:36px; animation: fadeUp .9s ease-out .8s both;">
+      <div style="display:flex; align-items:center; gap:10px; font-family:'Montserrat',sans-serif; font-size:11px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:var(--copper);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Encerramento às 19h do dia 30
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; font-size:13px; font-weight:300; letter-spacing:.1em; color:var(--muted);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Rua Antônio Carlos Berta, 151 · Jardim Europa · Central de Decorados Plaenge | Vanguard
+      </div>
+    </div>
+
+    <div class="countdown" id="countdown">
+      <div class="cd-block">
+        <span class="cd-num" id="cd-days">06</span>
+        <span class="cd-label">Dias</span>
+      </div>
+      <div class="cd-sep">:</div>
+      <div class="cd-block">
+        <span class="cd-num" id="cd-hours">00</span>
+        <span class="cd-label">Horas</span>
+      </div>
+      <div class="cd-sep">:</div>
+      <div class="cd-block">
+        <span class="cd-num" id="cd-min">00</span>
+        <span class="cd-label">Minutos</span>
+      </div>
+      <div class="cd-sep">:</div>
+      <div class="cd-block">
+        <span class="cd-num" id="cd-sec">00</span>
+        <span class="cd-label">Segundos</span>
+      </div>
+    </div>
+
+    <div class="hero-cta">
+      <span>Até 30 · Maio · 26</span>
+      <div class="hero-dot"></div>
+      <span>Até R$ 1 Milhão em Prêmios</span>
+    </div>
+  </div>
+
+  <div class="hero-scroll">
+    <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 5v14M5 12l7 7 7-7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+</section>
+
+<div class="copper-bar-thick"></div>
+
+<!-- ═══ INTRO ════════════════════════════════════════════════ -->
+<section id="intro">
+  <p class="eyebrow r">Sobre o evento</p>
+  <h2 class="section-title r d1">
+    A <span class="copper-text">janela</span> vai fechar
+  </h2>
+  <p class="section-lead r d2">
+    Até o dia 30 de maio, às 19h, os melhores empreendimentos da Plaenge e da Vanguard continuam com condições nunca antes praticadas pela incorporadora. A oportunidade vai acabar. Não perca sua chance.
+  </p>
+
+  <div class="stats-grid">
+    <div class="stat-card r">
+      <span class="stat-icon">🗓</span>
+      <span class="stat-num copper-text">30</span>
+      <span class="stat-label">Maio · 2026 · Último Dia</span>
+    </div>
+    <div class="stat-card r d2">
+      <span class="stat-icon">🏢</span>
+      <div style="font-family:'Montserrat',sans-serif; font-size:clamp(18px,2.8vw,32px); font-weight:900; text-transform:uppercase; letter-spacing:.04em; line-height:1.1; margin-bottom:10px; background:var(--cg); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">OS MELHORES<br>EMPREENDIMENTOS</div>
+      <span class="stat-label">Com os melhores preços</span>
+    </div>
+    <div class="stat-card r d3">
+      <span class="stat-icon">💎</span>
+      <span class="stat-num copper-text">32%</span>
+      <span class="stat-label">Descontos de até</span>
+    </div>
+  </div>
+</section>
+
+<div class="copper-bar-thick"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PLAENGE
+══════════════════════════════════════════════════════════════ -->
+
+<div class="brand-section">
+  <div class="brand-header r">
+    <div class="brand-pill">Plaenge</div>
+    <h2 class="brand-title">Empreendimentos <span class="copper-text">Plaenge</span></h2>
+  </div>
+</div>
+
+<!-- EDITION -->
+<div class="product-block">
+  <div class="product-header r">
+    <span class="product-name">Edition</span>
+    <span class="product-sub">3 Suítes · Plaenge</span>
+  </div>
+  <div class="product-layout">
+    <div class="product-img-wrap r">
+      <img src="assets/edition.jpg" alt="Edition" class="product-img">
+      <span class="product-img-name">Edition</span>
+    </div>
+    <div class="price-stack">
+
+      <div class="pc r d1">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 172,37 m² &nbsp;·&nbsp; Unid. 601/1</div>
+          <div class="off-badge">26% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 4.174.810,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 3.089.359</div>
+        <div class="pc-sqm">R$ 17.922<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 601/1</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 208.740,50</span>
+                <span class="dacas-table-cell-label">Total R$ 834.962 (20%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">23x R$ 27.227,02</span>
+                <span class="dacas-table-cell-label">Total R$ 626.221 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">3x R$ 208.740,50</span>
+                <span class="dacas-table-cell-label">Total R$ 626.221 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 2.087.405,04</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (50%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 154.467,95</span>
+                <span class="dacas-table-cell-label">Total R$ 617.872 (20%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">23x R$ 20.147,99</span>
+                <span class="dacas-table-cell-label">Total R$ 463.404 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">3x R$ 154.467,95</span>
+                <span class="dacas-table-cell-label">Total R$ 463.404 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 1.544.679,50</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (50%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d2">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 146,46 m² &nbsp;·&nbsp; Unid. 502/1</div>
+          <div class="off-badge">26% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 3.377.490,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 2.489.820</div>
+        <div class="pc-sqm">R$ 17.000<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 502/1</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 168.874,50</span>
+                <span class="dacas-table-cell-label">Total R$ 675.498 (20%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">23x R$ 22.027,11</span>
+                <span class="dacas-table-cell-label">Total R$ 506.624 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">3x R$ 168.874,50</span>
+                <span class="dacas-table-cell-label">Total R$ 506.624 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 1.688.745,02</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (50%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 124.491,00</span>
+                <span class="dacas-table-cell-label">Total R$ 497.964 (20%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">23x R$ 16.237,95</span>
+                <span class="dacas-table-cell-label">Total R$ 373.473 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">3x R$ 124.491,00</span>
+                <span class="dacas-table-cell-label">Total R$ 373.473 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 1.244.910,00</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (50%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d3">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 206,08 m² &nbsp;·&nbsp; Unid. 601/2</div>
+          <div class="off-badge">26% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 5.009.250,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 3.706.845</div>
+        <div class="pc-sqm">R$ 17.987<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 601/2</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 250.462,50</span>
+                <span class="dacas-table-cell-label">Total R$ 1.001.850 (20%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">23x R$ 32.669,02</span>
+                <span class="dacas-table-cell-label">Total R$ 751.387 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">3x R$ 250.462,50</span>
+                <span class="dacas-table-cell-label">Total R$ 751.387 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 2.504.624,98</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (50%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 185.342,25</span>
+                <span class="dacas-table-cell-label">Total R$ 741.369 (20%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">23x R$ 24.175,07</span>
+                <span class="dacas-table-cell-label">Total R$ 556.027 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">3x R$ 185.342,25</span>
+                <span class="dacas-table-cell-label">Total R$ 556.027 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 1.853.422,50</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (50%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d4">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 172,03 m² &nbsp;·&nbsp; Unid. 502/2</div>
+          <div class="off-badge">26% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 3.974.110,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 2.924.510</div>
+        <div class="pc-sqm">R$ 17.000<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 502/2</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 198.705,50</span>
+                <span class="dacas-table-cell-label">Total R$ 794.822 (20%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">23x R$ 25.918,11</span>
+                <span class="dacas-table-cell-label">Total R$ 596.117 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">3x R$ 198.705,50</span>
+                <span class="dacas-table-cell-label">Total R$ 596.117 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 1.987.055,02</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (50%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 146.225,50</span>
+                <span class="dacas-table-cell-label">Total R$ 584.902 (20%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">23x R$ 19.072,89</span>
+                <span class="dacas-table-cell-label">Total R$ 438.676 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">3x R$ 146.225,50</span>
+                <span class="dacas-table-cell-label">Total R$ 438.676 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 1.462.255,00</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (50%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="agende-btn-wrap">
+  <a class="agende-btn" href="https://forms.office.com/r/8Z13sb9WyW" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Clique aqui e garanta o seu atendimento
+  </a>
+</div>
+<div class="drive-btn-wrap" style="margin-top:-16px;">
+  <a class="drive-btn" href="https://drive.google.com/drive/folders/18sqHLsHkSRHUPwvF8WrCF0iteBUxvi1V?usp=drive_link" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Materiais Edition no Drive
+  </a>
+</div>
+
+<!-- ORBITALE -->
+<div class="product-block">
+  <div class="product-header r">
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+      <span class="product-name">Orbitale</span>
+      <span style="background: #e11d48; color: white; font-size: 10px; font-weight: 800; font-family: 'Montserrat', sans-serif; letter-spacing: 0.1em; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(225,29,72,0.2);">ÚLTIMA UNIDADE!</span>
+    </div>
+    <span class="product-sub">3 Suítes · Plaenge</span>
+  </div>
+  <div class="product-layout flip">
+    <div class="product-img-wrap r">
+      <img src="assets/orbitale.jpg" alt="Orbitale" class="product-img">
+      <span class="product-img-name">Orbitale</span>
+    </div>
+    <div class="price-stack">
+
+      <div class="pc r">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 230,94 m² &nbsp;·&nbsp; Unid. 301</div>
+          <div class="off-badge">28% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 6.627.410,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por copper-text" style="font-size: clamp(30px,4vw,48px);">R$ 4.800.000</div>
+        <div class="pc-sqm">R$ 20.784<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 301</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">1x R$ 2.278.552,00</span>
+                <span class="dacas-table-cell-label">Entrada (40%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 3.417.828,00</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (60%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">1x R$ 1.920.000,00</span>
+                <span class="dacas-table-cell-label">Entrada (40%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 2.880.000,00</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (60%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px; padding:16px 20px; background:rgba(201,144,109,.06); border:1px solid var(--border); font-family:'Montserrat',sans-serif; font-size:12px; color:var(--muted); letter-spacing:.15em; text-transform:uppercase; text-align:center;">
+          Maior desconto da Plaenge nesta janela
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="agende-btn-wrap">
+  <a class="agende-btn" href="https://forms.office.com/r/8Z13sb9WyW" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Clique aqui e garanta o seu atendimento
+  </a>
+</div>
+<div class="drive-btn-wrap" style="margin-top:-16px;">
+  <a class="drive-btn" href="https://drive.google.com/drive/folders/1ydGBvddrIiThoSkqu_2is21-puYe1pJH?usp=drive_link" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Materiais Orbitale no Drive
+  </a>
+</div>
+
+<!-- VERDANT -->
+<div class="product-block">
+  <div class="product-header r">
+    <span class="product-name">Verdant</span>
+    <span class="product-sub">3 Suítes · Plaenge</span>
+  </div>
+  <div class="product-layout">
+    <div class="product-img-wrap r">
+      <img src="assets/verdant.jpg" alt="Verdant" class="product-img">
+      <span class="product-img-name">Verdant</span>
+    </div>
+    <div class="price-stack">
+
+      <div class="pc r">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 145,08 m² &nbsp;·&nbsp; Unid. 303</div>
+          <div class="off-badge">23% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 2.584.310,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 1.999.000</div>
+        <div class="pc-sqm">R$ 13.778<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 303</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">5x R$ 77.529,30</span>
+                <span class="dacas-table-cell-label">Total R$ 387.647 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">7x R$ 36.918,71</span>
+                <span class="dacas-table-cell-label">Total R$ 258.431 (10%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">2x R$ 129.215,50</span>
+                <span class="dacas-table-cell-label">Total R$ 258.431 (10%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 1.679.801,53</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (65%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">5x R$ 59.970,00</span>
+                <span class="dacas-table-cell-label">Total R$ 299.850 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">7x R$ 28.557,14</span>
+                <span class="dacas-table-cell-label">Total R$ 199.900 (10%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">2x R$ 99.950,00</span>
+                <span class="dacas-table-cell-label">Total R$ 199.900 (10%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 1.299.350,00</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (65%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="agende-btn-wrap">
+  <a class="agende-btn" href="https://forms.office.com/r/8Z13sb9WyW" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Clique aqui e garanta o seu atendimento
+  </a>
+</div>
+<div class="drive-btn-wrap" style="margin-top:-16px;">
+  <a class="drive-btn" href="https://drive.google.com/drive/folders/1CEdRNf8uLO0bYjQpeIvTxUaxO-3bHVfB?usp=drive_link" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Materiais Verdant no Drive
+  </a>
+</div>
+
+<div class="copper-bar-thick"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     VANGUARD
+══════════════════════════════════════════════════════════════ -->
+
+<div class="brand-section">
+  <div class="brand-header r">
+    <div class="brand-pill">Vanguard</div>
+    <h2 class="brand-title">Empreendimentos <span class="copper-text">Vanguard</span></h2>
+  </div>
+</div>
+
+<!-- TREND DOWNTOWN NANO -->
+<div class="product-block">
+  <div class="product-header r">
+    <span class="product-name">Trend Downtown Nano</span>
+    <span class="product-sub">Estúdio · Vanguard</span>
+  </div>
+  <div class="product-layout flip">
+    <div class="product-img-wrap r">
+      <img src="assets/trend-nano.jpg" alt="Trend Downtown Nano" class="product-img">
+      <span class="product-img-name">Trend Downtown Nano</span>
+      <img src="assets/selo-vida-em-dobro.png" alt="Vida em Dobro" class="vida-dobro-seal">
+    </div>
+    <div class="price-stack">
+
+      <div class="pc r">
+        <div class="pc-top">
+          <div class="pc-meta">Estúdio 32 m² &nbsp;·&nbsp; Unid. 1501</div>
+          <div class="off-badge">32% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 637.580,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 433.554</div>
+        <div class="pc-sqm">R$ 13.548<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 1501</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 17.533,45</span>
+                <span class="dacas-table-cell-label">Total R$ 70.134 (11%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">1x R$ 51.006,40</span>
+                <span class="dacas-table-cell-label">Mensal (8%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">1x R$ 38.254,80</span>
+                <span class="dacas-table-cell-label">Reforço (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 478.185,00</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (75%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 6.503,31</span>
+                <span class="dacas-table-cell-label">Total R$ 26.013 (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">1x R$ 34.684,32</span>
+                <span class="dacas-table-cell-label">Mensal (8%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">1x R$ 26.013,24</span>
+                <span class="dacas-table-cell-label">Reforço (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 346.843,20</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (80%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d1">
+        <div class="pc-top">
+          <div class="pc-meta">Estúdio 28,1 m² &nbsp;·&nbsp; Unid. 306</div>
+          <div class="off-badge">25% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 480.630,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 360.472</div>
+        <div class="pc-sqm">R$ 12.828<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 306</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 13.217,33</span>
+                <span class="dacas-table-cell-label">Total R$ 52.869 (11%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">1x R$ 38.450,40</span>
+                <span class="dacas-table-cell-label">Mensal (8%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">1x R$ 28.837,80</span>
+                <span class="dacas-table-cell-label">Reforço (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 360.472,50</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (75%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 5.407,08</span>
+                <span class="dacas-table-cell-label">Total R$ 21.628 (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">1x R$ 28.837,76</span>
+                <span class="dacas-table-cell-label">Mensal (8%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">1x R$ 21.628,32</span>
+                <span class="dacas-table-cell-label">Reforço (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 288.377,60</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (80%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d2">
+        <div class="pc-top">
+          <div class="pc-meta">Estúdio 32 m² &nbsp;·&nbsp; Unid. 320</div>
+          <div class="off-badge">32% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 565.450,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 384.506</div>
+        <div class="pc-sqm">R$ 12.015<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 320</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 15.549,88</span>
+                <span class="dacas-table-cell-label">Total R$ 62.200 (11%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">1x R$ 45.236,00</span>
+                <span class="dacas-table-cell-label">Mensal (8%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">1x R$ 33.927,00</span>
+                <span class="dacas-table-cell-label">Reforço (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 424.087,50</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (75%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">4x R$ 5.767,59</span>
+                <span class="dacas-table-cell-label">Total R$ 23.070 (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">1x R$ 30.760,48</span>
+                <span class="dacas-table-cell-label">Mensal (8%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">1x R$ 23.070,36</span>
+                <span class="dacas-table-cell-label">Reforço (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 307.604,80</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (80%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="agende-btn-wrap">
+  <a class="agende-btn" href="https://forms.office.com/r/8Z13sb9WyW" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Clique aqui e garanta o seu atendimento
+  </a>
+</div>
+<div class="drive-btn-wrap" style="margin-top:-16px;">
+  <a class="drive-btn" href="https://drive.google.com/drive/folders/19nzRVlP4jpwoWHoWu1ZTh-yDXCYhqELj?usp=drive_link" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Materiais Trend Nano no Drive
+  </a>
+</div>
+
+<!-- MOOD -->
+<div class="product-block">
+  <div class="product-header r">
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+      <span class="product-name">Mood</span>
+      <span style="background: var(--copper); color: white; font-size: 10px; font-weight: 800; font-family: 'Montserrat', sans-serif; letter-spacing: 0.1em; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(201,144,109,0.2);">Últimas duas vagas!</span>
+    </div>
+    <span class="product-sub">Estúdio · Vanguard</span>
+  </div>
+  <div class="product-layout">
+    <div class="product-img-wrap r">
+      <img src="assets/mood.jpg" alt="Mood" class="product-img">
+      <span class="product-img-name">Mood</span>
+      <img src="assets/selo-vida-em-dobro.png" alt="Vida em Dobro" class="vida-dobro-seal">
+    </div>
+    <div class="price-stack">
+
+      <div class="pc r">
+        <div class="pc-top">
+          <div class="pc-meta">Uma Suíte c/ Lavabo 55,6 m² &nbsp;·&nbsp; Unid. 1102</div>
+          <div class="off-badge">28% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 866.100,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 623.592</div>
+        <div class="pc-sqm">R$ 11.215<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 1102</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">1x R$ 173.220,00</span>
+                <span class="dacas-table-cell-label">Entrada (20%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 692.880,00</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (80%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">1x R$ 62.359,20</span>
+                <span class="dacas-table-cell-label">Entrada (10%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 561.232,80</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (90%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d1">
+        <div class="pc-top">
+          <div class="pc-meta">Estúdio 30,07 m² &nbsp;·&nbsp; Unid. 1107</div>
+          <div class="off-badge">32% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 511.490,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 349.000</div>
+        <div class="pc-sqm">R$ 11.606<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 1107</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">1x R$ 102.298,00</span>
+                <span class="dacas-table-cell-label">Entrada (20%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 409.192,00</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (80%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">1x R$ 34.900,00</span>
+                <span class="dacas-table-cell-label">Entrada (10%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 314.100,00</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (90%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d2">
+        <div class="pc-top">
+          <div class="pc-meta">Estúdio 30,07 m² &nbsp;·&nbsp; Unid. 1113</div>
+          <div class="off-badge">32% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 511.490,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 349.000</div>
+        <div class="pc-sqm">R$ 11.606<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 1113</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">1x R$ 102.298,00</span>
+                <span class="dacas-table-cell-label">Entrada (20%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 409.192,00</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (80%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">1x R$ 34.900,00</span>
+                <span class="dacas-table-cell-label">Entrada (10%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">-</span>
+                <span class="dacas-table-cell-label">Não possui</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 314.100,00</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (90%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="agende-btn-wrap">
+  <a class="agende-btn" href="https://forms.office.com/r/8Z13sb9WyW" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Clique aqui e garanta o seu atendimento
+  </a>
+</div>
+<div class="drive-btn-wrap" style="margin-top:-16px;">
+  <a class="drive-btn" href="https://drive.google.com/drive/folders/1ymdGniyOtl7Bjf16Q63P1QmX9jxKSgAF?usp=drive_link" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Materiais Mood no Drive
+  </a>
+</div>
+
+<!-- YUNA -->
+<div class="product-block">
+  <div class="product-header r">
+    <span class="product-name">Yuna</span>
+    <span class="product-sub">2 e 3 Dormitórios · Vanguard</span>
+  </div>
+  <div class="product-layout flip">
+    <div class="product-img-wrap r">
+      <img src="assets/yuna.jpg" alt="Yuna" class="product-img">
+      <span class="product-img-name">Yuna</span>
+    </div>
+    <div class="price-stack">
+
+      <div class="pc r">
+        <div class="pc-top">
+          <div class="pc-meta">2 Dorm. &nbsp;·&nbsp; 74,58 m² &nbsp;·&nbsp; Unid. 406</div>
+          <div class="off-badge">23% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 987.720,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 760.544</div>
+        <div class="pc-sqm">R$ 10.197<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 406</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">5x R$ 29.631,60</span>
+                <span class="dacas-table-cell-label">Total R$ 148.158 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">14x R$ 7.055,14</span>
+                <span class="dacas-table-cell-label">Total R$ 98.772 (10%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">2x R$ 74.079,00</span>
+                <span class="dacas-table-cell-label">Total R$ 148.158 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 592.631,94</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (60%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">5x R$ 9.126,53</span>
+                <span class="dacas-table-cell-label">Total R$ 45.633 (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">14x R$ 4.345,97</span>
+                <span class="dacas-table-cell-label">Total R$ 60.844 (8%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">2x R$ 22.816,32</span>
+                <span class="dacas-table-cell-label">Total R$ 45.633 (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 608.435,20</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (80%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d1">
+        <div class="pc-top">
+          <div class="pc-meta">3 Dorm. &nbsp;·&nbsp; 88,68 m² &nbsp;·&nbsp; Unid. 301</div>
+          <div class="off-badge">23% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 1.267.140,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 975.697</div>
+        <div class="pc-sqm">R$ 11.002<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 301</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">5x R$ 38.014,20</span>
+                <span class="dacas-table-cell-label">Total R$ 190.071 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">14x R$ 9.051,00</span>
+                <span class="dacas-table-cell-label">Total R$ 126.714 (10%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">2x R$ 95.035,50</span>
+                <span class="dacas-table-cell-label">Total R$ 190.071 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 760.284,00</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (60%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">5x R$ 11.708,36</span>
+                <span class="dacas-table-cell-label">Total R$ 58.542 (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">14x R$ 5.575,41</span>
+                <span class="dacas-table-cell-label">Total R$ 78.056 (8%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">2x R$ 29.270,91</span>
+                <span class="dacas-table-cell-label">Total R$ 58.542 (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 780.557,60</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (80%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pc r d2">
+        <div class="pc-top">
+          <div class="pc-meta">3 Suítes &nbsp;·&nbsp; 88,68 m² &nbsp;·&nbsp; Unid. 302</div>
+          <div class="off-badge">23% OFF</div>
+        </div>
+        <div class="pc-de">DE &nbsp; R$ 1.334.180,00</div>
+        <div class="pc-por-label">A partir de</div>
+        <div class="pc-por">R$ 1.027.318</div>
+        <div class="pc-sqm">R$ 11.584<span>/m²</span></div>
+
+        <div class="dacas-table-container">
+          <div class="dacas-table-title">
+            <span>Fluxo de Pagamento · Unid. 302</span>
+            <span>Simulação Informativa</span>
+          </div>
+          <div class="dacas-table-grid">
+            <div class="dacas-table-row dacas-table-header-row">
+              <div class="dacas-table-header">Condição</div>
+              <div class="dacas-table-header">Entrada</div>
+              <div class="dacas-table-header">Mensais</div>
+              <div class="dacas-table-header">Reforços</div>
+              <div class="dacas-table-header">Financiamento</div>
+            </div>
+            <!-- Tabela Construtora -->
+            <div class="dacas-table-row">
+              <div class="dacas-table-cell">Tabela Construtora</div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">5x R$ 40.025,40</span>
+                <span class="dacas-table-cell-label">Total R$ 200.127 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">14x R$ 9.529,86</span>
+                <span class="dacas-table-cell-label">Total R$ 133.418 (10%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">2x R$ 100.063,50</span>
+                <span class="dacas-table-cell-label">Total R$ 200.127 (15%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 800.508,06</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (60%)</span>
+              </div>
+            </div>
+            <!-- Condição Cliente Da Cás -->
+            <div class="dacas-table-row promotional">
+              <div class="dacas-table-cell">
+                <img src="da cas.jpg" class="dacas-brand-logo" alt="Da Cás">
+                Cliente Da Cás
+              </div>
+              <div class="dacas-table-cell" data-label="Entrada">
+                <span class="dacas-table-cell-val">5x R$ 12.327,82</span>
+                <span class="dacas-table-cell-label">Total R$ 61.639 (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Mensais">
+                <span class="dacas-table-cell-val">14x R$ 5.870,39</span>
+                <span class="dacas-table-cell-label">Total R$ 82.185 (8%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Reforços">
+                <span class="dacas-table-cell-val">2x R$ 30.819,54</span>
+                <span class="dacas-table-cell-label">Total R$ 61.639 (6%)</span>
+              </div>
+              <div class="dacas-table-cell" data-label="Financiamento">
+                <span class="dacas-table-cell-val">R$ 821.854,40</span>
+                <span class="dacas-table-cell-label">Saldo Devedor (80%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="agende-btn-wrap">
+  <a class="agende-btn" href="https://forms.office.com/r/8Z13sb9WyW" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Clique aqui e garanta o seu atendimento
+  </a>
+</div>
+<div class="drive-btn-wrap" style="margin-top:-16px;">
+  <a class="drive-btn" href="https://drive.google.com/drive/folders/1yKCCtXwGP07evK1PZ9a8PGa0dqHN1qZ3?usp=drive_link" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Materiais Yuna no Drive
+  </a>
+</div>
+
+<div class="copper-bar"></div>
+
+<!-- ═══ CAMPANHAS ════════════════════════════════════════════ -->
+<section id="campanhas">
+  <p class="eyebrow r">Campanhas vigentes &nbsp;·&nbsp; até 31 de maio</p>
+  <h2 class="section-title r d1" style="margin-bottom:16px;">
+    Ganhe mais em <span class="copper-text">cada venda</span>
+  </h2>
+  <p class="section-lead r d2">
+    Além dos preços históricos, duas campanhas ativas potencializam ainda mais seus resultados até o final de maio.
+  </p>
+
+  <div class="campaigns-grid">
+
+    <!-- SCOOTER -->
+    <div class="camp-card scooter-card r">
+      <!-- Hero image com tratamento dramático -->
+      <div class="scooter-hero">
+        <img src="assets/scooter-produto.png" alt="Scooter Elétrica">
+        <div class="scooter-badge">Prêmio da campanha</div>
+        <div class="scooter-title-overlay">
+          Scooter<br><span>Elétrica</span>
+        </div>
+      </div>
+
+      <div class="camp-trigger">A cada 5 vendas do SHIFT</div>
+      <p class="camp-desc">
+        Cada grupo de 5 unidades vendidas do empreendimento SHIFT garante o sorteio de uma scooter elétrica. Leve seus clientes e acumule rodadas.
+      </p>
+      <a class="drive-btn" href="https://drive.google.com/drive/folders/13IzvLW6eiY2yhgXquXcYvQ3I1uygeaXN?usp=drive_link" target="_blank" rel="noopener" style="margin-top:20px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Materiais SHIFT no Drive
+      </a>
+    </div>
+
+    <!-- R$50K -->
+    <div class="camp-card money-card r d2">
+      <div class="camp-bg-text">💰</div>
+      <div class="money-stage">
+        <div class="money-bag-out" style="left:-5%;  top:80%; animation-duration:3.2s; animation-delay:0s;">💰</div>
+        <div class="money-bag-out" style="left:15%;  top:75%; animation-duration:2.6s; animation-delay:.5s;">💸</div>
+        <div class="money-bag-out" style="left:38%;  top:85%; animation-duration:3.5s; animation-delay:.2s;">🤑</div>
+        <div class="money-bag-out" style="left:60%;  top:78%; animation-duration:2.8s; animation-delay:.9s;">💰</div>
+        <div class="money-bag-out" style="left:80%;  top:82%; animation-duration:3.1s; animation-delay:.4s;">💸</div>
+        <div class="money-bag-out" style="left:100%; top:75%; animation-duration:2.9s; animation-delay:.7s;">🤑</div>
+        <div class="money-center">
+          <div style="font-family:'Montserrat',sans-serif; font-size:11px; font-weight:700; letter-spacing:.4em; color:var(--copper); margin-bottom:10px; text-transform:uppercase;">A cada</div>
+          <div style="font-family:'Montserrat',sans-serif; font-size:clamp(30px,4.5vw,54px); font-weight:900; background:var(--cg); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1;">R$ 5 milhões</div>
+          <div style="font-family:'Montserrat',sans-serif; font-size:11px; font-weight:600; letter-spacing:.2em; color:var(--subtle); margin-top:8px; text-transform:uppercase;">em vendas Plaenge + Vanguard</div>
+        </div>
+      </div>
+      <div class="camp-trigger">Campanha individual por corretor</div>
+      <div class="camp-reward">Prêmios de<br><span class="copper-text">R$ 50.000</span></div>
+      <p class="camp-desc">
+        A cada <strong style="color:var(--cream);">R$ 200 mil vendidos</strong>, você recebe 1 número para concorrer a R$ 50 mil. Quanto mais você vende, mais chances acumula. Os empreendimentos com o <strong style="color:var(--copper);">selo Vida em Dobro</strong> valem o dobro de chances — cada R$ 200 mil nesses produtos gera 2 números.
+      </p>
+      <button class="btn-regulamento" onclick="document.getElementById('modal-regulamento').style.display='flex'">
+        Conheça o regulamento
+      </button>
+    </div>
+
+  </div>
+</section>
+
+
+<div class="copper-bar-thick"></div>
+
+<!-- ═══ PRÊMIO TOTAL ═════════════════════════════════════════ -->
+<section id="premio-total">
+  <!-- Dinheiro saindo do frame do prêmio -->
+  <div class="money-fly" style="left:2%;  top:60%; animation-duration:3.4s; animation-delay:0s;">💰</div>
+  <div class="money-fly" style="left:12%; top:70%; animation-duration:2.8s; animation-delay:.6s;">💸</div>
+  <div class="money-fly" style="left:78%; top:65%; animation-duration:3.2s; animation-delay:.3s;">🤑</div>
+  <div class="money-fly" style="left:88%; top:72%; animation-duration:2.6s; animation-delay:.9s;">💰</div>
+  <div class="money-fly" style="left:50%; top:68%; animation-duration:3.6s; animation-delay:.15s;">💸</div>
+
+  <div class="premio-frame r">
+    <div class="premio-value copper-text">R$ 1.000.000,00</div>
+    <div class="premio-label">EM PRÊMIOS</div>
+    <div class="premio-meta-label">Para uma meta de</div>
+    <div class="premio-meta-value">R$ 100.000.000,00</div>
+  </div>
+
+  <p class="premio-desc r d1">
+    Distribuiremos R$ 1 milhão em prêmios entre os participantes ao atingirmos a meta de R$ 100 milhões em volume total combinado Plaenge + Vanguard.
+  </p>
+
+  <div class="premio-slogan r d2">
+    <span class="dim">MAIS FOCO.</span><br>
+    <span class="dim">MAIS RESULTADOS.</span><br>
+    <span class="gold">MAIS PRÊMIOS. 💰</span>
+  </div>
+</section>
+
+<div class="copper-bar-thick"></div>
+
+<!-- ═══ MOTIVAÇÃO ════════════════════════════════════════════ -->
+<section id="motivacao">
+
+  <div class="mot-lines r d1">
+    Leve seus clientes.<br>
+    <span class="copper-text">23 de maio é o dia.</span><br>
+    Condições nunca vistas.<br>
+    <span class="copper-text">A janela abre uma vez só.</span>
+  </div>
+
+  <p class="mot-sub r d2">
+    Agende já seus clientes até o dia 30 de maio, às 19h, e aproveite os melhores preços já praticados pela Plaenge e Vanguard. Cada visita é uma oportunidade real — e cada venda acumula mais chances de prêmios. <strong>Não deixe essa janela fechar sem você.</strong>
+  </p>
+
+  <div class="mot-badge r d3">
+    <span>30 · Maio · 2026</span>
+    <span style="width:5px; height:5px; border-radius:50%; background:var(--copper); display:inline-block; flex-shrink:0;"></span>
+    <span>A Janela Fecha</span>
+  </div>
+</section>
+
+<div class="copper-bar-thick"></div>
+
+<!-- ═══ COUNTDOWN FINAL ══════════════════════════════════════ -->
+<section style="text-align:center; padding: 80px 28px; background: var(--bg-2);">
+  <p class="eyebrow r" style="justify-content:center; margin-bottom: 28px;">A janela fecha em</p>
+  <div class="countdown r d1" id="countdown-bottom">
+    <div class="cd-block">
+      <span class="cd-num" id="cd2-days">--</span>
+      <span class="cd-label">Dias</span>
+    </div>
+    <div class="cd-sep">:</div>
+    <div class="cd-block">
+      <span class="cd-num" id="cd2-hours">--</span>
+      <span class="cd-label">Horas</span>
+    </div>
+    <div class="cd-sep">:</div>
+    <div class="cd-block">
+      <span class="cd-num" id="cd2-min">--</span>
+      <span class="cd-label">Minutos</span>
+    </div>
+    <div class="cd-sep">:</div>
+    <div class="cd-block">
+      <span class="cd-num" id="cd2-sec">--</span>
+      <span class="cd-label">Segundos</span>
+    </div>
+  </div>
+  <p style="margin-top: 32px; font-family:'Montserrat',sans-serif; font-size: clamp(18px,3vw,32px); font-weight:800; text-transform:uppercase; letter-spacing:.03em;">
+    <span class="copper-text">30 de Maio, às 19h.</span> Não perca.
+  </p>
+  <div class="agende-final-wrap r d2" style="margin-top:48px;">
+    <a class="agende-final-btn" href="https://forms.office.com/r/8Z13sb9WyW" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Clique aqui e garanta o seu atendimento agora
+    </a>
+  </div>
+</section>
+
+<div class="copper-bar-thick"></div>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+<footer>
+  <img
+    src="assets/logos-incorporadoras.png"
+    alt="Plaenge | Vanguard"
+    class="footer-logo"
+  >
+  <p class="footer-text">JANELA 23 &nbsp;·&nbsp; PLAENGE | VANGUARD &nbsp;·&nbsp; 23 DE MAIO DE 2026</p>
+</footer>
+
+<!-- ═══ MODAL REGULAMENTO ═════════════════════════════════════ -->
+<div id="modal-regulamento" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Regulamento</div>
+      <button class="modal-close" onclick="document.getElementById('modal-regulamento').style.display='none'">&times;</button>
+    </div>
+    <div class="modal-campaign-name"><span style="background:var(--cg);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Bateu, Concorreu</span></div>
+    <div class="modal-body">
+      <p>
+        A campanha promocional <strong>"Bateu, Concorreu"</strong> é destinada a corretores parceiros e será válida para vendas realizadas no período de <strong>10 de março de 2026 a 31 de maio de 2026</strong>.
+      </p>
+      <p>
+        Participam da campanha as vendas de unidades dos empreendimentos <strong>Orbitale, Verdant, Edition Moinhos, Yuna, Mood, Trend Downtown Nano e Trend Downtown Home</strong>.
+      </p>
+      <p>
+        A cada <strong>R$ 5.000.000,00 (cinco milhões de reais)</strong> em valor total de vendas efetivadas, devidamente formalizadas e reconhecidas pela incorporadora, o corretor participante fará jus a <strong>01 (um) número/cupom</strong> para participação no sorteio de <strong>R$ 50.000,00 (cinquenta mil reais)</strong>, conforme critérios estabelecidos nesta campanha.
+      </p>
+      <p>
+        Para fins de apuração, serão consideradas apenas vendas efetivamente registradas dentro do período de vigência da campanha e validadas pela empresa promotora, podendo esta realizar auditoria e conferência dos resultados.
+      </p>
+      <p>
+        Não serão consideradas para efeito de pontuação na campanha vendas que venham a ser <strong>canceladas, distratadas, rescindidas</strong> ou que apresentem inadimplência, bem como quaisquer operações que não sejam reconhecidas pela incorporadora como vendas válidas.
+      </p>
+      <p>
+        A empresa promotora reserva-se o direito de revisar, validar e consolidar os resultados, bem como deliberar sobre eventuais situações não previstas neste regulamento. A participação na campanha implica na aceitação integral das condições aqui estabelecidas.
+      </p>
+      <p>
+        Esta campanha possui caráter exclusivamente promocional e não gera qualquer obrigação adicional de remuneração além das comissões previstas em contrato.
+      </p>
+      <div class="modal-meta">Campanha válida de 10/03/2026 a 31/05/2026 &nbsp;·&nbsp; Plaenge | Vanguard</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ MODAL VIDEO SHORTS ═══════════════════════════════════ -->
+<div id="modal-video" class="video-modal-backdrop" onclick="if(event.target===this)closeVideoModal()">
+  <div class="video-modal-content">
+    <button class="video-modal-close" onclick="closeVideoModal()">&times;</button>
+    <div class="video-wrapper">
+      <iframe id="video-iframe" src="https://www.youtube.com/embed/JtN_rzxiMPY?playsinline=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCRIPTS ═══════════════════════════════════════════════ -->
+<script>
+  /* ── COUNTDOWN ──────────────────────────────────── */
+  function tick() {
+    const target = new Date('2026-05-30T19:00:00');
+    const diff   = target - new Date();
+
+    if (diff <= 0) {
+      ['cd-days','cd-hours','cd-min','cd-sec'].forEach(id =>
+        document.getElementById(id).textContent = '00'
+      );
+      return;
+    }
+
+    const pad = n => String(n).padStart(2,'0');
+    const days  = pad(Math.floor(diff / 864e5));
+    const hours = pad(Math.floor(diff % 864e5 / 36e5));
+    const mins  = pad(Math.floor(diff % 36e5  / 6e4));
+    const secs  = pad(Math.floor(diff % 6e4   / 1e3));
+
+    document.getElementById('cd-days').textContent  = days;
+    document.getElementById('cd-hours').textContent = hours;
+    document.getElementById('cd-min').textContent   = mins;
+    document.getElementById('cd-sec').textContent   = secs;
+
+    document.getElementById('cd2-days').textContent  = days;
+    document.getElementById('cd2-hours').textContent = hours;
+    document.getElementById('cd2-min').textContent   = mins;
+    document.getElementById('cd2-sec').textContent   = secs;
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  /* ── SCROLL REVEAL ──────────────────────────────── */
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('on'); }),
+    { threshold: 0.08 }
+  );
+  document.querySelectorAll('.r').forEach(el => observer.observe(el));
+
+  /* ── GA4 EVENTOS CUSTOMIZADOS ───────────────────── */
+  // Cliques nos botões Drive
+  document.querySelectorAll('.drive-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const label = btn.textContent.trim();
+      gtag('event', 'drive_click', { event_category: 'engajamento', event_label: label });
+    });
+  });
+
+  // Abertura do modal regulamento
+  document.querySelector('.btn-regulamento').addEventListener('click', () => {
+    gtag('event', 'regulamento_aberto', { event_category: 'engajamento', event_label: 'Modal Regulamento' });
+  });
+
+  // Scroll por seção de produto
+  const prodSections = [
+    { id: 'edition',    label: 'Edition' },
+    { id: 'orbitale',   label: 'Orbitale' },
+    { id: 'verdant',    label: 'Verdant' },
+    { id: 'trend-nano', label: 'Trend Nano' },
+    { id: 'mood',       label: 'Mood' },
+    { id: 'yuna',       label: 'Yuna' },
+  ];
+  const prodObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const label = e.target.dataset.gaLabel;
+        if (label) gtag('event', 'secao_vista', { event_category: 'scroll', event_label: label });
+        prodObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  document.querySelectorAll('.product-block').forEach((block, i) => {
+    if (prodSections[i]) {
+      block.dataset.gaLabel = prodSections[i].label;
+      prodObserver.observe(block);
+    }
+  });
+
+  // Cliques nos cards de preço
+  document.querySelectorAll('.pc').forEach(card => {
+    card.addEventListener('click', () => {
+      const meta = card.querySelector('.pc-meta');
+      const label = meta ? meta.textContent.trim() : 'card';
+      gtag('event', 'preco_clicado', { event_category: 'interesse', event_label: label });
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -427,6 +427,9 @@ export default function Dashboard() {
     .sort((a, b) => b.vgv - a.vgv)
     .slice(0, 5);
 
+  const totalProjectsVGV = sortedProjectSales.reduce((sum, p) => sum + p.vgv, 0);
+  const totalProjectsCount = sortedProjectSales.reduce((sum, p) => sum + p.count, 0);
+
   // ATIVIDADES RECENTES
   const recentVisitas = [...filteredVisitas]
     .sort((a, b) => new Date(b.created_at || b.data) - new Date(a.created_at || a.data))
@@ -797,28 +800,58 @@ export default function Dashboard() {
             {sortedProjectSales.length === 0 ? (
               <p className="text-slate-500 text-xs text-center py-8">Nenhuma venda registrada para a seleção atual.</p>
             ) : (
-              sortedProjectSales.map((proj) => {
-                const maxVGV = Math.max(...sortedProjectSales.map(p => p.vgv), 1);
-                const percent = Math.round((proj.vgv / maxVGV) * 100);
-                
-                return (
-                  <div key={proj.name} className="space-y-1.5">
-                    <div className="flex justify-between text-xs">
-                      <span className="font-bold text-slate-300">{proj.name}</span>
-                      <span className="font-black text-indigo-400">{formatBRL(proj.vgv)} <span className="text-[10px] text-slate-500 font-medium">({proj.count} {proj.count === 1 ? 'venda' : 'vendas'})</span></span>
+              <>
+                {/* BARRA DO TOTAL GERAL */}
+                {totalProjectsVGV > 0 && (
+                  <div className="space-y-1.5 pb-3 border-b border-slate-800/60 mb-2">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-emerald-400 flex items-center gap-1.5 font-bold">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        VGV Total Geral
+                      </span>
+                      <span className="text-emerald-400 font-black">
+                        {formatBRL(totalProjectsVGV)}{" "}
+                        <span className="text-[10px] text-slate-500 font-medium">({totalProjectsCount} {totalProjectsCount === 1 ? 'venda' : 'vendas'})</span>
+                      </span>
                     </div>
-                    <div className="w-full bg-slate-950 h-5 rounded-lg overflow-hidden relative border border-slate-850">
+                    <div className="w-full bg-slate-950 h-6 rounded-lg overflow-hidden relative border border-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.05)]">
                       <div 
-                        className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-indigo-600/80 to-indigo-500/40 rounded-l-lg border-r border-white/10 transition-all duration-1000 ease-out"
-                        style={{ width: `${percent}%` }}
+                        className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-emerald-600/80 to-emerald-500/40 rounded-l-lg border-r border-white/10"
+                        style={{ width: "100%" }}
                       ></div>
-                      <div className="absolute inset-0 flex items-center justify-end px-3 text-[10px] font-black text-white/50">
-                        {percent}%
+                      <div className="absolute inset-0 flex items-center justify-end px-3 text-[10px] font-black text-white">
+                        100% da Carteira
                       </div>
                     </div>
                   </div>
-                );
-              })
+                )}
+
+                {/* BARRAS DOS EMPREENDIMENTOS INDIVIDUAIS */}
+                {sortedProjectSales.map((proj) => {
+                  const percent = totalProjectsVGV > 0 ? Math.round((proj.vgv / totalProjectsVGV) * 100) : 0;
+                  
+                  return (
+                    <div key={proj.name} className="space-y-1.5">
+                      <div className="flex justify-between text-xs">
+                        <span className="font-semibold text-slate-300">{proj.name}</span>
+                        <span className="font-black text-indigo-400">
+                          {formatBRL(proj.vgv)}{" "}
+                          <span className="text-[10px] text-slate-500 font-medium">({proj.count} {proj.count === 1 ? 'venda' : 'vendas'})</span>
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-950 h-5 rounded-lg overflow-hidden relative border border-slate-850">
+                        <div 
+                          className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-indigo-600/80 to-indigo-500/40 rounded-l-lg border-r border-white/10 transition-all duration-1000 ease-out"
+                          style={{ width: `${percent}%` }}
+                        ></div>
+                        <div className="absolute inset-0 flex items-center justify-end px-3 text-[10px] font-black text-white/50">
+                          {percent}%
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
             )}
           </div>
         </div>

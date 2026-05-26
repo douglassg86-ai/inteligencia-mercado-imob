@@ -34,6 +34,10 @@ export default function Negocios({ user }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedCorretor, setSelectedCorretor] = useState(null);
 
+  // States para autocomplete de empreendimento
+  const [empSuggestions, setEmpSuggestions] = useState([]);
+  const [showEmpSuggestions, setShowEmpSuggestions] = useState(false);
+
   const gpiName = getGPIName(user?.email);
   const isAdmin = user?.email?.toLowerCase() === 'do.goncalves@vanguard.com.br' || 
                   user?.email?.toLowerCase() === 'douglas.goncalves@vanguard.com.br';
@@ -46,6 +50,34 @@ export default function Negocios({ user }) {
       setLoading(false);
     }
   }, [user]);
+
+  const handleEmpreendimentoChange = async (value) => {
+    setCurrentNegocio(prev => ({ ...prev, empreendimento: value }));
+    if (!value || value.trim().length < 1) {
+      setEmpSuggestions([]);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('negocios')
+        .select('empreendimento')
+        .ilike('empreendimento', `%${value}%`)
+        .not('empreendimento', 'is', null)
+        .limit(50);
+      if (!error && data) {
+        const unique = [...new Set(data.map(d => d.empreendimento).filter(Boolean))];
+        setEmpSuggestions(unique.sort());
+      }
+    } catch (err) {
+      console.error('[Negocios] Erro ao buscar empreendimentos:', err);
+    }
+  };
+
+  const handleSelectEmpreendimento = (emp) => {
+    setCurrentNegocio(prev => ({ ...prev, empreendimento: emp }));
+    setShowEmpSuggestions(false);
+    setEmpSuggestions([]);
+  };
 
   const handleCorretorChange = async (value) => {
     setCurrentNegocio(prev => ({ ...prev, corretor: value }));
@@ -225,28 +257,8 @@ export default function Negocios({ user }) {
           }
         }
       }
-      // Registrar logica de Funil (Etapas intermediarias)
-      const STAGES = ['INTERESSADO', 'AGENDAMENTO', 'ATENDIMENTO', 'PROPOSTA', 'VENDA'];
-      const original = negocios.find(n => n.id === currentNegocio.id);
-      const oldStatusIdx = original ? STAGES.indexOf(original.status) : -1;
-      const newStatusIdx = STAGES.indexOf(currentNegocio.status);
-      
-      const funnelInserts = [];
-      if (newStatusIdx > oldStatusIdx) {
-        // Insere as etapas puladas e a etapa atual
-        for (let i = oldStatusIdx + 1; i <= newStatusIdx; i++) {
-          funnelInserts.push({
-            id: crypto.randomUUID(),
-            data: new Date().toISOString().split('T')[0],
-            papel: 'GPI',
-            pessoa: user?.email || 'anon',
-            etapa: STAGES[i],
-            qtd: 1,
-            obs: `Avanço automático CRM (ID: ${currentNegocio.id})`,
-            ref: currentNegocio.id
-          });
-        }
-      }
+      // A trigger 'trigger_sync_negocios_to_funil' no banco cuida automaticamente
+      // de inserir as etapas intermediárias do funil. Não duplicamos aqui.
 
       const { data, error } = await supabase
         .from('negocios')
@@ -271,24 +283,21 @@ export default function Negocios({ user }) {
         .select();
 
       if (error) throw error;
-
-      // Inserir logs de funil em batch
-      if (funnelInserts.length > 0) {
-        await supabase.from('funil').insert(funnelInserts);
-      }
       
-      // Registrar Contato Efetivo na edição
-      await supabase.from('contatos_efetivos').insert({
+      // Registrar Contato Efetivo na edição (não bloqueia o fluxo principal)
+      supabase.from('contatos_efetivos').insert({
         gpi_id: user?.id || 'anon',
         tipo: 'EDICAO_NEGOCIO',
         ref_id: currentNegocio.id
+      }).then(({ error: ceErr }) => {
+        if (ceErr) console.warn('[Negocios] Contato efetivo não registrado:', ceErr);
       });
 
       setModalOpen(false);
       fetchNegocios(user);
     } catch (err) {
       console.error("Erro ao salvar negócio:", err);
-      alert("Erro ao salvar.");
+      alert("Erro ao salvar: " + (err?.message || JSON.stringify(err)));
     }
   };
 
@@ -488,10 +497,28 @@ export default function Negocios({ user }) {
                       <option>Plaenge</option>
                     </select>
                   </div>
-                  <div>
+                  <div className="relative">
                     <label className="block text-xs font-medium text-slate-400 mb-1">Empreendimento (Obrigatório)</label>
                     <input type="text" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500" 
-                      value={currentNegocio.empreendimento} onChange={e => setCurrentNegocio({...currentNegocio, empreendimento: e.target.value})} />
+                      value={currentNegocio.empreendimento} 
+                      onChange={e => handleEmpreendimentoChange(e.target.value)} 
+                      onFocus={() => setShowEmpSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowEmpSuggestions(false), 200)}
+                      placeholder="Digite para buscar..."
+                    />
+                    {showEmpSuggestions && empSuggestions.length > 0 && (
+                      <ul className="absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-slate-950 border border-slate-800 rounded-lg shadow-xl z-50 divide-y divide-slate-800/50 custom-scrollbar">
+                        {empSuggestions.map(emp => (
+                          <li
+                            key={emp}
+                            onClick={() => handleSelectEmpreendimento(emp)}
+                            className="px-3 py-2 hover:bg-indigo-600/20 cursor-pointer text-xs transition-colors text-slate-200 font-medium"
+                          >
+                            {emp}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-400 mb-1">Unidade (Obrigatório no Atendimento)</label>

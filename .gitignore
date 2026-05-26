@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python / Data
+.venv
+scratch/
+*.xlsx
+*.xls

@@ -139,9 +139,17 @@ export default function App() {
   const [inputValue, setInputValue] = useState('');
   const [selectedColor, setSelectedColor] = useState('cyan');
 
-  // Autenticação Anônima
+  // Autenticação Anônima (só se não houver sessão autenticada existente)
   useEffect(() => {
     const signIn = async () => {
+      // Verifica se já existe uma sessão autenticada (ex: GPI Tracker login)
+      const { data: { session: existingSession } } = await supabase.auth.getSession();
+      if (existingSession && !existingSession.user?.is_anonymous && existingSession.user?.email) {
+        // Já existe sessão autenticada real — não sobrescrever com anônima
+        setUser(existingSession.user);
+        return;
+      }
+
       const { data, error } = await supabase.auth.signInAnonymously();
       if (error) {
         console.error("Erro no Auth (Supabase):", error);

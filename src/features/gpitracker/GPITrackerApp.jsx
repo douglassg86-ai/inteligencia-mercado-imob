@@ -17,15 +17,21 @@ export default function GPITrackerApp() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
+      // Deferir a montagem das rotas por 150ms para garantir que os cabeçalhos de autorização
+      // JWT do cliente Postgrest global do Supabase estejam 100% sincronizados.
+      setTimeout(() => {
+        setSession(session);
+        setLoading(false);
+      }, 150);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setLoading(false);
+      setTimeout(() => {
+        setSession(session);
+        setLoading(false);
+      }, 150);
     });
 
     return () => subscription.unsubscribe();

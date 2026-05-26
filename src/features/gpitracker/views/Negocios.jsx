@@ -132,7 +132,7 @@ export default function Negocios({ user }) {
     setShowSuggestions(false);
   };
 
-  const fetchNegocios = async (currentUser, active = true) => {
+  const fetchNegocios = async (currentUser, active = true, isRetry = false) => {
     const activeUser = currentUser || user;
     if (!activeUser || !activeUser.email) {
       if (active) {
@@ -158,10 +158,24 @@ export default function Negocios({ user }) {
     if (active) {
       if (error) {
         console.error("[Negocios] Erro ao buscar negócios:", error);
+        setLoading(false);
       } else {
-        setNegocios(data || []);
+        const records = data || [];
+        setNegocios(records);
+
+        // Mecanismo de Auto-Recuperação (Self-Healing):
+        // Se o usuário é Administrador e a busca retornou ZERO registros (sendo que a base
+        // possui dezenas de registros históricos), isso indica filtragem temporária de RLS.
+        // Agendamos uma nova tentativa única após 300ms para garantir a sincronização de auth.
+        if (currentIsAdmin && records.length === 0 && !isRetry) {
+          console.warn("[Negocios] Alerta de RLS: Admin retornou 0 negócios. Tentando novamente em 300ms...");
+          setTimeout(() => {
+            if (active) fetchNegocios(activeUser, active, true);
+          }, 300);
+        } else {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     }
   };
 

@@ -7,10 +7,12 @@ import Visitas from './views/Visitas';
 import Treinamentos from './views/Treinamentos';
 import Corretores from './views/Corretores';
 import Login from './views/Login';
+import { Menu, X } from 'lucide-react';
 
 export default function GPITrackerApp() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -51,29 +53,59 @@ export default function GPITrackerApp() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-900 text-slate-100 font-sans">
-      <aside className="w-64 border-r border-slate-800 flex flex-col bg-slate-900">
-        <div className="p-6 border-b border-slate-800">
-          <h1 className="text-xl font-bold text-white tracking-tight">GPI Tracker</h1>
-          <p className="text-xs text-slate-400 mt-1">Vanguard · Comercial</p>
+    <div className="flex flex-col md:flex-row h-screen bg-slate-900 text-slate-100 font-sans overflow-hidden">
+      
+      {/* MOBILE TOPBAR */}
+      <header className="md:hidden bg-slate-900 border-b border-slate-800 px-5 py-4 flex items-center justify-between z-40 shrink-0">
+        <div>
+          <h1 className="text-lg font-bold text-white tracking-tight">GPI Tracker</h1>
+          <p className="text-[10px] text-slate-400">Vanguard · Comercial</p>
         </div>
+        <button 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 hover:text-white transition-colors"
+        >
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </header>
+
+      {/* SIDEBAR (Desktop permanent, Mobile overlay/drawer) */}
+      <aside className={`
+        fixed inset-y-0 left-0 w-64 border-r border-slate-800 flex flex-col bg-slate-900 z-50 transition-transform duration-300 ease-in-out
+        md:static md:translate-x-0
+        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">GPI Tracker</h1>
+            <p className="text-xs text-slate-400 mt-1">Vanguard · Comercial</p>
+          </div>
+          <button 
+            onClick={() => setMobileMenuOpen(false)}
+            className="md:hidden text-slate-400 hover:text-white"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
         <nav className="flex-1 p-4 space-y-1">
-          <Link to="/gpitracker" className={getLinkClass('/gpitracker')}>
+          <Link to="/gpitracker" className={getLinkClass('/gpitracker')} onClick={() => setMobileMenuOpen(false)}>
             📊 Dashboard
           </Link>
-          <Link to="/gpitracker/visitas" className={getLinkClass('/gpitracker/visitas')}>
+          <Link to="/gpitracker/visitas" className={getLinkClass('/gpitracker/visitas')} onClick={() => setMobileMenuOpen(false)}>
             📍 Registrar Visita
           </Link>
-          <Link to="/gpitracker/treinamentos" className={getLinkClass('/gpitracker/treinamentos')}>
+          <Link to="/gpitracker/treinamentos" className={getLinkClass('/gpitracker/treinamentos')} onClick={() => setMobileMenuOpen(false)}>
             📚 Treinamentos
           </Link>
-          <Link to="/gpitracker/negocios" className={getLinkClass('/gpitracker/negocios')}>
+          <Link to="/gpitracker/negocios" className={getLinkClass('/gpitracker/negocios')} onClick={() => setMobileMenuOpen(false)}>
             🏠 Negócios
           </Link>
-          <Link to="/gpitracker/corretores" className={getLinkClass('/gpitracker/corretores')}>
+          <Link to="/gpitracker/corretores" className={getLinkClass('/gpitracker/corretores')} onClick={() => setMobileMenuOpen(false)}>
             👥 Carteira de Corretores
           </Link>
         </nav>
+        
         <div className="p-4 border-t border-slate-800">
           <div className="flex items-center justify-between">
             <div className="text-xs text-slate-500 truncate pr-2" title={session.user.email}>
@@ -85,7 +117,17 @@ export default function GPITrackerApp() {
           </div>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto bg-slate-950 p-8">
+
+      {/* MOBILE OVERLAY BACKGROUND */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden animate-in fade-in duration-200"
+          onClick={() => setMobileMenuOpen(false)}
+        ></div>
+      )}
+
+      {/* MAIN CONTAINER */}
+      <main className="flex-1 overflow-auto bg-slate-950 p-4 md:p-8">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/visitas" element={<Visitas />} />

@@ -45,7 +45,7 @@ const GPIS = [
   'Daniel Mossatte - POA'
 ];
 
-export default function Corretores() {
+export default function Corretores({ user }) {
   const [corretores, setCorretores] = useState([]);
   const [imobiliarias, setImobiliarias] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,24 +66,17 @@ export default function Corretores() {
     gpi_assoc: 'Douglas Gonçalves - POA'
   });
 
-  const [user, setUser] = useState(null);
   const [gpiName, setGpiName] = useState('Douglas Gonçalves - POA');
 
   const isAdmin = user?.email?.toLowerCase() === 'do.goncalves@vanguard.com.br' || 
                   user?.email?.toLowerCase() === 'douglas.goncalves@vanguard.com.br';
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        setGpiName(getGPIName(session.user.email));
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+    if (user) {
+      setGpiName(getGPIName(user.email));
+      fetchData();
+    }
+  }, [user]);
 
   const fetchData = async () => {
     setLoading(true);

@@ -25,6 +25,7 @@ export default function GPITrackerApp() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -32,8 +33,8 @@ export default function GPITrackerApp() {
 
   if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500">Carregando...</div>;
 
-  // Rejeita acesso se não houver sessão ou se a sessão for anônima
-  const isAuthenticated = session && !session.user?.is_anonymous;
+  // Rejeita acesso se não houver sessão, se a sessão for anônima ou se não tiver e-mail válido
+  const isAuthenticated = session && session.user?.email && !session.user?.is_anonymous;
 
   if (!isAuthenticated) {
     return <Login />;
@@ -129,11 +130,11 @@ export default function GPITrackerApp() {
       {/* MAIN CONTAINER */}
       <main className="flex-1 overflow-auto bg-slate-950 p-4 md:p-8">
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/visitas" element={<Visitas />} />
-          <Route path="/treinamentos" element={<Treinamentos />} />
-          <Route path="/negocios" element={<Negocios />} />
-          <Route path="/corretores" element={<Corretores />} />
+          <Route path="/" element={<Dashboard user={session?.user} />} />
+          <Route path="/visitas" element={<Visitas user={session?.user} />} />
+          <Route path="/treinamentos" element={<Treinamentos user={session?.user} />} />
+          <Route path="/negocios" element={<Negocios user={session?.user} />} />
+          <Route path="/corretores" element={<Corretores user={session?.user} />} />
         </Routes>
       </main>
     </div>

@@ -23,14 +23,11 @@ const COLUMNS = [
   { id: 'VENDA', title: 'Vendas', color: 'border-green-500 bg-green-500/10 text-green-400' }
 ];
 
-export default function Negocios() {
+export default function Negocios({ user }) {
   const [negocios, setNegocios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [currentNegocio, setCurrentNegocio] = useState(null);
-  
-  // Session para validar GPI logado
-  const [user, setUser] = useState(null);
 
   // States para autocomplete de corretores
   const [suggestions, setSuggestions] = useState([]);
@@ -42,11 +39,13 @@ export default function Negocios() {
                   user?.email?.toLowerCase() === 'douglas.goncalves@vanguard.com.br';
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null);
-      if (session?.user) fetchNegocios();
-    });
-  }, []);
+    if (user) {
+      fetchNegocios(user);
+    } else {
+      setNegocios([]);
+      setLoading(false);
+    }
+  }, [user]);
 
   const handleCorretorChange = async (value) => {
     setCurrentNegocio(prev => ({ ...prev, corretor: value }));
@@ -85,13 +84,20 @@ export default function Negocios() {
     setShowSuggestions(false);
   };
 
-  const fetchNegocios = async () => {
+  const fetchNegocios = async (currentUser) => {
     setLoading(true);
-    const { data: sessionData } = await supabase.auth.getSession();
-    const currentUser = sessionData?.session?.user;
-    const currentGpiName = getGPIName(currentUser?.email);
-    const currentIsAdmin = currentUser?.email?.toLowerCase() === 'do.goncalves@vanguard.com.br' || 
-                          currentUser?.email?.toLowerCase() === 'douglas.goncalves@vanguard.com.br';
+    const activeUser = currentUser || user;
+    console.log("[Negocios] Iniciando busca. User:", activeUser?.email, "ID:", activeUser?.id);
+    if (!activeUser) {
+      console.warn("[Negocios] Busca cancelada: activeUser não definido.");
+      setLoading(false);
+      return;
+    }
+    const currentGpiName = getGPIName(activeUser?.email);
+    const currentIsAdmin = activeUser?.email?.toLowerCase() === 'do.goncalves@vanguard.com.br' || 
+                          activeUser?.email?.toLowerCase() === 'douglas.goncalves@vanguard.com.br';
+
+    console.log("[Negocios] Regras - GPI:", currentGpiName, "isAdmin:", currentIsAdmin);
 
     let query = supabase.from('negocios').select('*');
     if (!currentIsAdmin) {
@@ -100,8 +106,12 @@ export default function Negocios() {
 
     const { data, error } = await query.order('created_at', { ascending: false });
 
-    if (error) console.error("Erro ao buscar negócios:", error);
-    else setNegocios(data || []);
+    if (error) {
+      console.error("[Negocios] Erro ao buscar negócios:", error);
+    } else {
+      console.log("[Negocios] Busca realizada com sucesso. Total de registros:", data?.length || 0);
+      setNegocios(data || []);
+    }
     setLoading(false);
   };
 
@@ -275,7 +285,7 @@ export default function Negocios() {
       });
 
       setModalOpen(false);
-      fetchNegocios();
+      fetchNegocios(user);
     } catch (err) {
       console.error("Erro ao salvar negócio:", err);
       alert("Erro ao salvar.");

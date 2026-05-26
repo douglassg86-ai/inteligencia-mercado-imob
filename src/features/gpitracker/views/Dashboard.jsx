@@ -74,10 +74,9 @@ const GPI_EMAILS = {
   'Daniel Mossatte - POA': 'daniel.mossatte@vanguard.com.br'
 };
 
-export default function Dashboard() {
+export default function Dashboard({ user }) {
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
-  const [user, setUser] = useState(null);
   const [filterOwn, setFilterOwn] = useState(false);
   const [selectedGPI, setSelectedGPI] = useState('Todos');
 
@@ -87,24 +86,28 @@ export default function Dashboard() {
   const [treinamentos, setTreinamentos] = useState([]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null);
-    });
-
-    fetchData();
+    if (user) {
+      fetchData();
+    }
 
     // Inscrição em tempo real para sincronização automática
     const channel = supabase
       .channel('dashboard_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'negocios' }, () => fetchData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'visitas' }, () => fetchData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'treinamentos' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'negocios' }, () => {
+        if (user) fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'visitas' }, () => {
+        if (user) fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'treinamentos' }, () => {
+        if (user) fetchData();
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user]);
 
   const fetchData = async () => {
     try {

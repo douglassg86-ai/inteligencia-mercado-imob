@@ -435,11 +435,23 @@ export default function Dashboard({ user }) {
 
   // ATIVIDADES RECENTES
   const recentVisitas = [...filteredVisitas]
-    .sort((a, b) => new Date(b.created_at || b.data) - new Date(a.created_at || a.data))
+    .sort((a, b) => {
+      const dateA = new Date(a.created_at || a.data);
+      const dateB = new Date(b.created_at || b.data);
+      const diff = dateB - dateA;
+      if (diff === 0) return a.id > b.id ? 1 : -1;
+      return diff;
+    })
     .slice(0, 4);
 
   const recentNegocios = [...filteredNegocios]
-    .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
+    .sort((a, b) => {
+      const dateA = new Date(a.updated_at || a.created_at);
+      const dateB = new Date(b.updated_at || b.created_at);
+      const diff = dateB - dateA;
+      if (diff === 0) return a.id > b.id ? 1 : -1;
+      return diff;
+    })
     .slice(0, 4);
 
   if (loading) {

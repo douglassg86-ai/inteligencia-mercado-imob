@@ -153,7 +153,7 @@ export default function Negocios({ user }) {
       query = query.eq('responsavel', currentGpiName);
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false });
+    const { data, error } = await query.order('created_at', { ascending: false }).order('id', { ascending: true });
 
     if (active) {
       if (error) {

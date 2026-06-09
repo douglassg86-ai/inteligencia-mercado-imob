@@ -63,17 +63,18 @@ body::before {
     top: 0;
     left: 0;
     width: 100%;
-    padding: 1.5rem 3rem;
+    padding: 2rem;
     z-index: 100;
     display: flex;
-    justify-content: flex-start;
+    justify-content: center; /* Centered instead of flex-start */
     pointer-events: none;
+    background: linear-gradient(to bottom, rgba(10,10,15,0.8) 0%, transparent 100%);
 }
 
 .logo {
-    height: 50px;
+    height: 90px; /* Larger logo */
     object-fit: contain;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
 }
 
 /* Slides */
@@ -308,19 +309,24 @@ h3 {
     transform: translateY(-50%);
 }
 
-/* Slide 5 - Image Background */
-.image-bg {
-    background-image: url('©VISTA_03_EXT_FACHADA_DETALHE_01_FINAL.png');
+/* Background Images */
+.slide-bg {
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
 }
 
+.bg-hero { background-image: url('hero_bg.png'); }
+.bg-marketing { background-image: url('marketing_bg.png'); }
+.bg-leads { background-image: url('leads_bg.png'); }
+.bg-vendas { background-image: url('vendas_bg.png'); }
+.image-bg { background-image: url('©VISTA_03_EXT_FACHADA_DETALHE_01_FINAL.png'); }
+
 .bg-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(10, 10, 15, 0.7);
-    backdrop-filter: blur(5px);
+    background: rgba(10, 10, 15, 0.75);
+    backdrop-filter: blur(8px);
 }
 
 .special-card {
@@ -451,6 +457,34 @@ h3 {
 .gpi-card .value {
     justify-content: center;
     font-size: 3rem;
+}
+
+/* Imobiliárias List */
+.imobiliarias-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.imob-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 2rem;
+}
+
+.imob-item h4 {
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.imob-val {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary);
+    display: flex;
+    gap: 0.5rem;
 }
 
 /* Bar Chart */

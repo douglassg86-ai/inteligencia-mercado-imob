@@ -18,7 +18,8 @@
 
     <main class="presentation">
         <!-- Slide 1: Home -->
-        <section class="slide hero" id="slide-1">
+        <section class="slide hero slide-bg bg-hero" id="slide-1">
+            <div class="bg-overlay"></div>
             <div class="glass-panel">
                 <h1 class="animate-text-gradient">Resultados de Maio</h1>
                 <p class="subtitle fade-in-up">Inteligência de Mercado Imobiliário</p>
@@ -32,32 +33,60 @@
         </section>
 
         <!-- Slide 2: Marketing -->
-        <section class="slide" id="slide-2">
+        <section class="slide slide-bg bg-marketing" id="slide-2">
+            <div class="bg-overlay"></div>
             <div class="glass-panel content-layout">
                 <div class="text-content">
                     <h2>Verba de Marketing</h2>
-                    <p class="description">Investimento estratégico no mês de maio com alta eficiência de distribuição.</p>
+                    <p class="description">Distribuição do investimento estratégico entre as imobiliárias em maio.</p>
                 </div>
-                <div class="stats-grid">
-                    <div class="stat-card glass-card">
-                        <h3>Verba Total</h3>
-                        <div class="value">R$ <span class="counter" data-target="100000">0</span></div>
+                <div class="stats-grid" style="grid-template-columns: 1fr 1fr; gap: 4rem;">
+                    <!-- Overview -->
+                    <div style="display: flex; flex-direction: column; gap: 2rem;">
+                        <div class="stat-card glass-card">
+                            <h3>Verba Total</h3>
+                            <div class="value">R$ <span class="counter" data-target="100000">0</span></div>
+                        </div>
+                        <div class="stat-card glass-card highlight">
+                            <h3>Verba Utilizada</h3>
+                            <div class="value">R$ <span class="counter" data-target="92000">0</span></div>
+                            <div class="progress-ring-container">
+                                <svg class="progress-ring" width="120" height="120">
+                                    <circle class="progress-ring__circle bg" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+                                    <circle class="progress-ring__circle fg" stroke="url(#gradient)" stroke-width="8" fill="transparent" r="52" cx="60" cy="60" stroke-dasharray="326.72" stroke-dashoffset="326.72" data-percentage="92"/>
+                                    <defs>
+                                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stop-color="#00f2fe" />
+                                            <stop offset="100%" stop-color="#4facfe" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <span class="percentage">92%</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-card glass-card highlight">
-                        <h3>Verba Utilizada</h3>
-                        <div class="value">R$ <span class="counter" data-target="92000">0</span></div>
-                        <div class="progress-ring-container">
-                            <svg class="progress-ring" width="120" height="120">
-                                <circle class="progress-ring__circle bg" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
-                                <circle class="progress-ring__circle fg" stroke="url(#gradient)" stroke-width="8" fill="transparent" r="52" cx="60" cy="60" stroke-dasharray="326.72" stroke-dashoffset="326.72" data-percentage="92"/>
-                                <defs>
-                                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stop-color="#00f2fe" />
-                                        <stop offset="100%" stop-color="#4facfe" />
-                                    </linearGradient>
-                                </defs>
-                            </svg>
-                            <span class="percentage">92%</span>
+                    
+                    <!-- Imobiliárias -->
+                    <div class="imobiliarias-grid">
+                        <div class="imob-item glass-card">
+                            <h4>Raffael</h4>
+                            <div class="imob-val">R$ <span class="counter" data-target="20000">0</span></div>
+                        </div>
+                        <div class="imob-item glass-card">
+                            <h4>Jardim</h4>
+                            <div class="imob-val">R$ <span class="counter" data-target="20000">0</span></div>
+                        </div>
+                        <div class="imob-item glass-card">
+                            <h4>Nishi</h4>
+                            <div class="imob-val">R$ <span class="counter" data-target="20000">0</span></div>
+                        </div>
+                        <div class="imob-item glass-card">
+                            <h4>Charles</h4>
+                            <div class="imob-val">R$ <span class="counter" data-target="17000">0</span></div>
+                        </div>
+                        <div class="imob-item glass-card">
+                            <h4>Renato</h4>
+                            <div class="imob-val">R$ <span class="counter" data-target="15000">0</span></div>
                         </div>
                     </div>
                 </div>
@@ -65,39 +94,40 @@
         </section>
 
         <!-- Slide 3: Leads por GPI -->
-        <section class="slide" id="slide-3">
+        <section class="slide slide-bg bg-leads" id="slide-3">
+            <div class="bg-overlay"></div>
             <div class="glass-panel content-layout">
                 <div class="text-content">
                     <h2>Captação de Leads</h2>
-                    <p class="description">Distribuição do volume total de leads gerados por GPI no mês de maio.</p>
+                    <p class="description">Volume total de leads (incluindo oportunidades) gerados por imobiliária/SDR.</p>
                 </div>
                 
                 <div class="leads-layout">
                     <div class="stat-card glass-card highlight gold total-leads-card">
                         <h3>Total de Leads</h3>
-                        <div class="value massive"><span class="counter" data-target="88">0</span></div>
+                        <div class="value massive"><span class="counter" data-target="140">0</span></div>
                     </div>
                     
                     <div class="gpi-grid">
                         <div class="gpi-card glass-card">
-                            <h4>Renato</h4>
-                            <div class="value"><span class="counter" data-target="23">0</span></div>
+                            <h4>Raffa</h4>
+                            <div class="value"><span class="counter" data-target="37">0</span></div>
                         </div>
                         <div class="gpi-card glass-card">
-                            <h4>Raffa</h4>
-                            <div class="value"><span class="counter" data-target="22">0</span></div>
+                            <h4>Renato</h4>
+                            <div class="value"><span class="counter" data-target="33">0</span></div>
                         </div>
                         <div class="gpi-card glass-card">
                             <h4>Jardim</h4>
-                            <div class="value"><span class="counter" data-target="18">0</span></div>
+                            <div class="value"><span class="counter" data-target="31">0</span></div>
                         </div>
                         <div class="gpi-card glass-card">
                             <h4>Charles</h4>
-                            <div class="value"><span class="counter" data-target="13">0</span></div>
+                            <div class="value"><span class="counter" data-target="20">0</span></div>
                         </div>
                         <div class="gpi-card glass-card">
                             <h4>Nishi</h4>
-                            <div class="value"><span class="counter" data-target="12">0</span></div>
+                            <div class="value"><span class="counter" data-target="19">0</span></div>
                         </div>
                     </div>
                 </div>
@@ -105,7 +135,8 @@
         </section>
 
         <!-- Slide 4: Vendas de Maio -->
-        <section class="slide" id="slide-4">
+        <section class="slide slide-bg bg-vendas" id="slide-4">
+            <div class="bg-overlay"></div>
             <div class="glass-panel content-layout">
                 <div class="text-content">
                     <h2>Vendas de Maio</h2>
@@ -137,7 +168,7 @@
         </section>
 
         <!-- Slide 5: Metas Synthè (Image Background) -->
-        <section class="slide image-bg" id="slide-5">
+        <section class="slide slide-bg image-bg" id="slide-5">
             <div class="bg-overlay"></div>
             <div class="glass-panel content-layout">
                 <div class="text-content">
@@ -155,7 +186,8 @@
         </section>
 
         <!-- Slide 6: Meta Geral e Próximos Passos -->
-        <section class="slide" id="slide-6">
+        <section class="slide slide-bg bg-hero" id="slide-6">
+            <div class="bg-overlay"></div>
             <div class="glass-panel content-layout split-layout">
                 <div class="left-col">
                     <h2>Meta do Semestre</h2>

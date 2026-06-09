@@ -64,15 +64,14 @@ body::before {
     left: 0;
     width: 100%;
     padding: 2rem;
-    z-index: 100;
+    z-index: 9999; /* Changed from 100 to 9999 to be in front of everything */
     display: flex;
-    justify-content: center; /* Centered instead of flex-start */
+    justify-content: center;
     pointer-events: none;
-    background: linear-gradient(to bottom, rgba(10,10,15,0.8) 0%, transparent 100%);
 }
 
 .logo {
-    height: 90px; /* Larger logo */
+    height: 55px; /* Smaller logo */
     object-fit: contain;
     filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
 }
@@ -461,26 +460,41 @@ h3 {
 
 /* Imobiliárias List */
 .imobiliarias-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 1rem;
+}
+
+.imobiliarias-grid::-webkit-scrollbar {
+    width: 8px;
+}
+.imobiliarias-grid::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+}
+.imobiliarias-grid::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
 }
 
 .imob-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.2rem 2rem;
+    padding: 0.8rem 1.2rem;
 }
 
 .imob-item h4 {
-    font-size: 1.3rem;
+    font-size: 1rem;
     font-weight: 600;
+    color: var(--text-muted);
 }
 
 .imob-val {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     font-weight: 800;
     color: var(--primary);
     display: flex;

@@ -1,0 +1,1036 @@
+<meta charset="utf-8">
+<title>Performance de Marketing — Veículos Contratados</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --surface-alt: #f0efec;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --good-text: #006300;
+
+    --s1: #2a78d6; /* Mídia Digital */
+    --s2: #eb6834; /* Mídia Tradicional */
+    --s3: #1baf7a; /* Imobiliárias / Parcerias */
+    --s4: #eda100; /* Eventos & PDV */
+    --s5: #e87ba4; /* CRM / WhatsApp */
+
+    --status-good: #0ca30c;
+    --status-warn: #fab219;
+    --status-serious: #ec835a;
+    --status-critical: #d03b3b;
+
+    --ord-250:#86b6ef; --ord-350:#5598e7; --ord-450:#2a78d6; --ord-550:#1c5cab; --ord-600:#184f95;
+
+    --brand-plaenge: #4a3aa7; /* violeta — slot categórico 7 */
+    --brand-vanguard: #008300; /* verde — slot categórico 6 */
+
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(11,11,11,0.04), 0 8px 24px -12px rgba(11,11,11,0.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page:#0d0d0d; --surface:#1a1a19; --surface-alt:#232322;
+      --ink:#ffffff; --ink-2:#c3c2b7; --muted:#8f8d86;
+      --grid:#2c2c2a; --axis:#383835; --border: rgba(255,255,255,0.12);
+      --good-text:#26c95f;
+      --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181;
+      --brand-plaenge: #9085e9; --brand-vanguard: #008300;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19; --surface-alt:#232322;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#8f8d86;
+    --grid:#2c2c2a; --axis:#383835; --border: rgba(255,255,255,0.12);
+    --good-text:#26c95f;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181;
+    --brand-plaenge: #9085e9; --brand-vanguard: #008300;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px 64px; }
+
+  /* ---------- header ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--page) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .top-inner {
+    max-width: 1180px; margin: 0 auto; padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .brand { display:flex; align-items:center; gap:10px; }
+  .brand-mark {
+    width: 32px; height: 32px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--s1), var(--s3));
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:700; font-size:14px; letter-spacing:.02em;
+    flex-shrink:0;
+  }
+  .brand-text .t1 { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .brand-text .t2 { font-size: 11.5px; color: var(--muted); }
+  .top-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .period-pill {
+    font-size: 12.5px; font-weight: 600; color: var(--ink-2);
+    background: var(--surface-alt); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 999px; white-space:nowrap;
+  }
+  .print-btn {
+    font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    background: var(--ink); color: var(--page); border: none;
+    padding: 7px 14px; border-radius: 999px;
+  }
+  .print-btn:hover { opacity: .85; }
+
+  /* ---------- mock banner ---------- */
+  .mock-banner {
+    display:flex; align-items:flex-start; gap:10px;
+    background: color-mix(in srgb, var(--status-warn) 14%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--status-warn) 45%, transparent);
+    border-radius: var(--radius);
+    padding: 12px 16px; margin: 20px 0 8px;
+    font-size: 13px; color: var(--ink-2);
+  }
+  .mock-banner svg { flex-shrink:0; margin-top:1px; }
+  .mock-banner b { color: var(--ink); }
+  .mock-banner .tag {
+    display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.06em;
+    text-transform:uppercase; color: color-mix(in srgb, var(--status-warn) 55%, var(--ink));
+    background: color-mix(in srgb, var(--status-warn) 22%, transparent);
+    padding: 1px 7px; border-radius: 5px; margin-right:8px; vertical-align:1px;
+  }
+
+  section { margin-top: 34px; }
+  .section-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+  .section-head h2 { font-size: 16px; margin:0; letter-spacing:-.01em; }
+  .section-head p { margin:2px 0 0; font-size:12.5px; color:var(--muted); }
+  .eyebrow { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--s1); margin:0 0 4px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 20px;
+  }
+
+  /* ---------- KPI tiles ---------- */
+  .kpi-grid {
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:1px;
+    background: var(--border); border:1px solid var(--border); border-radius: var(--radius);
+    overflow:hidden; box-shadow: var(--shadow);
+  }
+  .kpi {
+    background: var(--surface); padding: 16px 18px; min-width:0;
+  }
+  .kpi .label { font-size: 11.5px; color: var(--muted); font-weight:600; letter-spacing:.02em; }
+  .kpi .value {
+    font-size: 22px; font-weight: 700; margin-top: 6px; letter-spacing:-.01em;
+    font-variant-numeric: tabular-nums; white-space:nowrap;
+  }
+  .kpi .delta { margin-top: 5px; font-size: 12px; font-weight:600; display:flex; align-items:center; gap:4px; }
+  .kpi .delta.up { color: var(--good-text); }
+  .kpi .delta.down { color: var(--status-critical); }
+  .kpi .delta .base { color: var(--muted); font-weight:500; }
+
+  /* ---------- two column ---------- */
+  .cols-2 { display:grid; grid-template-columns: 1.3fr 1fr; gap:20px; align-items:stretch; }
+  @media (max-width: 880px) { .cols-2 { grid-template-columns: 1fr; } .top-meta{width:100%; justify-content:space-between;} }
+
+  /* legend */
+  .legend { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:4px; }
+  .legend-item { display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-2); font-weight:600; }
+  .swatch { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+  .swatch.line { width:14px; height:2px; border-radius:2px; }
+
+  .toggle-link {
+    font-size:12px; font-weight:600; color: var(--s1); background:none; border:none; cursor:pointer;
+    font-family: inherit; padding:0; text-decoration: underline; text-underline-offset:2px;
+  }
+  .conv-badge {
+    font-size:12px; font-weight:700; color: var(--ink-2);
+    background: var(--surface-alt); border:1px solid var(--border);
+    padding: 4px 10px; border-radius: 999px; white-space:nowrap; align-self:center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- scope filter ---------- */
+  .scope-bar {
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    padding: 14px 20px;
+  }
+  .scope-control { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .scope-label { font-size:12px; font-weight:700; color:var(--ink-2); white-space:nowrap; }
+  .scope-select {
+    font: inherit; font-size:13px; font-weight:600; color:var(--ink);
+    background: var(--surface-alt); border:1px solid var(--border); border-radius:10px;
+    padding:8px 30px 8px 12px; cursor:pointer; max-width: 320px;
+  }
+  .scope-current { font-size:12.5px; color:var(--muted); font-variant-numeric: tabular-nums; }
+  .scope-current b { color:var(--ink); font-weight:700; }
+
+  /* brand identity */
+  .brand-dot { width:8px; height:8px; border-radius:50%; display:inline-block; flex-shrink:0; }
+  .brand-tag { font-size:11px; color:var(--muted); font-weight:600; display:flex; align-items:center; gap:5px; white-space:nowrap; }
+
+  table.data tr.proj-row { cursor:pointer; }
+  table.data tr.proj-row:hover td { background: var(--surface-alt); }
+  table.data tr.proj-row.selected td { background: color-mix(in srgb, var(--s1) 12%, transparent); }
+  table.data tr.subtotal td { font-weight:700; background: var(--surface-alt); color: var(--ink-2); }
+
+  /* tooltip */
+  .viz-tooltip {
+    position: fixed; pointer-events:none; z-index: 100;
+    background: var(--ink); color: var(--page);
+    font-size: 12px; line-height:1.4; padding: 8px 10px; border-radius: 8px;
+    box-shadow: 0 8px 24px -8px rgba(0,0,0,.35);
+    opacity:0; transform: translate(-50%, -110%); transition: opacity .1s ease;
+    max-width: 220px;
+  }
+  .viz-tooltip.show { opacity:1; }
+  .viz-tooltip .tt-title { font-weight:700; margin-bottom:3px; }
+  .viz-tooltip .tt-row { display:flex; justify-content:space-between; gap:12px; }
+  .viz-tooltip .tt-row + .tt-row { margin-top:1px; }
+  .viz-tooltip .tt-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; }
+
+  svg.chart-svg { width:100%; height:auto; display:block; overflow:visible; }
+  .grid-line { stroke: var(--grid); stroke-width:1; }
+  .axis-label { fill: var(--muted); font-size:10.5px; }
+  .axis-line { stroke: var(--axis); stroke-width:1; }
+
+  /* horizontal bar list */
+  .bar-row { display:grid; grid-template-columns: 168px 1fr auto; align-items:center; gap:12px; padding:7px 0; }
+  .bar-row .rlabel { font-size:12.5px; color:var(--ink); font-weight:600; display:flex; align-items:center; gap:7px; min-width:0; }
+  .bar-row .rlabel span.name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar-track { position:relative; height:20px; background: var(--surface-alt); border-radius:5px; overflow:hidden; }
+  .bar-fill { position:absolute; left:0; top:0; bottom:0; border-radius:5px; }
+  .bar-row .rvalue { font-size:12.5px; font-weight:700; font-variant-numeric: tabular-nums; white-space:nowrap; text-align:right; }
+  .bar-row .rsub { font-size:11px; color:var(--muted); font-weight:500; }
+
+  /* table */
+  .tbl-wrap { overflow-x:auto; }
+  table.data { width:100%; border-collapse:collapse; font-size:12.8px; min-width: 760px; }
+  table.data th {
+    text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--muted); padding:0 10px 8px; border-bottom:1px solid var(--border); white-space:nowrap;
+  }
+  table.data th.num, table.data td.num { text-align:right; font-variant-numeric: tabular-nums; }
+  table.data td { padding:11px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  table.data tr:last-child td { border-bottom:none; }
+  table.data td.name { display:flex; align-items:center; gap:8px; font-weight:600; white-space:nowrap; }
+  table.data tr.total td { font-weight:700; background: var(--surface-alt); }
+  .mini-bar-cell { display:flex; align-items:center; gap:8px; }
+  .mini-bar-track { width:64px; height:7px; background:var(--surface-alt); border-radius:4px; overflow:hidden; flex-shrink:0; }
+  .mini-bar-fill { height:100%; border-radius:4px; }
+  .roi-chip {
+    font-weight:700; padding:2px 7px; border-radius:6px; font-size:12px;
+    background: color-mix(in srgb, var(--good-text) 14%, transparent); color: var(--good-text);
+  }
+
+  /* insights */
+  .insight-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap:12px; }
+  .insight {
+    display:flex; gap:10px; padding:13px 14px; border-radius:11px; border:1px solid var(--border);
+    background: var(--surface-alt); font-size:12.8px; color:var(--ink-2);
+  }
+  .insight svg { flex-shrink:0; margin-top:2px; }
+  .insight b { color:var(--ink); }
+  .insight .tag { display:block; font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; margin-bottom:3px; }
+  .insight.good .tag, .insight.good svg { color: var(--status-good); }
+  .insight.warn .tag, .insight.warn svg { color: color-mix(in srgb, var(--status-warn) 70%, var(--ink-2)); }
+  .insight.critical .tag, .insight.critical svg { color: var(--status-critical); }
+
+  /* checklist */
+  .checklist { display:flex; flex-direction:column; gap:9px; }
+  .check-item { display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--ink-2); }
+  .check-item input { margin-top:3px; width:15px; height:15px; accent-color: var(--s1); flex-shrink:0; }
+  .check-item label b { color:var(--ink); }
+
+  footer {
+    margin-top: 40px; padding-top:16px; border-top:1px solid var(--border);
+    font-size:11.5px; color:var(--muted);
+    display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  }
+
+  @media print {
+    header.top { position: static; }
+    .print-btn, .toggle-link { display:none; }
+  }
+</style>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div class="brand-mark">EM</div>
+      <div class="brand-text">
+        <div class="t1">Empresa Exemplo Incorporadora</div>
+        <div class="t2">Painel de Performance de Marketing — Veículos Contratados</div>
+      </div>
+    </div>
+    <div class="top-meta">
+      <span class="period-pill">Período: Jan – Jun / 2026</span>
+      <button class="print-btn" onclick="window.print()">Exportar / Imprimir</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="mock-banner">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3L2 20h20L12 3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="color:var(--status-warn)"/><path d="M12 9.5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--status-warn)"/><circle cx="12" cy="17.2" r="1.15" fill="currentColor" style="color:var(--status-warn)"/></svg>
+    <div><span class="tag">Modelo em validação</span><b>Todos os valores deste painel são fictícios</b> (placeholder), montados apenas para validarmos juntos a estrutura, as métricas e o layout antes de conectar os dados reais de mídia, CRM e VGV.</div>
+  </div>
+
+  <!-- Filtro por empreendimento -->
+  <section aria-label="Filtro de visão" style="margin-top:22px;">
+    <div class="scope-bar card">
+      <div class="scope-control">
+        <label for="scopeSelect" class="scope-label">Visualizar por empreendimento</label>
+        <select id="scopeSelect" class="scope-select"></select>
+      </div>
+      <div class="scope-current" id="scopeCurrent"></div>
+    </div>
+  </section>
+
+  <!-- KPIs -->
+  <section aria-label="Indicadores gerais">
+    <div class="kpi-grid" id="kpiGrid"></div>
+  </section>
+
+  <!-- Investimento vs Resultado -->
+  <section>
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Indicador-chave</p>
+        <h2>Investimento vs. Resultado</h2>
+        <p>Evolução mensal indexada (Jan/2026 = 100) — investimento em mídia comparado a vendas geradas</p>
+      </div>
+      <button class="toggle-link" onclick="toggleTableView('trendTableWrap','trendChartWrap')">Ver como tabela</button>
+    </div>
+    <div class="card">
+      <div class="legend" id="trendLegend"></div>
+      <div id="trendChartWrap"><div id="trendChart"></div></div>
+      <div id="trendTableWrap" style="display:none;"></div>
+    </div>
+  </section>
+
+  <!-- Funil de conversão: imobiliárias vs direto -->
+  <section>
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Conversão</p>
+        <h2>Funil — Imobiliárias vs. Venda Direta</h2>
+        <p>Mesmo funil (lead até venda), separado por origem: negócios via imobiliárias/corretores parceiros e negócios fechados diretamente com o cliente final</p>
+      </div>
+    </div>
+    <div class="cols-2">
+      <div class="card">
+        <div class="section-head" style="margin-bottom:12px;">
+          <div><p class="eyebrow" style="color:var(--s3);">Via parceiros</p><h2>Funil — Imobiliárias</h2></div>
+          <span class="conv-badge" id="convImob"></span>
+        </div>
+        <div id="funnelImobChart"></div>
+      </div>
+      <div class="card">
+        <div class="section-head" style="margin-bottom:12px;">
+          <div><p class="eyebrow" style="color:var(--s1);">Sem intermediação</p><h2>Funil — Direto (Cliente Final)</h2></div>
+          <span class="conv-badge" id="convDireto"></span>
+        </div>
+        <div id="funnelDiretoChart"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Alocação de investimento -->
+  <section>
+    <div class="section-head">
+      <div><p class="eyebrow">Alocação</p><h2>Investimento por Veículo</h2></div>
+    </div>
+    <div class="card">
+      <div id="allocChart"></div>
+    </div>
+  </section>
+
+  <!-- Tabela comparativa -->
+  <section>
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Comparativo</p>
+        <h2>Desempenho por Veículo Contratado</h2>
+        <p>Investimento, geração de leads, vendas atribuídas e retorno — inclui verbas de imobiliárias parceiras</p>
+      </div>
+    </div>
+    <div class="card tbl-wrap">
+      <table class="data" id="channelTable"></table>
+    </div>
+  </section>
+
+  <!-- Desempenho por empreendimento -->
+  <section>
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Comparativo</p>
+        <h2>Desempenho por Empreendimento</h2>
+        <p>Verba, leads, vendas e ROI dos 9 lançamentos ativos das duas marcas do grupo — clique em uma linha para focar a visão acima nesse empreendimento</p>
+      </div>
+    </div>
+    <div class="card tbl-wrap">
+      <table class="data" id="projectTable"></table>
+    </div>
+  </section>
+
+  <!-- Foco imobiliárias -->
+  <section>
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Foco do CEO</p>
+        <h2>Verba para Imobiliárias Parceiras</h2>
+        <p>Comissionamento pago a corretoras parceiras e retorno gerado por parceiro</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="kpi-grid" id="imobKpiGrid" style="margin-bottom:18px;"></div>
+      <div id="imobRanking"></div>
+    </div>
+  </section>
+
+  <!-- Insights -->
+  <section>
+    <div class="section-head"><div><p class="eyebrow">Leitura executiva</p><h2>Destaques do período</h2></div></div>
+    <div class="insight-grid" id="insightGrid"></div>
+  </section>
+
+  <!-- Checklist de validação -->
+  <section>
+    <div class="section-head"><div><p class="eyebrow">Próximo passo</p><h2>O que validar antes de usar dados reais</h2></div></div>
+    <div class="card">
+      <div class="checklist" id="checklist"></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Painel-modelo gerado para validação interna — substituir dados fictícios antes do envio ao Conselho.</span>
+    <span>Fontes previstas: BI de Mídia, CRM de Vendas, Financeiro (comissões) e ERP (VGV).</span>
+  </footer>
+</div>
+
+<div class="viz-tooltip" id="tooltip"></div>
+
+<script>
+(function(){
+  const fmt = (v) => Math.round(v).toLocaleString('pt-BR');
+  const fmtBRL = (v) => 'R$ ' + Math.round(v).toLocaleString('pt-BR');
+  const fmtBRLmi = (v) => 'R$ ' + (v/1e6).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}) + ' mi';
+  const fmtPct = (v,d=0) => v.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}) + '%';
+  const fmtX = (v) => v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}) + 'x';
+
+  /* ================= Unidade econômica de referência por canal ================= */
+  const CHANNEL_META = [
+    { id:'digital', nome:'Mídia Digital', sub:'Google, Meta, portais imobiliários', color:'var(--s1)' },
+    { id:'trad',    nome:'Mídia Tradicional', sub:'TV, rádio, OOH / mobiliário urbano', color:'var(--s2)' },
+    { id:'imob',    nome:'Imobiliárias / Parcerias', sub:'Comissão a corretoras parceiras', color:'var(--s3)' },
+    { id:'eventos', nome:'Eventos & PDV', sub:'Feirões, plantões, stands', color:'var(--s4)' },
+    { id:'crm',     nome:'CRM / E-mail / WhatsApp', sub:'Reativação e nutrição de base', color:'var(--s5)' },
+  ];
+  const CHANNEL_IDS = CHANNEL_META.map(c => c.id);
+
+  // Cenário-base (grupo) usado só para derivar CPL / CAC / ROI por canal — a unidade econômica
+  // é tratada como constante do canal; o que muda por empreendimento é o mix de investimento.
+  const REF_CHANNEL = {
+    digital: { invest:1176000, leads:8100, vendas:142, vgv:78100000 },
+    trad:    { invest:504000,  leads:1850, vendas:38,  vgv:21400000 },
+    imob:    { invest:672000,  leads:2600, vendas:96,  vgv:61200000 },
+    eventos: { invest:280000,  leads:1100, vendas:24,  vgv:14800000 },
+    crm:     { invest:168000,  leads:550,  vendas:12,  vgv:7900000 },
+  };
+  const CHANNEL_UNIT = {};
+  CHANNEL_IDS.forEach(id => {
+    const r = REF_CHANNEL[id];
+    CHANNEL_UNIT[id] = { cpl: r.invest/r.leads, cac: r.invest/r.vendas, roi: r.vgv/r.invest };
+  });
+
+  const GROUP_INVEST = CHANNEL_IDS.reduce((s,id) => s + REF_CHANNEL[id].invest, 0); // R$ 2.800.000
+  const DEFAULT_MIX = {};
+  CHANNEL_IDS.forEach(id => { DEFAULT_MIX[id] = REF_CHANNEL[id].invest / GROUP_INVEST; });
+
+  function computeChannels(investTotal, mix){
+    const out = {};
+    CHANNEL_IDS.forEach(id => {
+      const inv = investTotal * mix[id];
+      const u = CHANNEL_UNIT[id];
+      out[id] = { invest: inv, leads: inv/u.cpl, vendas: inv/u.cac, vgv: inv*u.roi };
+    });
+    return out;
+  }
+
+  /* ================= Empreendimentos — cada um com a própria verba (share do grupo) ================= */
+  const BRANDS = {
+    plaenge:  { nome:'Plaenge',  dot:'var(--brand-plaenge)' },
+    vanguard: { nome:'Vanguard', dot:'var(--brand-vanguard)' },
+  };
+
+  const PROJECTS = [
+    { id:'orbitale', nome:'Orbitale', marca:'plaenge', share:0.16 },
+    { id:'verdant',  nome:'Verdant',  marca:'plaenge', share:0.10 },
+    { id:'edition',  nome:'Edition',  marca:'plaenge', share:0.14 },
+    { id:'synthe',   nome:'Synthè',   marca:'plaenge', share:0.08,
+      mix:{ digital:0.25, trad:0.15, imob:0.45, eventos:0.10, crm:0.05 } }, // lançamento boutique, forte em corretores parceiros
+    { id:'shift',    nome:'Shift',          marca:'vanguard', share:0.12 },
+    { id:'mood',     nome:'Mood',           marca:'vanguard', share:0.09 },
+    { id:'trend',    nome:'Trend Downtown', marca:'vanguard', share:0.11 },
+    { id:'yuna',     nome:'Yuna',           marca:'vanguard', share:0.07 },
+    { id:'wave',     nome:'Wave',           marca:'vanguard', share:0.13,
+      mix:{ digital:0.55, trad:0.10, imob:0.18, eventos:0.12, crm:0.05 } }, // lançamento digital-first
+  ];
+
+  PROJECTS.forEach(p => {
+    p.invest = GROUP_INVEST * p.share;
+    p.mixUsed = p.mix || DEFAULT_MIX;
+    p.channels = computeChannels(p.invest, p.mixUsed);
+    p.leads = CHANNEL_IDS.reduce((s,id) => s + p.channels[id].leads, 0);
+    p.vendas = CHANNEL_IDS.reduce((s,id) => s + p.channels[id].vendas, 0);
+    p.vgv = CHANNEL_IDS.reduce((s,id) => s + p.channels[id].vgv, 0);
+    p.cac = p.invest/p.vendas;
+    p.roi = p.vgv/p.invest;
+    p.ticket = p.vgv/p.vendas;
+  });
+
+  /* ================= Sazonalidade mensal (mesma curva do grupo, escalada por escopo) ================= */
+  const MONTHLY_REF = [
+    { m:'Jan', invest:410000, vendas:42 },
+    { m:'Fev', invest:430000, vendas:46 },
+    { m:'Mar', invest:450000, vendas:50 },
+    { m:'Abr', invest:480000, vendas:58 },
+    { m:'Mai', invest:505000, vendas:62 },
+    { m:'Jun', invest:525000, vendas:54 },
+  ];
+  const MREF_INVEST = MONTHLY_REF.reduce((s,d) => s+d.invest, 0);
+  const MREF_VENDAS = MONTHLY_REF.reduce((s,d) => s+d.vendas, 0);
+  const MONTHLY_SHAPE = MONTHLY_REF.map(d => ({ m:d.m, investFrac:d.invest/MREF_INVEST, vendasFrac:d.vendas/MREF_VENDAS }));
+
+  /* ================= Funil: taxas de conversão aplicadas sobre leads/vendas reais do escopo ================= */
+  const FUNNEL_RATES = {
+    imob:   { agenda: 1560/2600,  realiza: 1250/1560, proposta: 275/1250 },
+    direto: { agenda: 4540/11600, realiza: 3400/4540, proposta: 575/3400 },
+  };
+  function buildFunil(leads, vendas, rates){
+    const agenda = Math.round(leads*rates.agenda);
+    const realiza = Math.round(agenda*rates.realiza);
+    const proposta = Math.round(realiza*rates.proposta);
+    return [
+      { stage:'Leads', value:Math.round(leads), step:'var(--ord-250)' },
+      { stage:'Visitas agendadas', value:agenda, step:'var(--ord-350)' },
+      { stage:'Visitas realizadas', value:realiza, step:'var(--ord-450)' },
+      { stage:'Propostas', value:proposta, step:'var(--ord-550)' },
+      { stage:'Vendas', value:Math.round(vendas), step:'var(--ord-600)' },
+    ];
+  }
+
+  /* ================= Imobiliárias parceiras — distribuição de referência entre parceiros ================= */
+  const REF_IMOB = [
+    { nome:'Imobiliária Horizonte', leads:680, vendas:28, comissao:196000, vgv:17800000 },
+    { nome:'Rede Novo Lar', leads:540, vendas:22, comissao:154000, vgv:14100000 },
+    { nome:'Cravo Imóveis', leads:460, vendas:19, comissao:133000, vgv:12000000 },
+    { nome:'Prime Corretora', leads:410, vendas:15, comissao:105000, vgv:9400000 },
+    { nome:'Outras 32 imobiliárias (agregado)', leads:510, vendas:12, comissao:84000, vgv:7900000 },
+  ];
+  const REF_IMOB_SUM = {
+    leads: REF_IMOB.reduce((s,r)=>s+r.leads,0),
+    vendas: REF_IMOB.reduce((s,r)=>s+r.vendas,0),
+    comissao: REF_IMOB.reduce((s,r)=>s+r.comissao,0),
+    vgv: REF_IMOB.reduce((s,r)=>s+r.vgv,0),
+  };
+  const IMOB_ATIVAS_REF = 36;
+
+  /* ================= Agregação por escopo (grupo / marca / empreendimento) ================= */
+  function aggregateProjects(list){
+    const chAgg = {};
+    CHANNEL_IDS.forEach(id => chAgg[id] = { invest:0, leads:0, vendas:0, vgv:0 });
+    list.forEach(p => {
+      CHANNEL_IDS.forEach(id => {
+        const c = p.channels[id];
+        chAgg[id].invest += c.invest; chAgg[id].leads += c.leads;
+        chAgg[id].vendas += c.vendas; chAgg[id].vgv += c.vgv;
+      });
+    });
+    const invest = list.reduce((s,p)=>s+p.invest,0);
+    const leads = list.reduce((s,p)=>s+p.leads,0);
+    const vendas = list.reduce((s,p)=>s+p.vendas,0);
+    const vgv = list.reduce((s,p)=>s+p.vgv,0);
+    return { invest, leads, vendas, vgv, cac:invest/vendas, roi:vgv/invest, ticket:vgv/vendas, chAgg };
+  }
+
+  function getScopeData(scopeValue){
+    let list, label, sub;
+    if (scopeValue === 'grupo') {
+      list = PROJECTS; label = 'Grupo consolidado'; sub = `${PROJECTS.length} empreendimentos · Plaenge + Vanguard`;
+    } else if (scopeValue.indexOf('marca:') === 0) {
+      const m = scopeValue.split(':')[1];
+      list = PROJECTS.filter(p => p.marca === m);
+      label = `${BRANDS[m].nome} (consolidado)`; sub = `${list.length} empreendimentos`;
+    } else {
+      const id = scopeValue.split(':')[1];
+      const p = PROJECTS.find(x => x.id === id);
+      list = [p]; label = p.nome; sub = BRANDS[p.marca].nome;
+    }
+    const agg = aggregateProjects(list);
+    const channelBreakdown = CHANNEL_META.map(m => {
+      const c = agg.chAgg[m.id];
+      return { ...m, invest:c.invest, leads:c.leads, vendas:c.vendas, vgv:c.vgv,
+        cpl:c.invest/c.leads, cac:c.invest/c.vendas, roi:c.vgv/c.invest };
+    });
+    const monthly = MONTHLY_SHAPE.map(d => ({ m:d.m, invest: agg.invest*d.investFrac, vendas: agg.vendas*d.vendasFrac }));
+    const mBase = monthly[0];
+    monthly.forEach(d => { d.iInvest = d.invest/mBase.invest*100; d.iVendas = d.vendas/mBase.vendas*100; });
+
+    const imobCh = agg.chAgg.imob;
+    const diretoLeads = agg.leads - imobCh.leads;
+    const diretoVendas = agg.vendas - imobCh.vendas;
+    const funilImob = buildFunil(imobCh.leads, imobCh.vendas, FUNNEL_RATES.imob);
+    const funilDireto = buildFunil(diretoLeads, diretoVendas, FUNNEL_RATES.direto);
+
+    const imobRanking = REF_IMOB.map(r => ({
+      nome: r.nome,
+      leads: imobCh.leads * (r.leads/REF_IMOB_SUM.leads),
+      vendas: imobCh.vendas * (r.vendas/REF_IMOB_SUM.vendas),
+      comissao: imobCh.invest * (r.comissao/REF_IMOB_SUM.comissao),
+      vgv: imobCh.vgv * (r.vgv/REF_IMOB_SUM.vgv),
+    }));
+    const imobFocus = {
+      invest: imobCh.invest,
+      ativas: Math.max(1, Math.round(IMOB_ATIVAS_REF * imobCh.invest/REF_CHANNEL.imob.invest)),
+      vendas: imobCh.vendas,
+      cac: imobCh.invest/imobCh.vendas,
+    };
+
+    return { value:scopeValue, label, sub, list, agg, channelBreakdown, monthly, funilImob, funilDireto, imobRanking, imobFocus };
+  }
+
+  const tooltip = document.getElementById('tooltip');
+  function showTip(x, y, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+    tooltip.classList.add('show');
+  }
+  function hideTip(){ tooltip.classList.remove('show'); }
+
+  /* ---------------- KPI tiles ---------------- */
+  function kpiTile(label, value, delta, deltaDir){
+    const el = document.createElement('div');
+    el.className = 'kpi';
+    el.innerHTML = `
+      <div class="label">${label}</div>
+      <div class="value">${value}</div>
+      ${delta ? `<div class="delta ${deltaDir}">${deltaDir==='up' ? '&#9650;' : '&#9660;'} ${delta} <span class="base">vs período ant.</span></div>` : ''}
+    `;
+    return el;
+  }
+
+  const GROUP_DELTAS = {
+    invest:['8,4%','up'], vgv:['15,2%','up'], roi:['6,1%','up'],
+    vendas:['3,0%','down'], cac:['4,7%','down'], ticket:['1,3%','up'],
+  };
+
+  function renderKPIs(scope){
+    const grid = document.getElementById('kpiGrid');
+    grid.innerHTML = '';
+    const isGrupo = scope.value === 'grupo';
+    const d = GROUP_DELTAS;
+    grid.append(
+      kpiTile('Investimento total', fmtBRL(scope.agg.invest), isGrupo?d.invest[0]:null, isGrupo?d.invest[1]:null),
+      kpiTile('VGV gerado', fmtBRLmi(scope.agg.vgv), isGrupo?d.vgv[0]:null, isGrupo?d.vgv[1]:null),
+      kpiTile('ROI médio', fmtX(scope.agg.roi), isGrupo?d.roi[0]:null, isGrupo?d.roi[1]:null),
+      kpiTile('Vendas atribuídas', fmt(scope.agg.vendas) + ' un.', isGrupo?d.vendas[0]:null, isGrupo?d.vendas[1]:null),
+      kpiTile('CAC médio', fmtBRL(scope.agg.cac), isGrupo?d.cac[0]:null, isGrupo?d.cac[1]:null),
+      kpiTile('Ticket médio', fmtBRL(scope.agg.ticket), isGrupo?d.ticket[0]:null, isGrupo?d.ticket[1]:null),
+    );
+  }
+
+  /* ---------------- Trend chart (indexed investment vs vendas) ---------------- */
+  document.getElementById('trendLegend').innerHTML = `
+    <span class="legend-item"><span class="swatch line" style="background:var(--s1)"></span>Investimento (índice)</span>
+    <span class="legend-item"><span class="swatch line" style="background:var(--s3)"></span>Vendas (índice)</span>
+  `;
+
+  function renderTrend(scope){
+    const MONTHLY = scope.monthly;
+    const W = 900, H = 300, padL = 44, padR = 20, padT = 20, padB = 34;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const allIdx = MONTHLY.flatMap(d => [d.iInvest, d.iVendas]);
+    let yMin = Math.floor(Math.min(...allIdx, 95)/10)*10 - 5;
+    let yMax = Math.ceil(Math.max(...allIdx)/10)*10 + 5;
+    const x = i => padL + (i/(MONTHLY.length-1))*plotW;
+    const y = v => padT + plotH - ((v-yMin)/(yMax-yMin))*plotH;
+
+    const ticks = [];
+    for (let t = Math.ceil(yMin/10)*10; t <= yMax; t += 10) ticks.push(t);
+
+    function linePath(key){
+      return MONTHLY.map((d,i) => `${i===0?'M':'L'} ${x(i).toFixed(1)} ${y(d[key]).toFixed(1)}`).join(' ');
+    }
+
+    let svg = `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Investimento vs vendas indexado">`;
+    ticks.forEach(t => {
+      svg += `<line class="grid-line" x1="${padL}" x2="${W-padR}" y1="${y(t)}" y2="${y(t)}" />`;
+      svg += `<text class="axis-label" x="${padL-8}" y="${y(t)+3.5}" text-anchor="end">${t}</text>`;
+    });
+    svg += `<line class="axis-line" x1="${padL}" x2="${W-padR}" y1="${padT+plotH}" y2="${padT+plotH}" />`;
+    MONTHLY.forEach((d,i) => {
+      svg += `<text class="axis-label" x="${x(i)}" y="${H-8}" text-anchor="middle">${d.m}</text>`;
+    });
+
+    svg += `<path d="${linePath('iInvest')}" fill="none" stroke="var(--s1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />`;
+    svg += `<path d="${linePath('iVendas')}" fill="none" stroke="var(--s3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />`;
+
+    MONTHLY.forEach((d,i) => {
+      const lastI = i === MONTHLY.length-1;
+      svg += `<circle cx="${x(i)}" cy="${y(d.iInvest)}" r="${lastI?5:3.5}" fill="var(--s1)" stroke="var(--surface)" stroke-width="1.5" />`;
+      svg += `<circle cx="${x(i)}" cy="${y(d.iVendas)}" r="${lastI?5:3.5}" fill="var(--s3)" stroke="var(--surface)" stroke-width="1.5" />`;
+      svg += `<rect class="hit" data-i="${i}" x="${x(i)-plotW/(MONTHLY.length-1)/2}" y="${padT}" width="${plotW/(MONTHLY.length-1)}" height="${plotH}" fill="transparent" style="cursor:crosshair" />`;
+    });
+    const lastInvestVal = MONTHLY[MONTHLY.length-1].iInvest, lastVendasVal = MONTHLY[MONTHLY.length-1].iVendas;
+    let yInvestLabel = y(lastInvestVal) + 4, yVendasLabel = y(lastVendasVal) + 4;
+    const minGap = 13;
+    if (Math.abs(yInvestLabel - yVendasLabel) < minGap) {
+      const mid = (yInvestLabel + yVendasLabel) / 2;
+      const dir = yInvestLabel <= yVendasLabel ? -1 : 1; // invest é o mais alto na tela (menor y)?
+      yInvestLabel = mid + dir*minGap/2;
+      yVendasLabel = mid - dir*minGap/2;
+    }
+    svg += `<text class="axis-label" x="${x(MONTHLY.length-1)+8}" y="${yInvestLabel}" fill="var(--s1)" font-weight="700">${lastInvestVal.toFixed(0)}</text>`;
+    svg += `<text class="axis-label" x="${x(MONTHLY.length-1)+8}" y="${yVendasLabel}" fill="var(--s3)" font-weight="700">${lastVendasVal.toFixed(0)}</text>`;
+    svg += `</svg>`;
+
+    const container = document.getElementById('trendChart');
+    container.innerHTML = svg;
+    const svgEl = container.querySelector('svg');
+    svgEl.querySelectorAll('.hit').forEach(hit => {
+      hit.addEventListener('mousemove', (e) => {
+        const i = +hit.dataset.i;
+        const d = MONTHLY[i];
+        showTip(e.clientX, e.clientY, `
+          <div class="tt-title">${d.m}/2026</div>
+          <div class="tt-row"><span><span class="tt-dot" style="background:var(--s1)"></span>Investimento</span><b>${fmtBRL(d.invest)} (${d.iInvest.toFixed(0)})</b></div>
+          <div class="tt-row"><span><span class="tt-dot" style="background:var(--s3)"></span>Vendas</span><b>${fmt(d.vendas)} un. (${d.iVendas.toFixed(0)})</b></div>
+        `);
+      });
+      hit.addEventListener('mouseleave', hideTip);
+    });
+
+    // table view
+    let rows = MONTHLY.map(d => `<tr><td class="name">${d.m}/2026</td><td class="num">${fmtBRL(d.invest)}</td><td class="num">${d.iInvest.toFixed(0)}</td><td class="num">${fmt(d.vendas)} un.</td><td class="num">${d.iVendas.toFixed(0)}</td></tr>`).join('');
+    document.getElementById('trendTableWrap').innerHTML = `<table class="data"><thead><tr><th>Mês</th><th class="num">Investimento</th><th class="num">Índice invest.</th><th class="num">Vendas</th><th class="num">Índice vendas</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  window.toggleTableView = function(tableId, chartId){
+    const t = document.getElementById(tableId), c = document.getElementById(chartId);
+    const showingTable = t.style.display !== 'none';
+    t.style.display = showingTable ? 'none' : 'block';
+    c.style.display = showingTable ? 'block' : 'none';
+  };
+
+  /* ---------------- Funnels (imobiliárias vs direto) ---------------- */
+  function renderFunnel(containerId, data){
+    const max = data[0].value;
+    let html = '';
+    data.forEach((f,i) => {
+      const pct = f.value/max*100;
+      const conv = i>0 ? (f.value/data[i-1].value*100) : null;
+      html += `
+        <div class="bar-row" style="grid-template-columns:150px 1fr auto;">
+          <div class="rlabel"><span class="name">${f.stage}</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${f.step};" data-tip="${f.stage}|${fmt(f.value)}${conv!==null?` · ${fmtPct(conv,0)} do estágio anterior`:''}"></div></div>
+          <div class="rvalue">${fmt(f.value)}${conv!==null ? `<div class="rsub">${fmtPct(conv,0)}</div>` : ''}</div>
+        </div>`;
+    });
+    const el = document.getElementById(containerId);
+    el.innerHTML = html;
+    el.querySelectorAll('.bar-fill').forEach(bar => {
+      bar.addEventListener('mousemove', (e) => {
+        const [t,v] = bar.dataset.tip.split('|');
+        showTip(e.clientX, e.clientY, `<div class="tt-title">${t}</div><div>${v}</div>`);
+      });
+      bar.addEventListener('mouseleave', hideTip);
+    });
+  }
+
+  function convBadge(data){
+    const first = data[0].value, last = data[data.length-1].value;
+    return fmtPct(last/first*100, 1) + ' lead → venda';
+  }
+
+  /* ---------------- Allocation by channel ---------------- */
+  function renderAlloc(scope){
+    const list = scope.channelBreakdown;
+    const max = Math.max(...list.map(c=>c.invest));
+    const sorted = [...list].sort((a,b)=>b.invest-a.invest);
+    let html = '';
+    sorted.forEach(c => {
+      const pct = max>0 ? c.invest/max*100 : 0;
+      const share = scope.agg.invest>0 ? c.invest/scope.agg.invest*100 : 0;
+      html += `
+        <div class="bar-row">
+          <div class="rlabel"><span class="swatch" style="background:${c.color}"></span><span class="name">${c.nome}</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${c.color};" data-tip="${c.nome}|${fmtBRL(c.invest)} · ${fmtPct(share,0)} do total"></div></div>
+          <div class="rvalue">${fmtPct(share,0)}<div class="rsub">${fmtBRL(c.invest)}</div></div>
+        </div>`;
+    });
+    const el = document.getElementById('allocChart');
+    el.innerHTML = html;
+    el.querySelectorAll('.bar-fill').forEach(bar => {
+      bar.addEventListener('mousemove', (e) => {
+        const [t,v] = bar.dataset.tip.split('|');
+        showTip(e.clientX, e.clientY, `<div class="tt-title">${t}</div><div>${v}</div>`);
+      });
+      bar.addEventListener('mouseleave', hideTip);
+    });
+  }
+
+  /* ---------------- Channel comparison table ---------------- */
+  function renderChannelTable(scope){
+    const list = scope.channelBreakdown;
+    const maxInvest = Math.max(...list.map(c=>c.invest));
+    const head = `<thead><tr>
+      <th>Veículo</th><th class="num">Investimento</th><th class="num">% total</th>
+      <th class="num">Leads</th><th class="num">CPL</th><th class="num">Vendas</th>
+      <th class="num">CAC</th><th class="num">VGV gerado</th><th class="num">ROI</th>
+    </tr></thead>`;
+    let rows = list.map(c => `
+      <tr>
+        <td class="name"><span class="swatch" style="background:${c.color}"></span>${c.nome}<div class="rsub" style="font-weight:500;margin-left:0;">${c.sub}</div></td>
+        <td class="num">
+          <div class="mini-bar-cell" style="justify-content:flex-end;">
+            <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${maxInvest>0?c.invest/maxInvest*100:0}%;background:${c.color};"></div></div>
+            ${fmtBRL(c.invest)}
+          </div>
+        </td>
+        <td class="num">${fmtPct(scope.agg.invest>0?c.invest/scope.agg.invest*100:0,0)}</td>
+        <td class="num">${fmt(c.leads)}</td>
+        <td class="num">${fmtBRL(c.cpl)}</td>
+        <td class="num">${fmt(c.vendas)}</td>
+        <td class="num">${fmtBRL(c.cac)}</td>
+        <td class="num">${fmtBRLmi(c.vgv)}</td>
+        <td class="num"><span class="roi-chip">${fmtX(c.roi)}</span></td>
+      </tr>`).join('');
+    const total = `
+      <tr class="total">
+        <td class="name">Total do escopo</td>
+        <td class="num">${fmtBRL(scope.agg.invest)}</td>
+        <td class="num">100%</td>
+        <td class="num">${fmt(scope.agg.leads)}</td>
+        <td class="num">${fmtBRL(scope.agg.invest/scope.agg.leads)}</td>
+        <td class="num">${fmt(scope.agg.vendas)}</td>
+        <td class="num">${fmtBRL(scope.agg.cac)}</td>
+        <td class="num">${fmtBRLmi(scope.agg.vgv)}</td>
+        <td class="num"><span class="roi-chip">${fmtX(scope.agg.roi)}</span></td>
+      </tr>`;
+    document.getElementById('channelTable').innerHTML = head + `<tbody>${rows}${total}</tbody>`;
+  }
+
+  /* ---------------- Imobiliárias focus ---------------- */
+  function renderImobFocus(scope){
+    const grid = document.getElementById('imobKpiGrid');
+    grid.innerHTML = '';
+    grid.append(
+      kpiTile('Verba para imobiliárias', fmtBRL(scope.imobFocus.invest)),
+      kpiTile('Imobiliárias ativas', fmt(scope.imobFocus.ativas)),
+      kpiTile('Vendas geradas', fmt(scope.imobFocus.vendas) + ' un.'),
+      kpiTile('CAC via imobiliárias', fmtBRL(scope.imobFocus.cac)),
+    );
+  }
+
+  function renderImobRanking(scope){
+    const list = scope.imobRanking;
+    const max = Math.max(...list.map(r=>r.comissao));
+    let html = '<p style="font-size:12px;color:var(--muted);margin:0 0 12px;font-weight:600;">Ranking por comissão paga (top 4 + agregado das demais)</p>';
+    list.forEach((r,i) => {
+      const pct = max>0 ? r.comissao/max*100 : 0;
+      const shade = `color-mix(in oklab, var(--s3) ${100 - i*13}%, var(--surface-alt))`;
+      html += `
+        <div class="bar-row" style="grid-template-columns:220px 1fr auto;">
+          <div class="rlabel"><span class="name">${r.nome}</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${shade};" data-tip="${r.nome}|Comissão ${fmtBRL(r.comissao)} · ${fmt(r.vendas)} vendas · VGV ${fmtBRLmi(r.vgv)}"></div></div>
+          <div class="rvalue">${fmtBRL(r.comissao)}<div class="rsub">${fmt(r.vendas)} vendas</div></div>
+        </div>`;
+    });
+    const el = document.getElementById('imobRanking');
+    el.innerHTML = html;
+    el.querySelectorAll('.bar-fill').forEach(bar => {
+      bar.addEventListener('mousemove', (e) => {
+        const [t,v] = bar.dataset.tip.split('|');
+        showTip(e.clientX, e.clientY, `<div class="tt-title">${t}</div><div>${v}</div>`);
+      });
+      bar.addEventListener('mouseleave', hideTip);
+    });
+  }
+
+  /* ---------------- Tabela: Desempenho por Empreendimento (fixa, não filtra) ---------------- */
+  function renderProjectTable(){
+    const maxInvest = Math.max(...PROJECTS.map(p=>p.invest));
+    const head = `<thead><tr>
+      <th>Empreendimento</th><th class="num">Investimento</th><th class="num">% grupo</th>
+      <th class="num">Leads</th><th class="num">Vendas</th><th class="num">VGV gerado</th><th class="num">ROI</th>
+    </tr></thead>`;
+    let body = '';
+    ['plaenge','vanguard'].forEach(marca => {
+      const list = PROJECTS.filter(p=>p.marca===marca).sort((a,b)=>b.invest-a.invest);
+      body += list.map(p => `
+        <tr class="proj-row" data-scope="proj:${p.id}">
+          <td class="name">
+            <span class="brand-dot" style="background:${BRANDS[marca].dot}"></span>${p.nome}
+            <div class="rsub" style="font-weight:500;margin-left:0;">${BRANDS[marca].nome}</div>
+          </td>
+          <td class="num">
+            <div class="mini-bar-cell" style="justify-content:flex-end;">
+              <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${p.invest/maxInvest*100}%;background:${BRANDS[marca].dot};"></div></div>
+              ${fmtBRL(p.invest)}
+            </div>
+          </td>
+          <td class="num">${fmtPct(p.invest/GROUP_INVEST*100,1)}</td>
+          <td class="num">${fmt(p.leads)}</td>
+          <td class="num">${fmt(p.vendas)}</td>
+          <td class="num">${fmtBRLmi(p.vgv)}</td>
+          <td class="num"><span class="roi-chip">${fmtX(p.roi)}</span></td>
+        </tr>`).join('');
+      const agg = aggregateProjects(list);
+      body += `
+        <tr class="subtotal" data-scope="marca:${marca}">
+          <td class="name">Subtotal — ${BRANDS[marca].nome}</td>
+          <td class="num">${fmtBRL(agg.invest)}</td>
+          <td class="num">${fmtPct(agg.invest/GROUP_INVEST*100,1)}</td>
+          <td class="num">${fmt(agg.leads)}</td>
+          <td class="num">${fmt(agg.vendas)}</td>
+          <td class="num">${fmtBRLmi(agg.vgv)}</td>
+          <td class="num"><span class="roi-chip">${fmtX(agg.roi)}</span></td>
+        </tr>`;
+    });
+    const totalAgg = aggregateProjects(PROJECTS);
+    body += `
+      <tr class="total">
+        <td class="name">Total do grupo</td>
+        <td class="num">${fmtBRL(totalAgg.invest)}</td>
+        <td class="num">100%</td>
+        <td class="num">${fmt(totalAgg.leads)}</td>
+        <td class="num">${fmt(totalAgg.vendas)}</td>
+        <td class="num">${fmtBRLmi(totalAgg.vgv)}</td>
+        <td class="num"><span class="roi-chip">${fmtX(totalAgg.roi)}</span></td>
+      </tr>`;
+    const tableEl = document.getElementById('projectTable');
+    tableEl.innerHTML = head + `<tbody>${body}</tbody>`;
+    tableEl.querySelectorAll('tr.proj-row, tr.subtotal').forEach(row => {
+      row.addEventListener('click', () => {
+        renderAll(row.dataset.scope);
+        document.getElementById('kpiGrid').scrollIntoView({ behavior:'smooth', block:'start' });
+      });
+    });
+  }
+
+  function highlightProjectRow(scopeValue){
+    document.querySelectorAll('#projectTable tr').forEach(row => row.classList.remove('selected'));
+    const active = document.querySelector(`#projectTable tr[data-scope="${scopeValue}"]`);
+    if (active) active.classList.add('selected');
+  }
+
+  /* ---------------- Scope select + master render ---------------- */
+  function buildScopeSelect(){
+    const sel = document.getElementById('scopeSelect');
+    let html = `<optgroup label="Grupo"><option value="grupo">Consolidado — Grupo (${PROJECTS.length} empreendimentos)</option></optgroup>`;
+    ['plaenge','vanguard'].forEach(m => {
+      const list = PROJECTS.filter(p=>p.marca===m);
+      html += `<optgroup label="${BRANDS[m].nome}">`;
+      html += `<option value="marca:${m}">Consolidado — ${BRANDS[m].nome} (${list.length} empreendimentos)</option>`;
+      list.forEach(p => { html += `<option value="proj:${p.id}">${p.nome}</option>`; });
+      html += `</optgroup>`;
+    });
+    sel.innerHTML = html;
+    sel.addEventListener('change', () => renderAll(sel.value));
+  }
+
+  function renderAll(scopeValue){
+    const scope = getScopeData(scopeValue);
+    document.getElementById('scopeSelect').value = scopeValue;
+    document.getElementById('scopeCurrent').innerHTML = `Exibindo: <b>${scope.label}</b> · ${scope.sub} · Investimento ${fmtBRL(scope.agg.invest)} (${fmtPct(scope.agg.invest/GROUP_INVEST*100,1)} do grupo)`;
+    renderKPIs(scope);
+    renderTrend(scope);
+    renderFunnel('funnelImobChart', scope.funilImob);
+    renderFunnel('funnelDiretoChart', scope.funilDireto);
+    document.getElementById('convImob').textContent = convBadge(scope.funilImob);
+    document.getElementById('convDireto').textContent = convBadge(scope.funilDireto);
+    renderAlloc(scope);
+    renderChannelTable(scope);
+    renderImobFocus(scope);
+    renderImobRanking(scope);
+    highlightProjectRow(scopeValue);
+  }
+
+  buildScopeSelect();
+  renderProjectTable();
+  renderAll('grupo');
+
+  /* ---------------- Insights ---------------- */
+  const ICONS = {
+    good: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    warn: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3L2 20h20L12 3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 9.5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.1" fill="currentColor"/></svg>',
+    critical: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  };
+
+  // Insight dinâmico: ganho de VGV ao concentrar Synthè e Wave em canais de maior ROI (vs. usar o mix médio do grupo)
+  const counterfactualVGV = PROJECTS.reduce((s,p) => {
+    const ch = computeChannels(p.invest, DEFAULT_MIX);
+    return s + CHANNEL_IDS.reduce((s2,id)=>s2+ch[id].vgv,0);
+  }, 0);
+  const actualGroupVGV = aggregateProjects(PROJECTS).vgv;
+  const reallocDelta = actualGroupVGV - counterfactualVGV;
+
+  const INSIGHTS = [
+    { type:'good', tag:'Melhor retorno', html:'<b>Imobiliárias/Parcerias</b> entrega o menor CAC (R$ 7.000) e o maior ROI (91,1x) do mix — avaliar realocar parte da verba de Eventos/CRM para expandir parcerias.' },
+    { type:'good', tag:'Mix por empreendimento', html:`<b>Synthè</b> e <b>Wave</b> concentram verba em canais de maior ROI (imobiliárias e digital) — isso já adiciona ${fmtBRLmi(reallocDelta)} em VGV do grupo frente ao mix médio, com o mesmo investimento total.` },
+    { type:'warn', tag:'Atenção', html:'Em <b>Junho</b> as vendas caíram 13% mesmo com o investimento subindo 4% no mês — investigar saturação em Mídia Digital ou sazonalidade antes de aumentar verba.' },
+    { type:'critical', tag:'Revisar', html:'<b>CRM/WhatsApp</b> tem o maior CAC (R$ 14.000) e o menor volume de vendas — revisar a régua de reativação antes de qualquer novo aporte.' },
+    { type:'good', tag:'Conversão saudável', html:'Taxa de proposta → venda em <b>37%</b>, acima da referência interna de ~30% usada como meta do trimestre.' },
+    { type:'good', tag:'Qualificação prévia', html:'Leads via <b>imobiliárias</b> agendam visita a uma taxa de 60%, contra 39% nos leads <b>diretos</b> — indício de que o corretor parceiro já qualifica o cliente antes de repassar.' },
+  ];
+  document.getElementById('insightGrid').innerHTML = INSIGHTS.map(i => `
+    <div class="insight ${i.type}">
+      ${ICONS[i.type]}
+      <div><span class="tag">${i.tag}</span>${i.html}</div>
+    </div>
+  `).join('');
+
+  /* ---------------- Checklist ---------------- */
+  const CHECKS = [
+    'Confirmar a lista definitiva de veículos/canais contratados no período analisado.',
+    'Validar a fonte oficial de VGV e vendas por canal (CRM de vendas vs. financeiro).',
+    'Definir meta de CAC e ROI mínimo aceitável para cada veículo.',
+    'Confirmar lista de imobiliárias parceiras ativas e as regras de comissionamento vigentes.',
+    'Validar a verba real por empreendimento e as regras de mix (Synthè e Wave usam mix diferente do padrão — confirmar com o time).',
+    'Definir a periodicidade de atualização do painel (mensal ou quinzenal).',
+    'Validar a taxonomia do funil (visita agendada x realizada x proposta) com o time comercial.',
+  ];
+  document.getElementById('checklist').innerHTML = CHECKS.map((c,i) => `
+    <div class="check-item">
+      <input type="checkbox" id="chk${i}">
+      <label for="chk${i}">${c}</label>
+    </div>
+  `).join('');
+
+})();
+</script>

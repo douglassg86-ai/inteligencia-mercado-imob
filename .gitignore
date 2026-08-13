@@ -28,3 +28,8 @@ dist-ssr
 scratch/
 *.xlsx
 *.xls
+
+# Environment variables
+.env
+.env.*
+!.env.example

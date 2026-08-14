@@ -17,6 +17,8 @@ function normalizeUrl(url) {
 export default function EventModal({ mode, initialDate, event, allTags, onCreateTag, onSave, onDelete, onClose }) {
   const [title, setTitle] = useState(event?.title || '')
   const [eventDate, setEventDate] = useState(event?.event_date || initialDate)
+  const [endDate, setEndDate] = useState(event?.end_date || event?.event_date || initialDate)
+  const [notes, setNotes] = useState(event?.notes || '')
   const [tagIds, setTagIds] = useState(event?.tag_ids || [])
   const [buttons, setButtons] = useState(
     event?.buttons?.length ? event.buttons.map((b) => ({ ...b, id: b.id || newButtonId() })) : []
@@ -28,6 +30,11 @@ export default function EventModal({ mode, initialDate, event, allTags, onCreate
     setButtons((b) => b.map((btn) => (btn.id === id ? { ...btn, [field]: value } : btn)))
   const removeButton = (id) => setButtons((b) => b.filter((btn) => btn.id !== id))
 
+  const handleStartChange = (value) => {
+    setEventDate(value)
+    if (endDate < value) setEndDate(value)
+  }
+
   const handleSave = async () => {
     if (!title.trim() || !eventDate) return
     setSaving(true)
@@ -38,6 +45,8 @@ export default function EventModal({ mode, initialDate, event, allTags, onCreate
     await onSave({
       title: title.trim(),
       event_date: eventDate,
+      end_date: endDate && endDate >= eventDate ? endDate : eventDate,
+      notes: notes.trim() || null,
       tag_ids: tagIds,
       buttons: cleanButtons,
     })
@@ -62,14 +71,26 @@ export default function EventModal({ mode, initialDate, event, allTags, onCreate
           />
         </div>
 
-        <div className="pl-field">
-          <label htmlFor="pl-event-date">Data</label>
-          <input
-            id="pl-event-date"
-            type="date"
-            value={eventDate}
-            onChange={(e) => setEventDate(e.target.value)}
-          />
+        <div className="pl-field-row">
+          <div className="pl-field">
+            <label htmlFor="pl-event-date">Início</label>
+            <input
+              id="pl-event-date"
+              type="date"
+              value={eventDate}
+              onChange={(e) => handleStartChange(e.target.value)}
+            />
+          </div>
+          <div className="pl-field">
+            <label htmlFor="pl-event-end-date">Fim (opcional)</label>
+            <input
+              id="pl-event-end-date"
+              type="date"
+              value={endDate}
+              min={eventDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className="pl-field">
@@ -111,6 +132,18 @@ export default function EventModal({ mode, initialDate, event, allTags, onCreate
           <button type="button" className="pl-add-button-link" onClick={addButton}>
             + Adicionar botão
           </button>
+        </div>
+
+        <div className="pl-field">
+          <label htmlFor="pl-event-notes">Observações</label>
+          <textarea
+            id="pl-event-notes"
+            className="pl-input"
+            rows={3}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Direcionamentos, contexto adicional..."
+          />
         </div>
 
         <div className="pl-modal-actions">

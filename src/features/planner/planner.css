@@ -318,10 +318,27 @@
   z-index: 5;
 }
 
+.pl-event-bar {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 8px;
+  min-width: 8px;
+  border-radius: 999px;
+  border: 2px solid var(--pl-bg);
+  cursor: pointer;
+  transition: height 0.15s ease, box-shadow 0.15s ease;
+  z-index: 2;
+}
+
+.pl-event-bar:hover,
+.pl-event-bar.active {
+  height: 13px;
+  z-index: 5;
+}
+
 .pl-event-label {
   position: absolute;
-  top: calc(50% + 13px);
-  transform: translateX(-50%);
   max-width: 120px;
   display: flex;
   flex-direction: column;
@@ -333,13 +350,14 @@
   border: 1px solid var(--pl-border);
   cursor: pointer;
   z-index: 3;
+  transform: var(--pl-label-base, translateX(-50%));
   transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
 .pl-event-label:hover,
 .pl-event-label.active {
   z-index: 6;
-  transform: translateX(-50%) scale(1.05);
+  transform: var(--pl-label-base, translateX(-50%)) scale(1.05);
 }
 
 .pl-event-label-date {
@@ -347,16 +365,20 @@
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 .pl-event-label-title {
   font-family: 'Manrope', sans-serif;
   font-size: 10.5px;
+  line-height: 1.25;
   color: var(--pl-text);
   max-width: 106px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
   text-align: center;
 }
 
@@ -433,6 +455,19 @@
   flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 8px;
+}
+
+.pl-event-notes {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--pl-text-dim);
+  background: var(--pl-bg);
+  border: 1px solid var(--pl-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .pl-link-chip {
@@ -551,6 +586,17 @@
   margin-bottom: 16px;
 }
 
+.pl-field-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pl-field-row .pl-field {
+  flex: 1;
+  margin-bottom: 0;
+}
+
 .pl-field label {
   display: block;
   font-size: 10.5px;
@@ -582,6 +628,12 @@
 .pl-modal input:focus {
   border-color: var(--pl-accent);
   box-shadow: 0 0 0 3px var(--pl-accent-soft);
+}
+
+textarea.pl-input {
+  resize: vertical;
+  min-height: 64px;
+  font-family: 'Manrope', sans-serif;
 }
 
 .pl-tag-input-wrap {

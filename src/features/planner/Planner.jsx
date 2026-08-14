@@ -269,6 +269,22 @@ export default function Planner() {
     return () => el.removeEventListener('wheel', onWheel)
   }, [])
 
+  useEffect(() => {
+    if (!activeEventId) return
+    const handleClickOutside = (e) => {
+      if (
+        e.target.closest('.pl-event') ||
+        e.target.closest('.pl-event-bar') ||
+        e.target.closest('.pl-event-label') ||
+        e.target.closest('.pl-event-card')
+      )
+        return
+      setActiveEventId(null)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [activeEventId])
+
   const goToToday = () => {
     if (!scrollRef.current) return
     const container = scrollRef.current

@@ -9,6 +9,7 @@ import './planner.css'
 const ZOOM_LEVELS = [3, 6, 12, 24, 48] // pixels per day, from year-overview to day-precise
 const ZOOM_LABELS = ['Ano', 'Semestre', 'Mês', 'Semana', 'Dia']
 const DEFAULT_ZOOM_INDEX = 2
+const SPINE_HIT_RADIUS = 16 // px — how close (vertically) to the spine a click must land to create an event
 const MONTH_LABELS = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']
 
 const RANGE_START = new Date(Date.UTC(new Date().getFullYear() - 2, 0, 1))
@@ -262,6 +263,8 @@ export default function Planner() {
     if (e.target.closest('.pl-event') || e.target.closest('.pl-event-label') || e.target.closest('.pl-event-card'))
       return
     const rect = scrollRef.current.getBoundingClientRect()
+    const centerY = rect.top + rect.height / 2
+    if (Math.abs(e.clientY - centerY) > SPINE_HIT_RADIUS) return
     const x = e.clientX - rect.left + scrollRef.current.scrollLeft
     const dayIdx = Math.floor(x / pxPerDay)
     setActiveEventId(null)
@@ -304,9 +307,6 @@ export default function Planner() {
       <header className="pl-header">
         <div className="pl-header-left">
           <h1 className="pl-title">Planner</h1>
-          <a href="/" className="pl-back-link">
-            &larr; Cronograma
-          </a>
         </div>
         <div className="pl-header-right">
           {tagFilterIds.length > 0 && (
@@ -473,7 +473,7 @@ export default function Planner() {
       </div>
 
       <div className="pl-hint">
-        Clique em qualquer ponto da linha do tempo para criar um evento &middot; Ctrl+scroll ou os botões +/&minus; para zoom
+        Clique sobre a linha do tempo para criar um evento &middot; Ctrl+scroll ou os botões +/&minus; para zoom
       </div>
 
       {modalState && (

@@ -125,10 +125,18 @@ export default function Planner() {
         .eq('id', modalState.event.id)
         .select()
         .single()
-      if (!error && data) setEvents((prev) => prev.map((e) => (e.id === data.id ? data : e)))
+      if (error) {
+        window.alert(`Erro ao salvar evento: ${error.message}`)
+        return
+      }
+      setEvents((prev) => prev.map((e) => (e.id === data.id ? data : e)))
     } else {
       const { data, error } = await supabase.from('planner_events').insert(payload).select().single()
-      if (!error && data) setEvents((prev) => (prev.some((e) => e.id === data.id) ? prev : [...prev, data]))
+      if (error) {
+        window.alert(`Erro ao criar evento: ${error.message}`)
+        return
+      }
+      setEvents((prev) => (prev.some((e) => e.id === data.id) ? prev : [...prev, data]))
     }
     setModalState(null)
   }
@@ -137,7 +145,11 @@ export default function Planner() {
     if (modalState?.mode !== 'edit') return
     const id = modalState.event.id
     const { error } = await supabase.from('planner_events').delete().eq('id', id)
-    if (!error) setEvents((prev) => prev.filter((e) => e.id !== id))
+    if (error) {
+      window.alert(`Erro ao excluir evento: ${error.message}`)
+      return
+    }
+    setEvents((prev) => prev.filter((e) => e.id !== id))
     setModalState(null)
     setActiveEventId(null)
   }

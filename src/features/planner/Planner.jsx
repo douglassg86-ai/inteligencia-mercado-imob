@@ -20,6 +20,15 @@ const RANGE_START = new Date(Date.UTC(new Date().getFullYear() - 2, 0, 1))
 const RANGE_END = new Date(Date.UTC(new Date().getFullYear() + 3, 11, 31))
 const TOTAL_DAYS = Math.round((RANGE_END - RANGE_START) / 86400000)
 
+// Day indices (0-based from RANGE_START) that fall on a Saturday — used to
+// paint a faint weekly band so empty Saturdays are easy to spot at a glance.
+const SATURDAY_DAY_INDICES = (() => {
+  const indices = []
+  const firstSaturdayOffset = (6 - RANGE_START.getUTCDay() + 7) % 7
+  for (let idx = firstSaturdayOffset; idx <= TOTAL_DAYS; idx += 7) indices.push(idx)
+  return indices
+})()
+
 function todayStr() {
   return new Date().toISOString().slice(0, 10)
 }
@@ -446,6 +455,10 @@ export default function Planner() {
         onMouseLeave={endDrag}
       >
         <div className="pl-track" style={{ width: trackWidth }}>
+          {SATURDAY_DAY_INDICES.map((idx) => (
+            <div key={`sat-${idx}`} className="pl-saturday-band" style={{ left: idx * pxPerDay, width: pxPerDay }} />
+          ))}
+
           <div className="pl-spine" />
           <div className="pl-spine-hitzone" style={{ height: SPINE_HIT_RADIUS * 2 }} />
 

@@ -81,24 +81,6 @@
   color: transparent;
 }
 
-.pl-back-link {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--pl-text-dim);
-  text-decoration: none;
-  border: 1px solid var(--pl-border);
-  padding: 6px 12px;
-  border-radius: 999px;
-  transition: border-color 0.15s ease, color 0.15s ease;
-}
-
-.pl-back-link:hover {
-  color: var(--pl-accent);
-  border-color: var(--pl-accent);
-}
-
 .pl-header-right {
   display: flex;
   align-items: center;
@@ -323,13 +305,13 @@
   position: absolute;
   top: calc(50% + 13px);
   transform: translateX(-50%);
-  max-width: 150px;
+  max-width: 120px;
   display: flex;
-  align-items: baseline;
-  gap: 5px;
-  white-space: nowrap;
-  padding: 2px 8px 2px 7px;
-  border-radius: 999px;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 9px;
+  border-radius: 10px;
   background: var(--pl-bg-panel);
   border: 1px solid var(--pl-border);
   cursor: pointer;
@@ -348,16 +330,17 @@
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.03em;
-  flex-shrink: 0;
 }
 
 .pl-event-label-title {
   font-family: 'Manrope', sans-serif;
   font-size: 10.5px;
   color: var(--pl-text);
+  max-width: 106px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: center;
 }
 
 .pl-event-card {

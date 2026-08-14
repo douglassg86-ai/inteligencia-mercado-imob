@@ -188,6 +188,26 @@ export default function Planner() {
     })
   }
 
+  const changeZoomRef = useRef(changeZoom)
+  useEffect(() => {
+    changeZoomRef.current = changeZoom
+  })
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const onWheel = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault()
+        changeZoomRef.current(e.deltaY < 0 ? 1 : -1)
+        return
+      }
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) el.scrollLeft += e.deltaY
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [])
+
   const goToToday = () => {
     if (!scrollRef.current) return
     const container = scrollRef.current
@@ -246,17 +266,6 @@ export default function Planner() {
     const dayIdx = Math.floor(x / pxPerDay)
     setActiveEventId(null)
     setModalState({ mode: 'create', date: dateStrFromDayIndex(dayIdx) })
-  }
-
-  const handleWheel = (e) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault()
-      changeZoom(e.deltaY < 0 ? 1 : -1)
-      return
-    }
-    if (scrollRef.current && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      scrollRef.current.scrollLeft += e.deltaY
-    }
   }
 
   const monthTicks = useMemo(() => {
@@ -349,7 +358,6 @@ export default function Planner() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleTrackRelease}
         onMouseLeave={endDrag}
-        onWheel={handleWheel}
       >
         <div className="pl-track" style={{ width: trackWidth }}>
           <div className="pl-spine" />

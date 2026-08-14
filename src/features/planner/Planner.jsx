@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useSupabaseUser } from '../../lib/useSupabaseUser'
 import { colorForTagIndex, normalizeTagName } from '../../lib/tagUtils'
 import EventModal from './EventModal'
+import FilterBar from './FilterBar'
 import './planner.css'
 
 const ZOOM_LEVELS = [3, 6, 12, 24, 48] // pixels per day, from year-overview to day-precise
@@ -48,16 +49,23 @@ export default function Planner() {
   const [tags, setTags] = useState([])
   const [events, setEvents] = useState([])
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX)
+  const [customPxPerDay, setCustomPxPerDay] = useState(null)
   const [activeEventId, setActiveEventId] = useState(null)
   const [modalState, setModalState] = useState(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [tagFilterIds, setTagFilterIds] = useState([])
 
   const scrollRef = useRef(null)
   const dragInfo = useRef({ startX: 0, startScrollLeft: 0, moved: false })
 
-  const pxPerDay = ZOOM_LEVELS[zoomIndex]
+  const pxPerDay = customPxPerDay ?? ZOOM_LEVELS[zoomIndex]
   const trackWidth = TOTAL_DAYS * pxPerDay
   const showDayTicks = pxPerDay >= 20
+
+  const visibleEvents =
+    tagFilterIds.length === 0
+      ? events
+      : events.filter((ev) => (ev.tag_ids || []).some((id) => tagFilterIds.includes(id)))
 
   useEffect(() => {
     const load = async () => {
@@ -155,24 +163,57 @@ export default function Planner() {
   }
 
   const changeZoom = (delta) => {
-    setZoomIndex((prevIndex) => {
-      const nextIndex = Math.min(ZOOM_LEVELS.length - 1, Math.max(0, prevIndex + delta))
-      if (nextIndex === prevIndex || !scrollRef.current) return nextIndex
-      const container = scrollRef.current
-      const oldPx = ZOOM_LEVELS[prevIndex]
-      const newPx = ZOOM_LEVELS[nextIndex]
-      const centerDay = (container.scrollLeft + container.clientWidth / 2) / oldPx
-      requestAnimationFrame(() => {
-        container.scrollLeft = centerDay * newPx - container.clientWidth / 2
-      })
-      return nextIndex
+    if (!scrollRef.current) return
+    const container = scrollRef.current
+    const currentPx = pxPerDay
+    const baseIndex =
+      customPxPerDay == null
+        ? zoomIndex
+        : ZOOM_LEVELS.reduce(
+            (best, lvl, i) => (Math.abs(lvl - currentPx) < Math.abs(ZOOM_LEVELS[best] - currentPx) ? i : best),
+            0
+          )
+    const nextIndex = Math.min(ZOOM_LEVELS.length - 1, Math.max(0, baseIndex + delta))
+    const newPx = ZOOM_LEVELS[nextIndex]
+    const centerDay = (container.scrollLeft + container.clientWidth / 2) / currentPx
+    setCustomPxPerDay(null)
+    setZoomIndex(nextIndex)
+    requestAnimationFrame(() => {
+      container.scrollLeft = centerDay * newPx - container.clientWidth / 2
     })
   }
 
   const goToToday = () => {
     if (!scrollRef.current) return
+    const container = scrollRef.current
     const idx = dayIndexFromDate(todayStr())
-    scrollRef.current.scrollTo({ left: idx * pxPerDay - scrollRef.current.clientWidth / 2, behavior: 'smooth' })
+    const px = ZOOM_LEVELS[DEFAULT_ZOOM_INDEX]
+    setCustomPxPerDay(null)
+    setZoomIndex(DEFAULT_ZOOM_INDEX)
+    requestAnimationFrame(() => {
+      container.scrollTo({ left: idx * px - container.clientWidth / 2, behavior: 'smooth' })
+    })
+  }
+
+  const applyPeriodFilter = (startDateStr, endDateStr) => {
+    if (!scrollRef.current) return
+    const container = scrollRef.current
+    const a = dayIndexFromDate(startDateStr)
+    const b = dayIndexFromDate(endDateStr)
+    const lo = Math.min(a, b)
+    const hi = Math.max(a, b)
+    const daySpan = Math.max(1, hi - lo + 1)
+    const viewportWidth = container.clientWidth
+    const fitPx = Math.min(140, Math.max(3, (viewportWidth * 0.86) / daySpan))
+    const centerDay = (lo + hi) / 2
+    setCustomPxPerDay(fitPx)
+    requestAnimationFrame(() => {
+      container.scrollLeft = centerDay * fitPx - viewportWidth / 2
+    })
+  }
+
+  const toggleTagFilter = (tagId) => {
+    setTagFilterIds((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]))
   }
 
   const handleMouseDown = (e) => {
@@ -253,6 +294,21 @@ export default function Planner() {
           </a>
         </div>
         <div className="pl-header-right">
+          {tagFilterIds.length > 0 && (
+            <span className="pl-status-pill">
+              {visibleEvents.length} de {events.length} eventos
+            </span>
+          )}
+          <FilterBar
+            allTags={tags}
+            selectedTagIds={tagFilterIds}
+            onToggleTag={toggleTagFilter}
+            rangeMin={dateStrFromDayIndex(0)}
+            rangeMax={dateStrFromDayIndex(TOTAL_DAYS)}
+            onApplyPeriod={applyPeriodFilter}
+            onClearAll={() => setTagFilterIds([])}
+            activeFilterCount={tagFilterIds.length}
+          />
           <button type="button" className="pl-btn" onClick={goToToday}>
             Hoje
           </button>
@@ -261,17 +317,17 @@ export default function Planner() {
               type="button"
               className="pl-zoom-btn"
               onClick={() => changeZoom(-1)}
-              disabled={zoomIndex === 0}
+              disabled={customPxPerDay == null && zoomIndex === 0}
               aria-label="Diminuir zoom"
             >
               &minus;
             </button>
-            <span className="pl-zoom-label">{ZOOM_LABELS[zoomIndex]}</span>
+            <span className="pl-zoom-label">{customPxPerDay == null ? ZOOM_LABELS[zoomIndex] : 'Período'}</span>
             <button
               type="button"
               className="pl-zoom-btn"
               onClick={() => changeZoom(1)}
-              disabled={zoomIndex === ZOOM_LEVELS.length - 1}
+              disabled={customPxPerDay == null && zoomIndex === ZOOM_LEVELS.length - 1}
               aria-label="Aumentar zoom"
             >
               +
@@ -315,7 +371,7 @@ export default function Planner() {
             HOJE
           </div>
 
-          {events.map((ev) => {
+          {visibleEvents.map((ev) => {
             const idx = dayIndexFromDate(ev.event_date)
             const evTags = (ev.tag_ids || []).map((id) => tagById.get(id)).filter(Boolean)
             const color = evTags[0]?.color || '#8b94a7'

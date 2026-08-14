@@ -48,6 +48,8 @@
   pointer-events: none;
 }
 
+/* ---------- Header ---------- */
+
 .pl-header {
   position: relative;
   z-index: 10;
@@ -167,6 +169,8 @@
   text-align: center;
   letter-spacing: 0.03em;
 }
+
+/* ---------- Track / Timeline ---------- */
 
 .pl-track-scroll {
   position: relative;
@@ -294,6 +298,8 @@
   50% { box-shadow: 0 0 0 6px transparent; }
 }
 
+/* ---------- Event pins ---------- */
+
 .pl-event {
   position: absolute;
   top: 50%;
@@ -333,12 +339,15 @@
 .pl-event-card.below {
   top: calc(50% + 16px);
   transform: translate(-50%, 0);
-  animation-name: pl-pop-in-below;
 }
 
 @keyframes pl-pop-in {
   from { opacity: 0; transform: translate(-50%, -92%) scale(0.94); }
   to { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+}
+
+.pl-event-card.below {
+  animation-name: pl-pop-in-below;
 }
 
 @keyframes pl-pop-in-below {
@@ -429,6 +438,8 @@
   color: var(--pl-danger);
 }
 
+/* ---------- Empty-state hint ---------- */
+
 .pl-hint {
   position: absolute;
   bottom: 22px;
@@ -450,6 +461,8 @@
   from { opacity: 0; transform: translate(-50%, 8px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
+
+/* ---------- Modal ---------- */
 
 .pl-modal-overlay {
   position: fixed;
@@ -714,4 +727,150 @@
 
 .pl-btn-danger-text:hover {
   color: var(--pl-danger);
+}
+
+/* ---------- Filter bar ---------- */
+
+.pl-filter-wrap {
+  position: relative;
+}
+
+.pl-filter-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pl-filter-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--pl-accent);
+  color: #04241f;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.pl-filter-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 300px;
+  background: var(--pl-bg-elevated);
+  border: 1px solid var(--pl-border-strong);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55);
+  z-index: 50;
+  animation: pl-modal-in 0.16s cubic-bezier(0.16, 1, 0.3, 1) both;
+  font-family: 'Manrope', var(--font-mono);
+}
+
+.pl-filter-section {
+  margin-bottom: 16px;
+}
+
+.pl-filter-section-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pl-text-dim);
+  margin-bottom: 8px;
+}
+
+.pl-filter-empty {
+  font-size: 12.5px;
+  color: var(--pl-text-dim);
+  margin: 0;
+}
+
+.pl-filter-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.pl-filter-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--pl-text-dim);
+  border: 1px solid var(--pl-border-strong);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.pl-filter-tag-chip:hover {
+  border-color: var(--pl-text-dim);
+}
+
+.pl-filter-period-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.pl-filter-period-row input {
+  flex: 1;
+  box-sizing: border-box;
+  background: var(--pl-bg);
+  border: 1px solid var(--pl-border-strong);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12.5px;
+  color: var(--pl-text);
+  outline: none;
+}
+
+.pl-filter-period-row input:focus {
+  border-color: var(--pl-accent);
+  box-shadow: 0 0 0 3px var(--pl-accent-soft);
+}
+
+.pl-filter-period-sep {
+  font-size: 11px;
+  color: var(--pl-text-dim);
+}
+
+.pl-filter-period-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pl-filter-period-actions .pl-btn-secondary,
+.pl-filter-period-actions .pl-btn-primary {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  text-align: center;
+}
+
+.pl-filter-footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--pl-border);
+  text-align: right;
+}
+
+.pl-status-pill {
+  font-size: 11px;
+  color: var(--pl-text-dim);
+  letter-spacing: 0.03em;
 }

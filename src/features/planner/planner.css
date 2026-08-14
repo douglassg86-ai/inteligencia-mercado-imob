@@ -184,6 +184,17 @@
   min-width: 100%;
 }
 
+.pl-saturday-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 229, 199, 0.035);
+  border-left: 1px solid rgba(0, 229, 199, 0.09);
+  border-right: 1px solid rgba(0, 229, 199, 0.09);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .pl-spine {
   position: absolute;
   left: 0;

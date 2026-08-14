@@ -361,6 +361,7 @@ export default function Planner() {
       >
         <div className="pl-track" style={{ width: trackWidth }}>
           <div className="pl-spine" />
+          <div className="pl-spine-hitzone" style={{ height: SPINE_HIT_RADIUS * 2 }} />
 
           {monthTicks.map((t) => (
             <Fragment key={t.key}>

@@ -34,6 +34,11 @@ function formatDateLabel(dateStr) {
   return `${d}/${m}/${y}`
 }
 
+function formatShortDate(dateStr) {
+  const [, m, d] = dateStr.split('-')
+  return `${d}/${m}`
+}
+
 function applyRealtimeChange(setList, payload) {
   setList((prev) => {
     if (payload.eventType === 'DELETE') return prev.filter((r) => r.id !== payload.old.id)
@@ -234,7 +239,8 @@ export default function Planner() {
   const handleTrackRelease = (e) => {
     endDrag()
     if (dragInfo.current.moved) return
-    if (e.target.closest('.pl-event') || e.target.closest('.pl-event-card')) return
+    if (e.target.closest('.pl-event') || e.target.closest('.pl-event-label') || e.target.closest('.pl-event-card'))
+      return
     const rect = scrollRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left + scrollRef.current.scrollLeft
     const dayIdx = Math.floor(x / pxPerDay)
@@ -395,6 +401,30 @@ export default function Planner() {
                     }
                   }}
                 />
+
+                <div
+                  className={`pl-event-label${isActive ? ' active' : ''}`}
+                  style={{ left: idx * pxPerDay, borderColor: isActive ? color : undefined }}
+                  role="button"
+                  tabIndex={0}
+                  title={ev.title}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setActiveEventId(isActive ? null : ev.id)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setActiveEventId(isActive ? null : ev.id)
+                    }
+                  }}
+                >
+                  <span className="pl-event-label-date" style={{ color }}>
+                    {formatShortDate(ev.event_date)}
+                  </span>
+                  <span className="pl-event-label-title">{ev.title}</span>
+                </div>
+
                 {isActive && (
                   <div className="pl-event-card" style={{ left: idx * pxPerDay }}>
                     <div className="pl-event-date">{formatDateLabel(ev.event_date)}</div>

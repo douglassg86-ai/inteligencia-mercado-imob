@@ -12,6 +12,10 @@ const DEFAULT_ZOOM_INDEX = 2
 const SPINE_HIT_RADIUS = 16 // px — how close (vertically) to the spine a click must land to create an event
 const MONTH_LABELS = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']
 
+const LABEL_WIDTH = 136 // px — approximate footprint used for collision detection between labels
+const LABEL_BASE_OFFSET = 13 // px — gap between the spine and the nearest label
+const LABEL_LEVEL_STEP = 72 // px — extra vertical distance per stacked level when labels still collide
+
 const RANGE_START = new Date(Date.UTC(new Date().getFullYear() - 2, 0, 1))
 const RANGE_END = new Date(Date.UTC(new Date().getFullYear() + 3, 11, 31))
 const TOTAL_DAYS = Math.round((RANGE_END - RANGE_START) / 86400000)
@@ -38,6 +42,62 @@ function formatDateLabel(dateStr) {
 function formatShortDate(dateStr) {
   const [, m, d] = dateStr.split('-')
   return `${d}/${m}`
+}
+
+function eventSpan(ev) {
+  const rawStart = dayIndexFromDate(ev.event_date)
+  const rawEnd = dayIndexFromDate(ev.end_date || ev.event_date)
+  return { startIdx: Math.min(rawStart, rawEnd), endIdx: Math.max(rawStart, rawEnd) }
+}
+
+function formatLabelDate(ev) {
+  const start = formatShortDate(ev.event_date)
+  const end = ev.end_date && ev.end_date !== ev.event_date ? formatShortDate(ev.end_date) : null
+  return end ? `${start}–${end}` : start
+}
+
+function formatCardDate(ev) {
+  const start = formatDateLabel(ev.event_date)
+  const end = ev.end_date && ev.end_date !== ev.event_date ? formatDateLabel(ev.end_date) : null
+  return end ? `${start} – ${end}` : start
+}
+
+// Greedy label placement: alternates each event above/below the spine in
+// chronological order, escalating to an extra level only when two labels on
+// the same side would still overlap horizontally.
+function computeLabelPlacements(events, pxPerDay) {
+  const items = events.map((ev) => {
+    const { startIdx, endIdx } = eventSpan(ev)
+    const startPx = startIdx * pxPerDay
+    const endPx = endIdx * pxPerDay
+    const center = (startPx + endPx) / 2
+    const width = Math.max(LABEL_WIDTH, endPx - startPx)
+    return { id: ev.id, center, width }
+  })
+  items.sort((a, b) => a.center - b.center)
+
+  const lanesBelow = []
+  const lanesAbove = []
+  const placeIn = (lanes, left, right) => {
+    for (let lvl = 0; lvl < lanes.length; lvl++) {
+      if (left >= lanes[lvl]) {
+        lanes[lvl] = right
+        return lvl
+      }
+    }
+    lanes.push(right)
+    return lanes.length - 1
+  }
+
+  const placements = {}
+  items.forEach((item, i) => {
+    const left = item.center - item.width / 2
+    const right = item.center + item.width / 2
+    const below = i % 2 === 0
+    const level = placeIn(below ? lanesBelow : lanesAbove, left, right)
+    placements[item.id] = { side: below ? 'below' : 'above', level }
+  })
+  return placements
 }
 
 function applyRealtimeChange(setList, payload) {
@@ -260,7 +320,12 @@ export default function Planner() {
   const handleTrackRelease = (e) => {
     endDrag()
     if (dragInfo.current.moved) return
-    if (e.target.closest('.pl-event') || e.target.closest('.pl-event-label') || e.target.closest('.pl-event-card'))
+    if (
+      e.target.closest('.pl-event') ||
+      e.target.closest('.pl-event-bar') ||
+      e.target.closest('.pl-event-label') ||
+      e.target.closest('.pl-event-card')
+    )
       return
     const rect = scrollRef.current.getBoundingClientRect()
     const centerY = rect.top + rect.height / 2
@@ -299,6 +364,11 @@ export default function Planner() {
     tags.forEach((t) => m.set(t.id, t))
     return m
   }, [tags])
+
+  const labelPlacements = useMemo(
+    () => computeLabelPlacements(visibleEvents, pxPerDay),
+    [visibleEvents, pxPerDay]
+  )
 
   const todayIdx = dayIndexFromDate(todayStr())
 
@@ -387,56 +457,88 @@ export default function Planner() {
           </div>
 
           {visibleEvents.map((ev) => {
-            const idx = dayIndexFromDate(ev.event_date)
+            const { startIdx, endIdx } = eventSpan(ev)
+            const isRange = endIdx > startIdx
+            const startPx = startIdx * pxPerDay
+            const endPx = endIdx * pxPerDay
+            const centerPx = (startPx + endPx) / 2
             const evTags = (ev.tag_ids || []).map((id) => tagById.get(id)).filter(Boolean)
             const color = evTags[0]?.color || '#8b94a7'
             const isActive = activeEventId === ev.id
+
+            const placement = labelPlacements[ev.id] || { side: 'below', level: 0 }
+            const labelDistance = LABEL_BASE_OFFSET + placement.level * LABEL_LEVEL_STEP
+            const labelStyle =
+              placement.side === 'below'
+                ? { left: centerPx, top: `calc(50% + ${labelDistance}px)`, '--pl-label-base': 'translateX(-50%)' }
+                : {
+                    left: centerPx,
+                    top: `calc(50% - ${labelDistance}px)`,
+                    '--pl-label-base': 'translate(-50%, -100%)',
+                  }
+            if (isActive) labelStyle.borderColor = color
+
+            const toggleActive = (e) => {
+              e.stopPropagation()
+              setActiveEventId(isActive ? null : ev.id)
+            }
+            const toggleActiveOnKey = (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                setActiveEventId(isActive ? null : ev.id)
+              }
+            }
+
             return (
               <Fragment key={ev.id}>
-                <div
-                  className={`pl-event${isActive ? ' active' : ''}`}
-                  style={{ left: idx * pxPerDay, background: color, boxShadow: `0 0 10px ${color}99` }}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Evento: ${ev.title}, ${formatDateLabel(ev.event_date)}`}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setActiveEventId(isActive ? null : ev.id)
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      setActiveEventId(isActive ? null : ev.id)
-                    }
-                  }}
-                />
+                {isRange ? (
+                  <div
+                    className={`pl-event-bar${isActive ? ' active' : ''}`}
+                    style={{
+                      left: startPx,
+                      width: Math.max(4, endPx - startPx),
+                      background: color,
+                      boxShadow: `0 0 10px ${color}99`,
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Evento: ${ev.title}, ${formatCardDate(ev)}`}
+                    onClick={toggleActive}
+                    onKeyDown={toggleActiveOnKey}
+                  />
+                ) : (
+                  <div
+                    className={`pl-event${isActive ? ' active' : ''}`}
+                    style={{ left: startPx, background: color, boxShadow: `0 0 10px ${color}99` }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Evento: ${ev.title}, ${formatCardDate(ev)}`}
+                    onClick={toggleActive}
+                    onKeyDown={toggleActiveOnKey}
+                  />
+                )}
 
                 <div
                   className={`pl-event-label${isActive ? ' active' : ''}`}
-                  style={{ left: idx * pxPerDay, borderColor: isActive ? color : undefined }}
+                  style={labelStyle}
                   role="button"
                   tabIndex={0}
                   title={ev.title}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setActiveEventId(isActive ? null : ev.id)
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      setActiveEventId(isActive ? null : ev.id)
-                    }
-                  }}
+                  onClick={toggleActive}
+                  onKeyDown={toggleActiveOnKey}
                 >
                   <span className="pl-event-label-date" style={{ color }}>
-                    {formatShortDate(ev.event_date)}
+                    {formatLabelDate(ev)}
                   </span>
                   <span className="pl-event-label-title">{ev.title}</span>
                 </div>
 
                 {isActive && (
-                  <div className="pl-event-card" style={{ left: idx * pxPerDay }}>
-                    <div className="pl-event-date">{formatDateLabel(ev.event_date)}</div>
+                  <div
+                    className={`pl-event-card${placement.side === 'above' ? ' below' : ''}`}
+                    style={{ left: centerPx }}
+                  >
+                    <div className="pl-event-date">{formatCardDate(ev)}</div>
                     <div className="pl-event-title">{ev.title}</div>
                     {evTags.length > 0 && (
                       <div className="pl-tag-row">
@@ -451,6 +553,7 @@ export default function Planner() {
                         ))}
                       </div>
                     )}
+                    {ev.notes && <div className="pl-event-notes">{ev.notes}</div>}
                     {ev.buttons?.length > 0 && (
                       <div className="pl-btn-row">
                         {ev.buttons.map((b) => (

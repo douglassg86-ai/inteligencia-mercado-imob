@@ -155,7 +155,7 @@
   .card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing:.06em; color: var(--muted); margin: 0 0 14px; }
 
   /* ---------- KPI tiles ---------- */
-  .kpi-grid { display:grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 22px; }
+  .kpi-grid { display:grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 22px; }
   @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
   .kpi { background: var(--surface); border:1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
   .kpi .label { font-size: 11.5px; color: var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
@@ -187,7 +187,8 @@
   .funnel-row .n { text-align:right; font-size: 13px; font-weight:700; font-variant-numeric:tabular-nums; }
 
   /* onde travou table */
-  table.simple { width:100%; border-collapse:collapse; font-size: 12.8px; }
+  .table-scroll { overflow-x:auto; }
+  table.simple { width:100%; min-width:560px; border-collapse:collapse; font-size: 12.8px; }
   table.simple th { text-align:left; font-size: 10.5px; text-transform:uppercase; letter-spacing:.05em; color: var(--muted); font-weight:600; padding: 0 10px 8px; border-bottom: 1px solid var(--grid); }
   table.simple td { padding: 10px; border-bottom: 1px solid var(--grid); vertical-align:middle; }
   table.simple tr:last-child td { border-bottom:none; }
@@ -290,12 +291,26 @@
   .dept-tab.active { background: var(--ink); color: var(--page); border-color: var(--ink); }
   .dept-tab.active .dot { box-shadow: 0 0 0 2px var(--page); }
 
-  .ticket-row { display:grid; grid-template-columns: 1fr 120px 130px 110px 90px; gap:14px; align-items:center; padding: 13px 6px; border-bottom: 1px solid var(--grid); font-size:12.8px; }
+  .ticket-row { display:grid; grid-template-columns: 1fr 108px 92px 92px 78px 62px; gap:12px; align-items:center; padding: 13px 6px; border-bottom: 1px solid var(--grid); font-size:12.8px; }
   .ticket-row:last-child { border-bottom:none; }
   .ticket-row.head { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color: var(--muted); font-weight:600; padding-bottom:8px; }
   .ticket-row .tt { font-weight:600; }
   .ticket-row .tt .id { color: var(--muted); font-weight:500; margin-right:6px; }
+  .ticket-sub { font-weight:400; font-size:11px; color: var(--muted); margin-top:2px; }
+  .ticket-row .custo { font-variant-numeric: tabular-nums; font-weight:600; }
   .stars { color: var(--accent); font-size: 12px; letter-spacing:1px; }
+
+  /* aderência a orçamento */
+  .orc-row { padding: 10px 0; border-bottom: 1px solid var(--grid); }
+  .orc-row:last-child { border-bottom:none; }
+  .orc-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:6px; }
+  .orc-regional { font-size:12.5px; color: var(--ink-2); }
+  .orc-regional .marca { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color: var(--muted); margin-left:6px; }
+  .orc-val { font-size:12.5px; font-weight:700; font-variant-numeric: tabular-nums; white-space:nowrap; }
+  .orc-val .meta { font-weight:400; color: var(--muted); }
+  .orc-track { position:relative; height:8px; background: var(--surface-alt); border-radius:999px; overflow:visible; }
+  .orc-fill { height:100%; border-radius:999px; }
+  .orc-mark { position:absolute; top:-3px; width:2px; height:14px; background: var(--ink); opacity:.45; border-radius:1px; }
 
   /* ---------- empreendimentos ---------- */
   .emp-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:16px; }
@@ -378,7 +393,7 @@
       <div class="view-head">
         <div>
           <h1>Visão geral</h1>
-          <p>Panorama executivo cruzando todas as áreas — comercial, marketing, incorporação, engenharia, DAC e financeiro.</p>
+          <p>Panorama executivo cruzando todas as áreas — comercial, marketing, incorporação, engenharia, DAC e financeiro, com aging e aderência a orçamento por regional.</p>
         </div>
       </div>
 
@@ -386,6 +401,7 @@
         <div class="kpi"><div class="label">SLA médio</div><div class="value">89%</div><div class="delta good">+3pp vs. mês anterior</div></div>
         <div class="kpi"><div class="label">CSAT médio</div><div class="value">4.6</div><div class="delta good">142 avaliações</div></div>
         <div class="kpi"><div class="label">Chamados abertos</div><div class="value">37</div><div class="delta warn">11 há mais de 7 dias</div></div>
+        <div class="kpi"><div class="label">Custo médio/chamado</div><div class="value">R$ 890</div><div class="delta good">-6% vs. mês anterior</div></div>
         <div class="kpi"><div class="label">VGV em negociação</div><div class="value">R$ 42,8M</div><div class="delta good">33 propostas ativas</div></div>
         <div class="kpi"><div class="label">Vendas no mês</div><div class="value">14</div><div class="delta good">R$ 18,1M</div></div>
       </div>
@@ -401,12 +417,25 @@
         </div>
       </div>
 
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Aging de chamados abertos <span style="text-transform:none;font-weight:400;">(37 no total)</span></div>
+          <div id="agingDist"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Aderência ao orçamento — Assistência técnica <span style="text-transform:none;font-weight:400;">(meta por regional)</span></div>
+          <div id="orcamentoBars"></div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-title">Onde travou — chamados com maior tempo parado</div>
-        <table class="simple">
-          <tr><th>Chamado</th><th>Área</th><th>Tipo</th><th>Prioridade</th><th>Tempo parado</th></tr>
-          <tbody id="agingRows"></tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="simple">
+            <tr><th>Chamado</th><th>Área</th><th>Tipo</th><th>Prioridade</th><th>Faixa</th><th>Tempo parado</th></tr>
+            <tbody id="agingRows"></tbody>
+          </table>
+        </div>
       </div>
 
       <div class="footnote">Modelo em validação — todos os valores exibidos são fictícios (placeholder), usados para avaliar estrutura e leitura visual do painel antes de conectar aos dados reais.</div>
@@ -461,11 +490,16 @@
         </div>
       </div>
       <div class="dept-tabs" id="deptTabs"></div>
+      <div class="filter-row" id="equipeFilter" style="display:none;"></div>
       <div class="card">
-        <div class="ticket-row head">
-          <div>Assunto</div><div>Status</div><div>Prioridade</div><div>SLA</div><div>CSAT</div>
+        <div class="table-scroll" style="min-width:0;">
+          <div style="min-width:680px;">
+            <div class="ticket-row head">
+              <div>Assunto</div><div>Status</div><div>Prioridade</div><div>SLA</div><div>CSAT</div><div>Custo</div>
+            </div>
+            <div id="ticketRows"></div>
+          </div>
         </div>
-        <div id="ticketRows"></div>
       </div>
     </section>
 
@@ -494,6 +528,16 @@
     { id:'financeiro',    label:'Financeiro',    color:'var(--dept-financeiro)' }
   ];
   function deptById(id){ return DEPTS.find(function(d){ return d.id === id; }); }
+
+  /* reusable "swatch + label + track + count" row — dept bars, aging distribution, etc. */
+  function barRowHTML(label, count, pct, color, asButton, extraAttrs){
+    var tag = asButton ? 'button' : 'div';
+    return '<' + tag + (asButton ? ' type="button"' : '') + ' class="dept-bar-row"' + (extraAttrs || '') + '>' +
+      '<span class="dept-swatch" style="background:' + color + '"></span>' +
+      '<span class="name">' + label + '</span>' +
+      '<span class="dept-bar-track"><span class="dept-bar-fill" style="width:' + pct + '%;background:' + color + '"></span></span>' +
+      '<span class="count">' + count + '</span></' + tag + '>';
+  }
 
   /* ---------------- navigation ---------------- */
   var sideItems = document.querySelectorAll('.side-item');
@@ -535,13 +579,9 @@
   document.getElementById('deptBars').innerHTML = DEPTS.map(function(d){
     var n = deptOpen[d.id];
     var pct = Math.round(n / maxOpen * 100);
-    return '<button type="button" class="dept-bar-row" data-dept="' + d.id + '" aria-label="Filtrar chamados de ' + d.label + '">' +
-      '<span class="dept-swatch" style="background:' + d.color + '"></span>' +
-      '<span class="name">' + d.label + '</span>' +
-      '<span class="dept-bar-track"><span class="dept-bar-fill" style="width:' + pct + '%;background:' + d.color + '"></span></span>' +
-      '<span class="count">' + n + '</span></button>';
+    return barRowHTML(d.label, n, pct, d.color, true, ' data-dept="' + d.id + '" aria-label="Filtrar chamados de ' + d.label + '"');
   }).join('');
-  document.querySelectorAll('.dept-bar-row').forEach(function(row){
+  document.querySelectorAll('#deptBars .dept-bar-row').forEach(function(row){
     row.addEventListener('click', function(){
       var d = row.dataset.dept;
       document.querySelectorAll('.side-item').forEach(function(b){ b.classList.remove('active'); });
@@ -551,6 +591,55 @@
       selectDeptTab(d);
     });
   });
+
+  /* ---------------- dashboard: aging distribution (view_chamados_aging) ---------------- */
+  var AGING_BUCKETS = [
+    { id:'ate_30',      label:'0–30 dias',    color:'var(--status-good)' },
+    { id:'31_a_60',     label:'31–60 dias',   color:'var(--status-good)' },
+    { id:'61_a_90',     label:'61–90 dias',   color:'var(--status-warning)' },
+    { id:'91_a_120',    label:'91–120 dias',  color:'var(--status-warning)' },
+    { id:'121_a_180',   label:'121–180 dias', color:'var(--status-serious)' },
+    { id:'181_a_365',   label:'181–365 dias', color:'var(--status-serious)' },
+    { id:'366_a_540',   label:'366–540 dias', color:'var(--status-critical)' },
+    { id:'mais_de_540', label:'+540 dias',    color:'var(--status-critical)' }
+  ];
+  var agingCounts = { ate_30:22, '31_a_60':8, '61_a_90':4, '91_a_120':2, '121_a_180':1, '181_a_365':0, '366_a_540':0, mais_de_540:0 };
+  function agingFaixa(dias){
+    if (dias <= 30) return AGING_BUCKETS[0];
+    if (dias <= 60) return AGING_BUCKETS[1];
+    if (dias <= 90) return AGING_BUCKETS[2];
+    if (dias <= 120) return AGING_BUCKETS[3];
+    if (dias <= 180) return AGING_BUCKETS[4];
+    if (dias <= 365) return AGING_BUCKETS[5];
+    if (dias <= 540) return AGING_BUCKETS[6];
+    return AGING_BUCKETS[7];
+  }
+  var maxAgingCount = Math.max.apply(null, Object.values(agingCounts));
+  document.getElementById('agingDist').innerHTML = AGING_BUCKETS
+    .filter(function(b){ return agingCounts[b.id] > 0; })
+    .map(function(b){
+      var n = agingCounts[b.id];
+      var pct = Math.round(n / maxAgingCount * 100);
+      return barRowHTML(b.label, n, pct, b.color, false);
+    }).join('');
+
+  /* ---------------- dashboard: aderência ao orçamento por regional (metas_orcamento) ---------------- */
+  var ORCAMENTO = [
+    { regional:'Porto Alegre Centro', marca:'Plaenge',  meta:2.0, realizado:1.6 },
+    { regional:'Porto Alegre Zona Sul', marca:'Vanguard', meta:2.0, realizado:2.4 },
+    { regional:'Londrina', marca:'Plaenge', meta:2.0, realizado:1.9 }
+  ];
+  var ORC_SCALE = 3.0;
+  document.getElementById('orcamentoBars').innerHTML = ORCAMENTO.map(function(o){
+    var fillPct = Math.min(100, Math.round(o.realizado / ORC_SCALE * 100));
+    var markPct = Math.min(100, Math.round(o.meta / ORC_SCALE * 100));
+    var color = o.realizado <= o.meta ? 'var(--status-good)' : (o.realizado <= o.meta * 1.15 ? 'var(--status-warning)' : 'var(--status-critical)');
+    return '<div class="orc-row">' +
+      '<div class="orc-head"><span class="orc-regional">' + o.regional + '<span class="marca">' + o.marca + '</span></span>' +
+      '<span class="orc-val" style="color:' + color + '">' + o.realizado.toFixed(1) + '% <span class="meta">/ meta ' + o.meta.toFixed(1) + '%</span></span></div>' +
+      '<div class="orc-track"><div class="orc-fill" style="width:' + fillPct + '%;background:' + color + '"></div>' +
+      '<div class="orc-mark" style="left:' + markPct + '%"></div></div></div>';
+  }).join('');
 
   /* ---------------- dashboard: aging table ---------------- */
   var aging = [
@@ -564,10 +653,12 @@
     var d = deptById(a.dept);
     var pct = Math.round(a.dias / maxDias * 100);
     var fillColor = a.dias > 14 ? 'var(--status-critical)' : (a.dias > 8 ? 'var(--status-warning)' : 'var(--status-good)');
+    var faixa = agingFaixa(a.dias);
     return '<tr><td class="tt">' + a.id + '</td>' +
       '<td><span class="pill dept" style="background:' + d.color + '">' + d.label + '</span></td>' +
       '<td>' + a.tipo + '</td>' +
       '<td><span class="pill prio-' + a.prio + '">' + a.prio + '</span></td>' +
+      '<td style="color:' + faixa.color + '">' + faixa.label + '</td>' +
       '<td><div class="aging-bar"><div class="aging-track"><div class="aging-fill" style="width:' + pct + '%;background:' + fillColor + '"></div></div>' + a.dias + 'd</div></td></tr>';
   }).join('');
 
@@ -725,38 +816,45 @@
   /* ---------------- Chamados ---------------- */
   var TICKETS = {
     comercial: [
-      { titulo:'Follow-up de proposta — André Villa', status:'em_andamento', prio:'media', sla:'2h restantes', csat:null },
-      { titulo:'Upsell — 2ª unidade para cliente recorrente', status:'aberto', prio:'baixa', sla:'6h restantes', csat:null }
+      { titulo:'Follow-up de proposta — André Villa', status:'em_andamento', prio:'media', sla:'2h restantes', csat:null, canal:'hub' },
+      { titulo:'Upsell — 2ª unidade para cliente recorrente', status:'aberto', prio:'baixa', sla:'6h restantes', csat:null, canal:'whatsapp' }
     ],
     marketing: [
-      { titulo:'Investimento evento lançamento WAVE', status:'em_andamento', prio:'media', sla:'—', csat:null },
-      { titulo:'Campanha relacionamento pós-venda — Fev/26', status:'resolvido', prio:'baixa', sla:'—', csat:5 }
+      { titulo:'Investimento evento lançamento WAVE', status:'em_andamento', prio:'media', sla:'—', csat:null, canal:'interno' },
+      { titulo:'Campanha relacionamento pós-venda — Fev/26', status:'resolvido', prio:'baixa', sla:'—', csat:5, canal:'interno' }
     ],
     incorporacao: [
-      { titulo:'Aprovação de financiamento — Rafael Duarte', status:'aguardando_cliente', prio:'media', sla:'aguardando doc.', csat:null },
-      { titulo:'Habite-se — SYNTHÈ Loja 12', status:'em_andamento', prio:'alta', sla:'9d parado', csat:null },
-      { titulo:'Documentação — Marina Bittencourt', status:'resolvido', prio:'media', sla:'—', csat:5 }
+      { titulo:'Aprovação de financiamento — Rafael Duarte', status:'aguardando_cliente', prio:'media', sla:'aguardando doc.', csat:null, canal:'whatsapp' },
+      { titulo:'Habite-se — SYNTHÈ Loja 12', status:'em_andamento', prio:'alta', sla:'9d parado', csat:null, canal:'interno' },
+      { titulo:'Documentação — Marina Bittencourt', status:'resolvido', prio:'media', sla:'—', csat:5, canal:'whatsapp' }
     ],
     engenharia: [
-      { titulo:'Atraso de obra — TREND NANO', status:'em_andamento', prio:'alta', sla:'18d parado', csat:null },
-      { titulo:'Vistoria pré-entrega — ORBITALE 1103', status:'aberto', prio:'media', sla:'agendar', csat:null },
-      { titulo:'Entrega de chaves — EDITION 402', status:'resolvido', prio:'media', sla:'—', csat:5 }
+      { titulo:'Atraso de obra — TREND NANO', status:'em_andamento', prio:'alta', sla:'18d parado', csat:null, canal:'interno' },
+      { titulo:'Vistoria pré-entrega — ORBITALE 1103', status:'aberto', prio:'media', sla:'agendar', csat:null, canal:'whatsapp' },
+      { titulo:'Entrega de chaves — EDITION 402', status:'resolvido', prio:'media', sla:'—', csat:5, canal:'interno' }
     ],
     dac: [
-      { titulo:'Infiltração banheiro suíte — EDITION 402', status:'resolvido', prio:'alta', sla:'—', csat:5 },
-      { titulo:'Ruído em porta de armário — WAVE 305', status:'aberto', prio:'baixa', sla:'12h restantes', csat:null },
-      { titulo:'Assistência técnica — MOOD 1201', status:'em_andamento', prio:'urgente', sla:'12d parado', csat:null }
+      { titulo:'Infiltração banheiro suíte — EDITION 402', status:'resolvido', prio:'alta', sla:'—', csat:5,
+        canal:'whatsapp', equipe:'pos_venda', ambiente:'Banheiro', componente:'Impermeabilização', custo:1450 },
+      { titulo:'Ruído em porta de armário — WAVE 305', status:'aberto', prio:'baixa', sla:'12h restantes', csat:null,
+        canal:'pvc', equipe:'pos_ocupacao', ambiente:'Dormitório', componente:'Portas e Janelas', custo:null },
+      { titulo:'Assistência técnica — MOOD 1201', status:'em_andamento', prio:'urgente', sla:'12d parado', csat:null,
+        canal:'whatsapp', equipe:'pos_venda', ambiente:'Cozinha', componente:'Hidráulica', custo:620 }
     ],
     financeiro: [
-      { titulo:'Segunda via de boleto — Marina Bittencourt', status:'resolvido', prio:'baixa', sla:'—', csat:4 },
-      { titulo:'Renegociação — Eduardo Ramos', status:'em_andamento', prio:'alta', sla:'7d parado', csat:null }
+      { titulo:'Segunda via de boleto — Marina Bittencourt', status:'resolvido', prio:'baixa', sla:'—', csat:4, canal:'whatsapp' },
+      { titulo:'Renegociação — Eduardo Ramos', status:'em_andamento', prio:'alta', sla:'7d parado', csat:null, canal:'hub' }
     ]
   };
   var STATUS_LABEL = { aberto:'Aberto', em_andamento:'Em andamento', aguardando_cliente:'Aguard. cliente', resolvido:'Resolvido' };
+  var CANAL_LABEL = { pvc:'PVC', whatsapp:'WhatsApp', hub:'Hub', interno:'Interno' };
+  var EQUIPE_LABEL = { pos_venda:'Pós-Venda', pos_ocupacao:'Pós-Ocupação' };
 
   document.getElementById('deptTabs').innerHTML = DEPTS.map(function(d){
     return '<button type="button" class="dept-tab" data-dept="' + d.id + '" aria-pressed="false"><span class="dot" style="background:' + d.color + '"></span>' + d.label + '</button>';
   }).join('');
+
+  var activeEquipe = 'todas';
 
   function selectDeptTab(id){
     document.querySelectorAll('.dept-tab').forEach(function(t){
@@ -764,15 +862,37 @@
       t.classList.toggle('active', on);
       t.setAttribute('aria-pressed', String(on));
     });
-    var rows = TICKETS[id] || [];
+
+    var equipeBox = document.getElementById('equipeFilter');
+    if (id === 'dac') {
+      var opts = [{ id:'todas', label:'Todas as equipes' }, { id:'pos_venda', label:'Pós-Venda' }, { id:'pos_ocupacao', label:'Pós-Ocupação' }];
+      equipeBox.style.display = 'flex';
+      equipeBox.innerHTML = opts.map(function(o){
+        return '<button type="button" class="chip period' + (activeEquipe === o.id ? ' active' : '') + '" data-equipe="' + o.id + '" aria-pressed="' + (activeEquipe === o.id) + '">' + o.label + '</button>';
+      }).join('');
+      equipeBox.querySelectorAll('.chip').forEach(function(ch){
+        ch.addEventListener('click', function(){ activeEquipe = ch.dataset.equipe; selectDeptTab('dac'); });
+      });
+    } else {
+      equipeBox.style.display = 'none';
+    }
+
+    var rows = (TICKETS[id] || []).filter(function(t){
+      return id !== 'dac' || activeEquipe === 'todas' || t.equipe === activeEquipe;
+    });
     document.getElementById('ticketRows').innerHTML = rows.map(function(t){
       var stars = t.csat ? '★★★★★'.slice(0, t.csat) + '☆☆☆☆☆'.slice(0, 5 - t.csat) : '—';
+      var subParts = [CANAL_LABEL[t.canal] || t.canal];
+      if (t.ambiente) subParts.push(t.ambiente + ' / ' + t.componente);
+      if (t.equipe) subParts.push(EQUIPE_LABEL[t.equipe]);
+      var custo = t.custo ? t.custo.toLocaleString('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:0 }) : '—';
       return '<div class="ticket-row">' +
-        '<div class="tt">' + t.titulo + '</div>' +
+        '<div class="tt">' + t.titulo + '<div class="ticket-sub">' + subParts.join(' · ') + '</div></div>' +
         '<div><span class="status-chip ' + t.status + '"><span class="dot"></span>' + STATUS_LABEL[t.status] + '</span></div>' +
         '<div><span class="pill prio-' + t.prio + '">' + t.prio + '</span></div>' +
         '<div>' + t.sla + '</div>' +
-        '<div class="stars">' + stars + '</div></div>';
+        '<div class="stars">' + stars + '</div>' +
+        '<div class="custo">' + custo + '</div></div>';
     }).join('') || '<div style="padding:16px;color:var(--muted);font-size:12.5px;">Nenhum chamado nesta área.</div>';
   }
   document.querySelectorAll('.dept-tab').forEach(function(tab){
@@ -782,15 +902,15 @@
 
   /* ---------------- Empreendimentos ---------------- */
   var EMPREENDIMENTOS = [
-    { nome:'EDITION', marca:'plaenge', cidade:'Porto Alegre, RS', disp:22, res:8, vend:65, bloq:5 },
-    { nome:'ORBITALE', marca:'plaenge', cidade:'Porto Alegre, RS', disp:41, res:12, vend:40, bloq:7 },
-    { nome:'TREND NANO', marca:'vanguard', cidade:'Porto Alegre, RS', disp:15, res:10, vend:70, bloq:5 },
-    { nome:'WAVE', marca:'vanguard', cidade:'Porto Alegre, RS', disp:58, res:9, vend:30, bloq:3 }
+    { nome:'EDITION', marca:'plaenge', cidade:'Porto Alegre, RS', regional:'Regional Porto Alegre Centro', disp:22, res:8, vend:65, bloq:5 },
+    { nome:'ORBITALE', marca:'plaenge', cidade:'Porto Alegre, RS', regional:'Regional Porto Alegre Centro', disp:41, res:12, vend:40, bloq:7 },
+    { nome:'TREND NANO', marca:'vanguard', cidade:'Porto Alegre, RS', regional:'Regional Porto Alegre Zona Sul', disp:15, res:10, vend:70, bloq:5 },
+    { nome:'WAVE', marca:'vanguard', cidade:'Porto Alegre, RS', regional:'Regional Porto Alegre Zona Sul', disp:58, res:9, vend:30, bloq:3 }
   ];
   document.getElementById('empGrid').innerHTML = EMPREENDIMENTOS.map(function(e){
     return '<div class="emp-card">' +
       '<div class="top-row"><h3>' + e.nome + '</h3><span class="brand-tag ' + e.marca + '">' + (e.marca === 'plaenge' ? 'Plaenge' : 'Vanguard') + '</span></div>' +
-      '<div class="city">' + e.cidade + '</div>' +
+      '<div class="city">' + e.cidade + ' · ' + e.regional + '</div>' +
       '<div class="stack-bar">' +
         '<div class="stack-seg disp" style="width:' + e.disp + '%"></div>' +
         '<div class="stack-seg res" style="width:' + e.res + '%"></div>' +

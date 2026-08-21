@@ -81,7 +81,7 @@
   ::selection { background: var(--accent); color: var(--accent-ink); }
   h1, h2, h3, .serif { font-family: var(--serif); font-weight: 600; letter-spacing: -0.01em; }
   button { font: inherit; }
-  button.chip, button.client-item, button.dept-bar-row, button.dept-tab {
+  button.chip, button.client-item, button.dept-bar-row, button.dept-tab, button.ticket-row {
     appearance: none; -webkit-appearance: none; margin: 0; color: inherit; font-family: inherit;
   }
   button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -291,14 +291,35 @@
   .dept-tab.active { background: var(--ink); color: var(--page); border-color: var(--ink); }
   .dept-tab.active .dot { box-shadow: 0 0 0 2px var(--page); }
 
-  .ticket-row { display:grid; grid-template-columns: 1fr 108px 92px 92px 78px 62px; gap:12px; align-items:center; padding: 13px 6px; border-bottom: 1px solid var(--grid); font-size:12.8px; }
+  .ticket-row { display:grid; grid-template-columns: 1fr 108px 92px 92px 78px 62px; gap:12px; align-items:center; padding: 13px 6px; border-bottom: 1px solid var(--grid); font-size:12.8px; width:100%; text-align:left; background:none; border-left:none; border-right:none; border-top:none; }
   .ticket-row:last-child { border-bottom:none; }
   .ticket-row.head { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color: var(--muted); font-weight:600; padding-bottom:8px; }
+  button.ticket-row { cursor:pointer; }
+  button.ticket-row:hover { background: var(--surface-alt); border-radius: var(--radius-sm); }
   .ticket-row .tt { font-weight:600; }
   .ticket-row .tt .id { color: var(--muted); font-weight:500; margin-right:6px; }
   .ticket-sub { font-weight:400; font-size:11px; color: var(--muted); margin-top:2px; }
   .ticket-row .custo { font-variant-numeric: tabular-nums; font-weight:600; }
   .stars { color: var(--accent); font-size: 12px; letter-spacing:1px; }
+
+  /* ---------- modal (criar/editar chamado) ---------- */
+  .modal-overlay { position:fixed; inset:0; background:rgba(11,11,11,.5); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; z-index:100; padding:20px; }
+  .modal { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); max-width:560px; width:100%; max-height:88vh; overflow-y:auto; border:1px solid var(--border); }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface); }
+  .modal-head h2 { margin:0; font-size:19px; }
+  .modal-close { width:30px; height:30px; border-radius:999px; border:1px solid var(--border); background:var(--surface-alt); cursor:pointer; color:var(--ink); }
+  .modal-body { padding:18px 22px; display:flex; flex-direction:column; gap:14px; }
+  .field { display:flex; flex-direction:column; gap:5px; flex:1; }
+  .field label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  .field input, .field select { padding:9px 11px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--page); color:var(--ink); font:inherit; font-size:13px; width:100%; }
+  .field input:focus, .field select:focus { outline:2px solid var(--accent); outline-offset:-1px; }
+  .field-row { display:flex; gap:12px; }
+  @media (max-width:480px) { .field-row { flex-direction:column; } }
+  .sla-preview { font-size:12px; color:var(--ink-2); background:var(--surface-alt); border-radius:var(--radius-sm); padding:9px 12px; }
+  .modal-foot { display:flex; justify-content:flex-end; gap:10px; padding:16px 22px; border-top:1px solid var(--border); }
+  .btn-ghost { padding:9px 16px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--ink); cursor:pointer; font:inherit; font-size:13px; font-weight:600; }
+  .btn-primary { padding:9px 18px; border-radius:999px; border:none; background:var(--ink); color:var(--page); cursor:pointer; font:inherit; font-size:13px; font-weight:600; }
+  .btn-primary:disabled { opacity:.6; cursor:default; }
 
   /* aderência a orçamento */
   .orc-row { padding: 10px 0; border-bottom: 1px solid var(--grid); }
@@ -398,10 +419,10 @@
       </div>
 
       <div class="kpi-grid">
-        <div class="kpi"><div class="label">SLA médio</div><div class="value">89%</div><div class="delta good">+3pp vs. mês anterior</div></div>
-        <div class="kpi"><div class="label">CSAT médio</div><div class="value">4.6</div><div class="delta good">142 avaliações</div></div>
-        <div class="kpi"><div class="label">Chamados abertos</div><div class="value">37</div><div class="delta warn">11 há mais de 7 dias</div></div>
-        <div class="kpi"><div class="label">Custo médio/chamado</div><div class="value">R$ 890</div><div class="delta good">-6% vs. mês anterior</div></div>
+        <div class="kpi"><div class="label">SLA médio</div><div class="value" id="kpiSLA">—</div><div class="delta good" id="kpiSLADelta"></div></div>
+        <div class="kpi"><div class="label">CSAT médio</div><div class="value" id="kpiCSAT">—</div><div class="delta good" id="kpiCSATDelta"></div></div>
+        <div class="kpi"><div class="label">Chamados abertos</div><div class="value" id="kpiAbertos">—</div><div class="delta warn" id="kpiAbertosDelta"></div></div>
+        <div class="kpi"><div class="label">Custo médio/chamado</div><div class="value" id="kpiCusto">—</div><div class="delta good" id="kpiCustoDelta"></div></div>
         <div class="kpi"><div class="label">VGV em negociação</div><div class="value">R$ 42,8M</div><div class="delta good">33 propostas ativas</div></div>
         <div class="kpi"><div class="label">Vendas no mês</div><div class="value">14</div><div class="delta good">R$ 18,1M</div></div>
       </div>
@@ -419,7 +440,7 @@
 
       <div class="grid-2">
         <div class="card">
-          <div class="card-title">Aging de chamados abertos <span style="text-transform:none;font-weight:400;">(37 no total)</span></div>
+          <div class="card-title">Aging de chamados abertos <span id="agingCardTotal" style="text-transform:none;font-weight:400;"></span></div>
           <div id="agingDist"></div>
         </div>
         <div class="card">
@@ -438,7 +459,7 @@
         </div>
       </div>
 
-      <div class="footnote">Modelo em validação — todos os valores exibidos são fictícios (placeholder), usados para avaliar estrutura e leitura visual do painel antes de conectar aos dados reais.</div>
+      <div class="footnote">Modelo em validação — os chamados de exemplo são fictícios, mas todo número acima (SLA, CSAT, custo, aging, aderência a orçamento) é <b>calculado ao vivo</b> a partir dos mesmos campos do plano de banco de dados (PLANO_BANCO_DE_DADOS.md) — crie ou edite um chamado na aba Chamados para ver recalcular.</div>
     </section>
 
     <!-- ============ CLIENTE 360 ============ -->
@@ -486,8 +507,9 @@
       <div class="view-head">
         <div>
           <h1>Chamados</h1>
-          <p>Cada área vê apenas os próprios chamados — este piloto simula a troca de departamento para demonstrar o isolamento.</p>
+          <p>Cada área vê apenas os próprios chamados — este piloto simula a troca de departamento para demonstrar o isolamento. Clique em um chamado para editar, ou crie um novo — o dashboard recalcula na hora.</p>
         </div>
+        <button type="button" class="btn-primary" id="btnNovoChamado">+ Novo chamado</button>
       </div>
       <div class="dept-tabs" id="deptTabs"></div>
       <div class="filter-row" id="equipeFilter" style="display:none;"></div>
@@ -515,6 +537,61 @@
     </section>
 
   </main>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" style="display:none;">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <h2 id="modalTitle" class="serif">Novo chamado</h2>
+      <button type="button" class="modal-close" id="modalClose" aria-label="Fechar">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label for="fCliente">Cliente</label><select id="fCliente"></select></div>
+      <div class="field-row">
+        <div class="field"><label for="fDepartamento">Departamento</label><select id="fDepartamento"></select></div>
+        <div class="field"><label for="fTipo">Tipo</label><select id="fTipo"></select></div>
+      </div>
+      <div class="field"><label for="fTitulo">Título</label><input type="text" id="fTitulo" placeholder="Ex.: Infiltração banheiro suíte"></div>
+      <div class="field-row">
+        <div class="field"><label for="fPrioridade">Prioridade</label>
+          <select id="fPrioridade">
+            <option value="baixa">Baixa</option><option value="media">Média</option><option value="alta">Alta</option><option value="urgente">Urgente</option>
+          </select>
+        </div>
+        <div class="field"><label for="fCanal">Canal de origem</label>
+          <select id="fCanal">
+            <option value="whatsapp">WhatsApp</option><option value="pvc">PVC</option><option value="hub">Hub</option><option value="interno">Interno</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row" id="fDacRow" style="display:none;">
+        <div class="field"><label for="fEquipe">Equipe</label>
+          <select id="fEquipe"><option value="pos_venda">Pós-Venda</option><option value="pos_ocupacao">Pós-Ocupação</option></select>
+        </div>
+        <div class="field"><label for="fEmpreendimento">Empreendimento</label><select id="fEmpreendimento"></select></div>
+      </div>
+      <div class="field-row" id="fAmbienteRow" style="display:none;">
+        <div class="field"><label for="fAmbiente">Ambiente</label><input type="text" id="fAmbiente" placeholder="Ex.: Banheiro"></div>
+        <div class="field"><label for="fComponente">Componente</label><input type="text" id="fComponente" placeholder="Ex.: Impermeabilização"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="fStatus">Status</label><select id="fStatus"></select></div>
+        <div class="field"><label for="fCusto">Custo lançado (R$)</label><input type="number" id="fCusto" min="0" step="1" placeholder="opcional"></div>
+      </div>
+      <div class="field" id="fCsatField" style="display:none;">
+        <label for="fCsat">CSAT do cliente</label>
+        <select id="fCsat">
+          <option value="">— aguardando resposta —</option>
+          <option value="5">5 · Ótimo</option><option value="4">4 · Bom</option><option value="3">3 · Regular</option><option value="2">2 · Ruim</option><option value="1">1 · Péssimo</option>
+        </select>
+      </div>
+      <div class="sla-preview" id="slaPreview"></div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn-ghost" id="modalCancel">Cancelar</button>
+      <button type="button" class="btn-primary" id="modalSave">Salvar</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -573,94 +650,196 @@
       '<div class="n">' + f.n + '</div></div>';
   }).join('');
 
-  /* ---------------- dashboard: dept bars ---------------- */
-  var deptOpen = { comercial:6, marketing:2, incorporacao:9, engenharia:11, dac:7, financeiro:2 };
-  var maxOpen = Math.max.apply(null, Object.values(deptOpen));
-  document.getElementById('deptBars').innerHTML = DEPTS.map(function(d){
-    var n = deptOpen[d.id];
-    var pct = Math.round(n / maxOpen * 100);
-    return barRowHTML(d.label, n, pct, d.color, true, ' data-dept="' + d.id + '" aria-label="Filtrar chamados de ' + d.label + '"');
-  }).join('');
-  document.querySelectorAll('#deptBars .dept-bar-row').forEach(function(row){
-    row.addEventListener('click', function(){
-      var d = row.dataset.dept;
-      document.querySelectorAll('.side-item').forEach(function(b){ b.classList.remove('active'); });
-      document.querySelector('.side-item[data-view="chamados"]').classList.add('active');
-      document.querySelectorAll('section.view').forEach(function(s){ s.classList.remove('active'); });
-      document.getElementById('view-chamados').classList.add('active');
-      selectDeptTab(d);
-    });
-  });
+  /* ================================================================
+     Modelo de dados único (mirrors PLANO_BANCO_DE_DADOS.md): todo KPI,
+     gráfico e tabela do dashboard é DERIVADO de CHAMADOS/EMPREENDIMENTOS
+     — nada é digitado duas vezes. Criar/editar um chamado (ver modal no
+     fim do arquivo) escreve neste mesmo array e tudo recalcula.
+     ================================================================ */
 
-  /* ---------------- dashboard: aging distribution (view_chamados_aging) ---------------- */
-  var AGING_BUCKETS = [
-    { id:'ate_30',      label:'0–30 dias',    color:'var(--status-good)' },
-    { id:'31_a_60',     label:'31–60 dias',   color:'var(--status-good)' },
-    { id:'61_a_90',     label:'61–90 dias',   color:'var(--status-warning)' },
-    { id:'91_a_120',    label:'91–120 dias',  color:'var(--status-warning)' },
-    { id:'121_a_180',   label:'121–180 dias', color:'var(--status-serious)' },
-    { id:'181_a_365',   label:'181–365 dias', color:'var(--status-serious)' },
-    { id:'366_a_540',   label:'366–540 dias', color:'var(--status-critical)' },
-    { id:'mais_de_540', label:'+540 dias',    color:'var(--status-critical)' }
+  var EMPREENDIMENTOS = [
+    { nome:'EDITION', marca:'plaenge', cidade:'Porto Alegre, RS', regional:'Regional Porto Alegre Centro', orcamentoObra:45000000, disp:22, res:8, vend:65, bloq:5 },
+    { nome:'ORBITALE', marca:'plaenge', cidade:'Porto Alegre, RS', regional:'Regional Porto Alegre Centro', orcamentoObra:62000000, disp:41, res:12, vend:40, bloq:7 },
+    { nome:'TREND NANO', marca:'vanguard', cidade:'Porto Alegre, RS', regional:'Regional Porto Alegre Zona Sul', orcamentoObra:28000000, disp:15, res:10, vend:70, bloq:5 },
+    { nome:'WAVE', marca:'vanguard', cidade:'Porto Alegre, RS', regional:'Regional Porto Alegre Zona Sul', orcamentoObra:34000000, disp:58, res:9, vend:30, bloq:3 },
+    { nome:'MOOD', marca:'vanguard', cidade:'Porto Alegre, RS', regional:'Regional Porto Alegre Zona Sul', orcamentoObra:21000000, disp:33, res:14, vend:48, bloq:5 }
   ];
-  var agingCounts = { ate_30:22, '31_a_60':8, '61_a_90':4, '91_a_120':2, '121_a_180':1, '181_a_365':0, '366_a_540':0, mais_de_540:0 };
+  function empByNome(nome){ return EMPREENDIMENTOS.find(function(e){ return e.nome === nome; }); }
+  function formatBRL(v){ return v.toLocaleString('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:0 }); }
+
+  var SLA_CONFIG = {
+    baixa:   { resposta:24, resolucao:120 },
+    media:   { resposta:12, resolucao:72 },
+    alta:    { resposta:4,  resolucao:48 },
+    urgente: { resposta:1,  resolucao:24 }
+  };
+  var TIPOS_POR_DEPARTAMENTO = {
+    comercial:    [['agendamento','Agendamento'],['atendimento','Atendimento'],['proposta','Proposta'],['pos_venda_upsell','Pós-venda / Upsell']],
+    marketing:    [['evento','Evento'],['investimento_imobiliaria','Investimento em imobiliária'],['leads_campanha','Leads de campanha']],
+    incorporacao: [['contrato_pendente','Contrato pendente'],['documentacao','Documentação'],['aprovacao_financiamento','Aprovação de financiamento'],['distrato','Distrato']],
+    engenharia:   [['vistoria_pre_entrega','Vistoria pré-entrega'],['atraso_obra','Atraso de obra'],['entrega_chaves','Entrega de chaves'],['ajuste_projeto','Ajuste de projeto']],
+    dac:          [['assistencia_tecnica','Assistência técnica'],['reclamacao_qualidade','Reclamação de qualidade'],['garantia','Garantia'],['manutencao','Manutenção']],
+    financeiro:   [['segunda_via_boleto','Segunda via de boleto'],['renegociacao','Renegociação'],['inadimplencia','Inadimplência'],['repasse_bancario','Repasse bancário'],['distrato_financeiro','Distrato financeiro']]
+  };
+  function tipoLabel(dept, tipoId){ return (TIPOS_POR_DEPARTAMENTO[dept].find(function(x){ return x[0] === tipoId; }) || [null, tipoId])[1]; }
+  var STATUS_LABEL = { aberto:'Aberto', em_andamento:'Em andamento', aguardando_cliente:'Aguard. cliente', aguardando_terceiro:'Aguard. terceiro', resolvido:'Resolvido', cancelado:'Cancelado' };
+  var CANAL_LABEL = { pvc:'PVC', whatsapp:'WhatsApp', hub:'Hub', interno:'Interno' };
+  var EQUIPE_LABEL = { pos_venda:'Pós-Venda', pos_ocupacao:'Pós-Ocupação' };
+
+  function daysAgoISO(n){ var d = new Date(); d.setTime(d.getTime() - n * 86400000); return d.toISOString(); }
+  function hoursBetween(a, b){ return (new Date(b) - new Date(a)) / 3600000; }
+
+  var chamadoSeq = 16;
+  var CHAMADOS = [
+    { id:'c1', clienteId:null, departamento:'comercial', tipo:'proposta', titulo:'Follow-up de proposta — André Villa', status:'em_andamento', prioridade:'media', canal:'hub', empreendimento:null, createdAt:daysAgoISO(1), resolvidoEm:null, csat:null, custo:null },
+    { id:'c2', clienteId:null, departamento:'comercial', tipo:'pos_venda_upsell', titulo:'Upsell — 2ª unidade para cliente recorrente', status:'aberto', prioridade:'baixa', canal:'whatsapp', empreendimento:null, createdAt:daysAgoISO(0.3), resolvidoEm:null, csat:null, custo:null },
+    { id:'c3', clienteId:null, departamento:'marketing', tipo:'investimento_imobiliaria', titulo:'Investimento evento lançamento WAVE', status:'em_andamento', prioridade:'media', canal:'interno', empreendimento:null, createdAt:daysAgoISO(3), resolvidoEm:null, csat:null, custo:null },
+    { id:'c4', clienteId:1, departamento:'marketing', tipo:'evento', titulo:'Campanha relacionamento pós-venda — Marina Bittencourt', status:'resolvido', prioridade:'baixa', canal:'interno', empreendimento:null, createdAt:daysAgoISO(40), resolvidoEm:daysAgoISO(38), csat:5, custo:null },
+    { id:'c5', clienteId:2, departamento:'incorporacao', tipo:'aprovacao_financiamento', titulo:'Aprovação de financiamento — Rafael Duarte', status:'aguardando_cliente', prioridade:'media', canal:'whatsapp', empreendimento:null, createdAt:daysAgoISO(5), resolvidoEm:null, csat:null, custo:null },
+    { id:'c6', clienteId:3, departamento:'incorporacao', tipo:'documentacao', titulo:'Habite-se — Construtora Alfa (Loja 12)', status:'em_andamento', prioridade:'alta', canal:'interno', empreendimento:null, createdAt:daysAgoISO(9), resolvidoEm:null, csat:null, custo:null },
+    { id:'c7', clienteId:1, departamento:'incorporacao', tipo:'documentacao', titulo:'Documentação — Marina Bittencourt', status:'resolvido', prioridade:'media', canal:'whatsapp', empreendimento:null, createdAt:daysAgoISO(70), resolvidoEm:daysAgoISO(66), csat:5, custo:null },
+    { id:'c8', clienteId:null, departamento:'engenharia', tipo:'atraso_obra', titulo:'Atraso de obra — TREND NANO', status:'em_andamento', prioridade:'alta', canal:'interno', empreendimento:'TREND NANO', createdAt:daysAgoISO(18), resolvidoEm:null, csat:null, custo:null },
+    { id:'c9', clienteId:2, departamento:'engenharia', tipo:'vistoria_pre_entrega', titulo:'Vistoria pré-entrega — Rafael Duarte (Orbitale 1103)', status:'aberto', prioridade:'media', canal:'whatsapp', empreendimento:'ORBITALE', createdAt:daysAgoISO(2), resolvidoEm:null, csat:null, custo:null },
+    { id:'c10', clienteId:1, departamento:'engenharia', tipo:'entrega_chaves', titulo:'Entrega de chaves — Marina Bittencourt (Edition 402)', status:'resolvido', prioridade:'media', canal:'interno', empreendimento:'EDITION', createdAt:daysAgoISO(50), resolvidoEm:daysAgoISO(50), csat:5, custo:null },
+    { id:'c11', clienteId:1, departamento:'dac', tipo:'assistencia_tecnica', titulo:'Infiltração banheiro suíte — Marina Bittencourt (Edition 402)', status:'resolvido', prioridade:'alta', canal:'whatsapp', equipe:'pos_venda', ambiente:'Banheiro', componente:'Impermeabilização', empreendimento:'EDITION', createdAt:daysAgoISO(31), resolvidoEm:daysAgoISO(29), csat:5, custo:1450 },
+    { id:'c12', clienteId:null, departamento:'dac', tipo:'reclamacao_qualidade', titulo:'Ruído em porta de armário — WAVE 305', status:'aberto', prioridade:'baixa', canal:'pvc', equipe:'pos_ocupacao', ambiente:'Dormitório', componente:'Portas e Janelas', empreendimento:'WAVE', createdAt:daysAgoISO(0.5), resolvidoEm:null, csat:null, custo:null },
+    { id:'c13', clienteId:null, departamento:'dac', tipo:'manutencao', titulo:'Assistência técnica — MOOD 1201', status:'em_andamento', prioridade:'urgente', canal:'whatsapp', equipe:'pos_venda', ambiente:'Cozinha', componente:'Hidráulica', empreendimento:'MOOD', createdAt:daysAgoISO(12), resolvidoEm:null, csat:null, custo:620 },
+    { id:'c14', clienteId:null, departamento:'dac', tipo:'garantia', titulo:'Trinca em revestimento — TREND NANO 802', status:'em_andamento', prioridade:'media', canal:'hub', equipe:'pos_ocupacao', ambiente:'Sala', componente:'Revestimentos', empreendimento:'TREND NANO', createdAt:daysAgoISO(145), resolvidoEm:null, csat:null, custo:310 },
+    { id:'c15', clienteId:1, departamento:'financeiro', tipo:'segunda_via_boleto', titulo:'Segunda via de boleto — Marina Bittencourt', status:'resolvido', prioridade:'baixa', canal:'whatsapp', empreendimento:null, createdAt:daysAgoISO(10), resolvidoEm:daysAgoISO(10), csat:4, custo:null },
+    { id:'c16', clienteId:4, departamento:'financeiro', tipo:'renegociacao', titulo:'Renegociação — Eduardo Ramos', status:'em_andamento', prioridade:'alta', canal:'hub', empreendimento:null, createdAt:daysAgoISO(7), resolvidoEm:null, csat:null, custo:null }
+  ];
+
+  var AGING_BUCKETS = [
+    { id:'ate_30',      label:'0–30 dias',    color:'var(--status-good)',     max:30 },
+    { id:'31_a_60',     label:'31–60 dias',   color:'var(--status-good)',     max:60 },
+    { id:'61_a_90',     label:'61–90 dias',   color:'var(--status-warning)',  max:90 },
+    { id:'91_a_120',    label:'91–120 dias',  color:'var(--status-warning)',  max:120 },
+    { id:'121_a_180',   label:'121–180 dias', color:'var(--status-serious)',  max:180 },
+    { id:'181_a_365',   label:'181–365 dias', color:'var(--status-serious)',  max:365 },
+    { id:'366_a_540',   label:'366–540 dias', color:'var(--status-critical)', max:540 },
+    { id:'mais_de_540', label:'+540 dias',    color:'var(--status-critical)', max:Infinity }
+  ];
   function agingFaixa(dias){
-    if (dias <= 30) return AGING_BUCKETS[0];
-    if (dias <= 60) return AGING_BUCKETS[1];
-    if (dias <= 90) return AGING_BUCKETS[2];
-    if (dias <= 120) return AGING_BUCKETS[3];
-    if (dias <= 180) return AGING_BUCKETS[4];
-    if (dias <= 365) return AGING_BUCKETS[5];
-    if (dias <= 540) return AGING_BUCKETS[6];
-    return AGING_BUCKETS[7];
+    for (var i = 0; i < AGING_BUCKETS.length; i++) if (dias <= AGING_BUCKETS[i].max) return AGING_BUCKETS[i];
+    return AGING_BUCKETS[AGING_BUCKETS.length - 1];
   }
-  var maxAgingCount = Math.max.apply(null, Object.values(agingCounts));
-  document.getElementById('agingDist').innerHTML = AGING_BUCKETS
-    .filter(function(b){ return agingCounts[b.id] > 0; })
-    .map(function(b){
-      var n = agingCounts[b.id];
-      var pct = Math.round(n / maxAgingCount * 100);
-      return barRowHTML(b.label, n, pct, b.color, false);
+  function diasAbertos(c){ return Math.floor(hoursBetween(c.createdAt, new Date().toISOString()) / 24); }
+  function isAberto(c){ return c.status !== 'resolvido' && c.status !== 'cancelado'; }
+
+  /* ---- métricas: cada uma lê só os campos que o schema declara — nada inventado ---- */
+  function computeDeptOpen(){
+    var m = {}; DEPTS.forEach(function(d){ m[d.id] = 0; });
+    CHAMADOS.forEach(function(c){ if (isAberto(c)) m[c.departamento]++; });
+    return m;
+  }
+  function computeAgingDist(){
+    var m = {}; AGING_BUCKETS.forEach(function(b){ m[b.id] = 0; });
+    CHAMADOS.forEach(function(c){ if (isAberto(c)) m[agingFaixa(diasAbertos(c)).id]++; });
+    return m;
+  }
+  function computeSLA(){
+    var total = 0, dentro = 0;
+    CHAMADOS.forEach(function(c){
+      total++;
+      var decorrido = c.status === 'resolvido' && c.resolvidoEm ? hoursBetween(c.createdAt, c.resolvidoEm) : hoursBetween(c.createdAt, new Date().toISOString());
+      var meta = (SLA_CONFIG[c.prioridade] || SLA_CONFIG.media).resolucao;
+      if (decorrido <= meta) dentro++;
+    });
+    return { pct: total ? Math.round(dentro / total * 100) : 0, dentro:dentro, total:total };
+  }
+  function computeCSAT(){
+    var notas = CHAMADOS.map(function(c){ return c.csat; }).filter(function(n){ return !!n; });
+    return { media: notas.length ? notas.reduce(function(a,b){ return a+b; }, 0) / notas.length : 0, count: notas.length };
+  }
+  function computeCustoMedio(){
+    var custos = CHAMADOS.map(function(c){ return c.custo; }).filter(function(v){ return !!v; });
+    return { media: custos.length ? custos.reduce(function(a,b){ return a+b; }, 0) / custos.length : 0, count: custos.length };
+  }
+  function computeOndeTravou(){
+    return CHAMADOS.filter(isAberto).map(function(c){ return { c:c, dias: diasAbertos(c) }; })
+      .sort(function(a,b){ return b.dias - a.dias; }).slice(0, 5);
+  }
+  function computeOrcamento(){
+    var porRegional = {};
+    EMPREENDIMENTOS.forEach(function(e){
+      if (!porRegional[e.regional]) porRegional[e.regional] = { regional:e.regional, marca: e.marca === 'plaenge' ? 'Plaenge' : 'Vanguard', orcamento:0, custo:0 };
+      porRegional[e.regional].orcamento += e.orcamentoObra;
+    });
+    CHAMADOS.forEach(function(c){
+      if (c.departamento === 'dac' && c.custo && c.empreendimento) {
+        var emp = empByNome(c.empreendimento);
+        if (emp && porRegional[emp.regional]) porRegional[emp.regional].custo += c.custo;
+      }
+    });
+    return Object.values(porRegional).map(function(r){
+      return { regional:r.regional.replace('Regional ', ''), marca:r.marca, meta:2.0, realizado: r.orcamento ? (r.custo / r.orcamento * 100) : 0 };
+    });
+  }
+
+  function renderDashboard(){
+    var deptOpen = computeDeptOpen();
+    var maxOpen = Math.max.apply(null, Object.values(deptOpen).concat([1]));
+    document.getElementById('deptBars').innerHTML = DEPTS.map(function(d){
+      var n = deptOpen[d.id];
+      return barRowHTML(d.label, n, Math.round(n / maxOpen * 100), d.color, true, ' data-dept="' + d.id + '" aria-label="Filtrar chamados de ' + d.label + '"');
+    }).join('');
+    document.querySelectorAll('#deptBars .dept-bar-row').forEach(function(row){
+      row.addEventListener('click', function(){
+        document.querySelectorAll('.side-item').forEach(function(b){ b.classList.remove('active'); });
+        document.querySelector('.side-item[data-view="chamados"]').classList.add('active');
+        document.querySelectorAll('section.view').forEach(function(s){ s.classList.remove('active'); });
+        document.getElementById('view-chamados').classList.add('active');
+        selectDeptTab(row.dataset.dept);
+      });
+    });
+
+    var agingCounts = computeAgingDist();
+    var maxAgingCount = Math.max.apply(null, Object.values(agingCounts).concat([1]));
+    document.getElementById('agingDist').innerHTML = AGING_BUCKETS.filter(function(b){ return agingCounts[b.id] > 0; })
+      .map(function(b){ return barRowHTML(b.label, agingCounts[b.id], Math.round(agingCounts[b.id] / maxAgingCount * 100), b.color, false); })
+      .join('') || '<div style="color:var(--muted);font-size:12.5px;">Nenhum chamado aberto no momento.</div>';
+
+    var orcamento = computeOrcamento();
+    document.getElementById('orcamentoBars').innerHTML = orcamento.map(function(o){
+      var casas = o.realizado > 0 && o.realizado < 0.1 ? 3 : 1;
+      var color = o.realizado <= o.meta ? 'var(--status-good)' : (o.realizado <= o.meta * 1.15 ? 'var(--status-warning)' : 'var(--status-critical)');
+      var scale = o.meta * 1.6;
+      var barPct = o.realizado > 0 ? Math.max(3, Math.min(100, Math.round(o.realizado / scale * 100))) : 0;
+      var markPct = Math.min(100, Math.round(o.meta / scale * 100));
+      return '<div class="orc-row">' +
+        '<div class="orc-head"><span class="orc-regional">' + o.regional + '<span class="marca">' + o.marca + '</span></span>' +
+        '<span class="orc-val" style="color:' + color + '">' + o.realizado.toFixed(casas) + '% <span class="meta">/ meta ' + o.meta.toFixed(1) + '%</span></span></div>' +
+        '<div class="orc-track"><div class="orc-fill" style="width:' + barPct + '%;background:' + color + '"></div><div class="orc-mark" style="left:' + markPct + '%"></div></div></div>';
     }).join('');
 
-  /* ---------------- dashboard: aderência ao orçamento por regional (metas_orcamento) ---------------- */
-  var ORCAMENTO = [
-    { regional:'Porto Alegre Centro', marca:'Plaenge',  meta:2.0, realizado:1.6 },
-    { regional:'Porto Alegre Zona Sul', marca:'Vanguard', meta:2.0, realizado:2.4 },
-    { regional:'Londrina', marca:'Plaenge', meta:2.0, realizado:1.9 }
-  ];
-  var ORC_SCALE = 3.0;
-  document.getElementById('orcamentoBars').innerHTML = ORCAMENTO.map(function(o){
-    var fillPct = Math.min(100, Math.round(o.realizado / ORC_SCALE * 100));
-    var markPct = Math.min(100, Math.round(o.meta / ORC_SCALE * 100));
-    var color = o.realizado <= o.meta ? 'var(--status-good)' : (o.realizado <= o.meta * 1.15 ? 'var(--status-warning)' : 'var(--status-critical)');
-    return '<div class="orc-row">' +
-      '<div class="orc-head"><span class="orc-regional">' + o.regional + '<span class="marca">' + o.marca + '</span></span>' +
-      '<span class="orc-val" style="color:' + color + '">' + o.realizado.toFixed(1) + '% <span class="meta">/ meta ' + o.meta.toFixed(1) + '%</span></span></div>' +
-      '<div class="orc-track"><div class="orc-fill" style="width:' + fillPct + '%;background:' + color + '"></div>' +
-      '<div class="orc-mark" style="left:' + markPct + '%"></div></div></div>';
-  }).join('');
+    var travou = computeOndeTravou();
+    var maxDias = travou.length ? travou[0].dias : 1;
+    document.getElementById('agingRows').innerHTML = travou.map(function(t){
+      var c = t.c, d = deptById(c.departamento), faixa = agingFaixa(t.dias);
+      var pct = Math.round(t.dias / (maxDias || 1) * 100);
+      var fillColor = t.dias > 90 ? 'var(--status-critical)' : (t.dias > 30 ? 'var(--status-warning)' : 'var(--status-good)');
+      return '<tr><td class="tt">' + c.titulo + '</td>' +
+        '<td><span class="pill dept" style="background:' + d.color + '">' + d.label + '</span></td>' +
+        '<td>' + tipoLabel(c.departamento, c.tipo) + '</td>' +
+        '<td><span class="pill prio-' + c.prioridade + '">' + c.prioridade + '</span></td>' +
+        '<td style="color:' + faixa.color + '">' + faixa.label + '</td>' +
+        '<td><div class="aging-bar"><div class="aging-track"><div class="aging-fill" style="width:' + pct + '%;background:' + fillColor + '"></div></div>' + t.dias + 'd</div></td></tr>';
+    }).join('') || '<tr><td colspan="6" style="color:var(--muted);padding:10px 0;">Nenhum chamado aberto.</td></tr>';
 
-  /* ---------------- dashboard: aging table ---------------- */
-  var aging = [
-    { id:'#1042', dept:'engenharia', tipo:'Atraso de obra', dias:18, prio:'alta' },
-    { id:'#1077', dept:'dac', tipo:'Assistência técnica', dias:12, prio:'urgente' },
-    { id:'#1030', dept:'incorporacao', tipo:'Aprovação de financiamento', dias:9, prio:'media' },
-    { id:'#1090', dept:'financeiro', tipo:'Renegociação', dias:7, prio:'alta' }
-  ];
-  var maxDias = Math.max.apply(null, aging.map(function(a){ return a.dias; }));
-  document.getElementById('agingRows').innerHTML = aging.map(function(a){
-    var d = deptById(a.dept);
-    var pct = Math.round(a.dias / maxDias * 100);
-    var fillColor = a.dias > 14 ? 'var(--status-critical)' : (a.dias > 8 ? 'var(--status-warning)' : 'var(--status-good)');
-    var faixa = agingFaixa(a.dias);
-    return '<tr><td class="tt">' + a.id + '</td>' +
-      '<td><span class="pill dept" style="background:' + d.color + '">' + d.label + '</span></td>' +
-      '<td>' + a.tipo + '</td>' +
-      '<td><span class="pill prio-' + a.prio + '">' + a.prio + '</span></td>' +
-      '<td style="color:' + faixa.color + '">' + faixa.label + '</td>' +
-      '<td><div class="aging-bar"><div class="aging-track"><div class="aging-fill" style="width:' + pct + '%;background:' + fillColor + '"></div></div>' + a.dias + 'd</div></td></tr>';
-  }).join('');
+    var sla = computeSLA(), csat = computeCSAT(), custo = computeCustoMedio();
+    var abertosTotal = CHAMADOS.filter(isAberto).length;
+    var abertosMais7 = CHAMADOS.filter(function(c){ return isAberto(c) && diasAbertos(c) > 7; }).length;
+
+    document.getElementById('kpiSLA').textContent = sla.pct + '%';
+    document.getElementById('kpiSLADelta').textContent = sla.dentro + '/' + sla.total + ' dentro do prazo';
+    document.getElementById('kpiCSAT').textContent = csat.count ? csat.media.toFixed(1) : '—';
+    document.getElementById('kpiCSATDelta').textContent = csat.count + ' avaliações';
+    document.getElementById('kpiAbertos').textContent = abertosTotal;
+    document.getElementById('kpiAbertosDelta').textContent = abertosMais7 + ' há mais de 7 dias';
+    document.getElementById('kpiCusto').textContent = custo.count ? formatBRL(Math.round(custo.media)) : '—';
+    document.getElementById('kpiCustoDelta').textContent = custo.count + ' lançamento' + (custo.count === 1 ? '' : 's');
+    document.getElementById('agingCardTotal').textContent = '(' + abertosTotal + ' no total)';
+  }
 
   /* ---------------- Cliente 360 ---------------- */
   var CLIENTS = [
@@ -813,50 +992,44 @@
       }).join('') + '</div>';
   }).join('');
 
-  /* ---------------- Chamados ---------------- */
-  var TICKETS = {
-    comercial: [
-      { titulo:'Follow-up de proposta — André Villa', status:'em_andamento', prio:'media', sla:'2h restantes', csat:null, canal:'hub' },
-      { titulo:'Upsell — 2ª unidade para cliente recorrente', status:'aberto', prio:'baixa', sla:'6h restantes', csat:null, canal:'whatsapp' }
-    ],
-    marketing: [
-      { titulo:'Investimento evento lançamento WAVE', status:'em_andamento', prio:'media', sla:'—', csat:null, canal:'interno' },
-      { titulo:'Campanha relacionamento pós-venda — Fev/26', status:'resolvido', prio:'baixa', sla:'—', csat:5, canal:'interno' }
-    ],
-    incorporacao: [
-      { titulo:'Aprovação de financiamento — Rafael Duarte', status:'aguardando_cliente', prio:'media', sla:'aguardando doc.', csat:null, canal:'whatsapp' },
-      { titulo:'Habite-se — SYNTHÈ Loja 12', status:'em_andamento', prio:'alta', sla:'9d parado', csat:null, canal:'interno' },
-      { titulo:'Documentação — Marina Bittencourt', status:'resolvido', prio:'media', sla:'—', csat:5, canal:'whatsapp' }
-    ],
-    engenharia: [
-      { titulo:'Atraso de obra — TREND NANO', status:'em_andamento', prio:'alta', sla:'18d parado', csat:null, canal:'interno' },
-      { titulo:'Vistoria pré-entrega — ORBITALE 1103', status:'aberto', prio:'media', sla:'agendar', csat:null, canal:'whatsapp' },
-      { titulo:'Entrega de chaves — EDITION 402', status:'resolvido', prio:'media', sla:'—', csat:5, canal:'interno' }
-    ],
-    dac: [
-      { titulo:'Infiltração banheiro suíte — EDITION 402', status:'resolvido', prio:'alta', sla:'—', csat:5,
-        canal:'whatsapp', equipe:'pos_venda', ambiente:'Banheiro', componente:'Impermeabilização', custo:1450 },
-      { titulo:'Ruído em porta de armário — WAVE 305', status:'aberto', prio:'baixa', sla:'12h restantes', csat:null,
-        canal:'pvc', equipe:'pos_ocupacao', ambiente:'Dormitório', componente:'Portas e Janelas', custo:null },
-      { titulo:'Assistência técnica — MOOD 1201', status:'em_andamento', prio:'urgente', sla:'12d parado', csat:null,
-        canal:'whatsapp', equipe:'pos_venda', ambiente:'Cozinha', componente:'Hidráulica', custo:620 }
-    ],
-    financeiro: [
-      { titulo:'Segunda via de boleto — Marina Bittencourt', status:'resolvido', prio:'baixa', sla:'—', csat:4, canal:'whatsapp' },
-      { titulo:'Renegociação — Eduardo Ramos', status:'em_andamento', prio:'alta', sla:'7d parado', csat:null, canal:'hub' }
-    ]
-  };
-  var STATUS_LABEL = { aberto:'Aberto', em_andamento:'Em andamento', aguardando_cliente:'Aguard. cliente', resolvido:'Resolvido' };
-  var CANAL_LABEL = { pvc:'PVC', whatsapp:'WhatsApp', hub:'Hub', interno:'Interno' };
-  var EQUIPE_LABEL = { pos_venda:'Pós-Venda', pos_ocupacao:'Pós-Ocupação' };
-
+  /* ---------------- Chamados: listagem por área + filtro de equipe (DAC) ---------------- */
   document.getElementById('deptTabs').innerHTML = DEPTS.map(function(d){
     return '<button type="button" class="dept-tab" data-dept="' + d.id + '" aria-pressed="false"><span class="dot" style="background:' + d.color + '"></span>' + d.label + '</button>';
   }).join('');
 
+  var activeDept = 'dac';
   var activeEquipe = 'todas';
 
+  function renderTicketRows(){
+    var rows = CHAMADOS.filter(function(c){
+      if (c.departamento !== activeDept) return false;
+      if (activeDept === 'dac' && activeEquipe !== 'todas' && c.equipe !== activeEquipe) return false;
+      return true;
+    }).slice().sort(function(a,b){ return new Date(b.createdAt) - new Date(a.createdAt); });
+
+    document.getElementById('ticketRows').innerHTML = rows.map(function(c){
+      var stars = c.csat ? '★★★★★'.slice(0, c.csat) + '☆☆☆☆☆'.slice(0, 5 - c.csat) : '—';
+      var subParts = [CANAL_LABEL[c.canal] || c.canal];
+      if (c.ambiente) subParts.push(c.ambiente + ' / ' + c.componente);
+      if (c.equipe) subParts.push(EQUIPE_LABEL[c.equipe]);
+      var slaTxt = c.status === 'resolvido' ? '—' : diasAbertos(c) + 'd aberto';
+      var custo = c.custo ? formatBRL(c.custo) : '—';
+      return '<button type="button" class="ticket-row" data-id="' + c.id + '">' +
+        '<div class="tt">' + c.titulo + '<div class="ticket-sub">' + subParts.join(' · ') + '</div></div>' +
+        '<div><span class="status-chip ' + c.status + '"><span class="dot"></span>' + STATUS_LABEL[c.status] + '</span></div>' +
+        '<div><span class="pill prio-' + c.prioridade + '">' + c.prioridade + '</span></div>' +
+        '<div>' + slaTxt + '</div>' +
+        '<div class="stars">' + stars + '</div>' +
+        '<div class="custo">' + custo + '</div></button>';
+    }).join('') || '<div style="padding:16px;color:var(--muted);font-size:12.5px;">Nenhum chamado nesta área.</div>';
+
+    document.querySelectorAll('#ticketRows .ticket-row').forEach(function(row){
+      row.addEventListener('click', function(){ openModal(row.dataset.id); });
+    });
+  }
+
   function selectDeptTab(id){
+    activeDept = id;
     document.querySelectorAll('.dept-tab').forEach(function(t){
       var on = t.dataset.dept === id;
       t.classList.toggle('active', on);
@@ -876,41 +1049,145 @@
     } else {
       equipeBox.style.display = 'none';
     }
-
-    var rows = (TICKETS[id] || []).filter(function(t){
-      return id !== 'dac' || activeEquipe === 'todas' || t.equipe === activeEquipe;
-    });
-    document.getElementById('ticketRows').innerHTML = rows.map(function(t){
-      var stars = t.csat ? '★★★★★'.slice(0, t.csat) + '☆☆☆☆☆'.slice(0, 5 - t.csat) : '—';
-      var subParts = [CANAL_LABEL[t.canal] || t.canal];
-      if (t.ambiente) subParts.push(t.ambiente + ' / ' + t.componente);
-      if (t.equipe) subParts.push(EQUIPE_LABEL[t.equipe]);
-      var custo = t.custo ? t.custo.toLocaleString('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:0 }) : '—';
-      return '<div class="ticket-row">' +
-        '<div class="tt">' + t.titulo + '<div class="ticket-sub">' + subParts.join(' · ') + '</div></div>' +
-        '<div><span class="status-chip ' + t.status + '"><span class="dot"></span>' + STATUS_LABEL[t.status] + '</span></div>' +
-        '<div><span class="pill prio-' + t.prio + '">' + t.prio + '</span></div>' +
-        '<div>' + t.sla + '</div>' +
-        '<div class="stars">' + stars + '</div>' +
-        '<div class="custo">' + custo + '</div></div>';
-    }).join('') || '<div style="padding:16px;color:var(--muted);font-size:12.5px;">Nenhum chamado nesta área.</div>';
+    renderTicketRows();
   }
   document.querySelectorAll('.dept-tab').forEach(function(tab){
     tab.addEventListener('click', function(){ selectDeptTab(tab.dataset.dept); });
   });
+
+  /* ---------------- Modal: criar / editar chamado ---------------- */
+  var editingId = null;
+  var savingModal = false;
+
+  function fillSelect(sel, options, selected){
+    sel.innerHTML = options.map(function(o){ return '<option value="' + o[0] + '"' + (String(o[0]) === String(selected) ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
+  }
+
+  function updateDeptDependentFields(preserveTipo){
+    var dept = document.getElementById('fDepartamento').value;
+    fillSelect(document.getElementById('fTipo'), TIPOS_POR_DEPARTAMENTO[dept], preserveTipo || null);
+    var isDac = dept === 'dac';
+    document.getElementById('fDacRow').style.display = isDac ? 'flex' : 'none';
+    document.getElementById('fAmbienteRow').style.display = isDac ? 'flex' : 'none';
+    updateSlaPreview();
+  }
+  function updateSlaPreview(){
+    var sla = SLA_CONFIG[document.getElementById('fPrioridade').value];
+    document.getElementById('slaPreview').textContent = 'SLA aplicável (snapshot ao salvar): resposta em ' + sla.resposta + 'h · resolução em ' + sla.resolucao + 'h.';
+  }
+  function updateCsatVisibility(){
+    document.getElementById('fCsatField').style.display = document.getElementById('fStatus').value === 'resolvido' ? 'flex' : 'none';
+  }
+
+  function openModal(id){
+    editingId = id || null;
+    var c = id ? CHAMADOS.find(function(x){ return x.id === id; }) : null;
+    document.getElementById('modalTitle').textContent = c ? 'Editar chamado' : 'Novo chamado';
+
+    fillSelect(document.getElementById('fCliente'), [['', '— sem cliente vinculado —']].concat(CLIENTS.map(function(cl){ return [cl.id, cl.nome]; })), c ? c.clienteId : '');
+    fillSelect(document.getElementById('fDepartamento'), DEPTS.map(function(d){ return [d.id, d.label]; }), c ? c.departamento : 'dac');
+    fillSelect(document.getElementById('fEmpreendimento'), EMPREENDIMENTOS.map(function(e){ return [e.nome, e.nome]; }), c ? c.empreendimento : EMPREENDIMENTOS[0].nome);
+    fillSelect(document.getElementById('fStatus'), [['aberto','Aberto'],['em_andamento','Em andamento'],['aguardando_cliente','Aguardando cliente'],['aguardando_terceiro','Aguardando terceiro'],['resolvido','Resolvido'],['cancelado','Cancelado']], c ? c.status : 'aberto');
+
+    updateDeptDependentFields(c ? c.tipo : null);
+
+    document.getElementById('fTitulo').value = c ? c.titulo : '';
+    document.getElementById('fPrioridade').value = c ? c.prioridade : 'media';
+    document.getElementById('fCanal').value = c ? c.canal : 'whatsapp';
+    document.getElementById('fEquipe').value = (c && c.equipe) ? c.equipe : 'pos_venda';
+    document.getElementById('fAmbiente').value = (c && c.ambiente) ? c.ambiente : '';
+    document.getElementById('fComponente').value = (c && c.componente) ? c.componente : '';
+    document.getElementById('fCusto').value = (c && c.custo) ? c.custo : '';
+    document.getElementById('fCsat').value = (c && c.csat) ? c.csat : '';
+
+    updateSlaPreview();
+    updateCsatVisibility();
+    document.getElementById('modalOverlay').style.display = 'flex';
+    document.getElementById('fTitulo').focus();
+  }
+  function closeModal(){ document.getElementById('modalOverlay').style.display = 'none'; editingId = null; }
+
+  document.getElementById('btnNovoChamado').addEventListener('click', function(){ openModal(null); });
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('modalCancel').addEventListener('click', closeModal);
+  document.getElementById('modalOverlay').addEventListener('click', function(e){ if (e.target.id === 'modalOverlay') closeModal(); });
+  document.getElementById('fDepartamento').addEventListener('change', function(){ updateDeptDependentFields(null); });
+  document.getElementById('fPrioridade').addEventListener('change', updateSlaPreview);
+  document.getElementById('fStatus').addEventListener('change', updateCsatVisibility);
+
+  document.getElementById('modalSave').addEventListener('click', function(){
+    if (savingModal) return; // guard de double-submit — lição documentada no próprio plano (seção 1)
+    var titulo = document.getElementById('fTitulo').value.trim();
+    if (!titulo) { document.getElementById('fTitulo').focus(); return; }
+    savingModal = true;
+    var btn = document.getElementById('modalSave'); btn.disabled = true; btn.textContent = 'Salvando…';
+
+    var dept = document.getElementById('fDepartamento').value;
+    var prio = document.getElementById('fPrioridade').value;
+    var status = document.getElementById('fStatus').value;
+    var sla = SLA_CONFIG[prio];
+    var clienteIdRaw = document.getElementById('fCliente').value;
+    var clienteId = clienteIdRaw ? parseInt(clienteIdRaw, 10) : null;
+    var isDac = dept === 'dac';
+    var previous = editingId ? CHAMADOS.find(function(x){ return x.id === editingId; }) : null;
+    var wasResolvido = previous ? previous.status === 'resolvido' : false;
+
+    var data = {
+      clienteId: clienteId, departamento: dept, tipo: document.getElementById('fTipo').value, titulo: titulo,
+      status: status, prioridade: prio, canal: document.getElementById('fCanal').value,
+      empreendimento: isDac ? document.getElementById('fEmpreendimento').value : null,
+      equipe: isDac ? document.getElementById('fEquipe').value : null,
+      ambiente: isDac ? (document.getElementById('fAmbiente').value.trim() || null) : null,
+      componente: isDac ? (document.getElementById('fComponente').value.trim() || null) : null,
+      custo: document.getElementById('fCusto').value ? Number(document.getElementById('fCusto').value) : null,
+      csat: document.getElementById('fCsat').value ? Number(document.getElementById('fCsat').value) : null,
+      sla_resposta_horas: sla.resposta, sla_resolucao_horas: sla.resolucao
+    };
+
+    setTimeout(function(){ // pequena latência simulada — evidencia por que o guard acima é necessário
+      var isNew = !editingId;
+      var c;
+      if (isNew) {
+        chamadoSeq++;
+        c = Object.assign({ id:'c' + chamadoSeq, createdAt: new Date().toISOString(), resolvidoEm: null }, data);
+        if (status === 'resolvido') c.resolvidoEm = new Date().toISOString();
+        CHAMADOS.push(c);
+      } else {
+        c = previous;
+        Object.assign(c, data);
+        c.resolvidoEm = (status === 'resolvido') ? (c.resolvidoEm || new Date().toISOString()) : null;
+      }
+
+      if (clienteId) {
+        var cliente = CLIENTS.find(function(x){ return x.id === clienteId; });
+        if (cliente) {
+          cliente.eventos.push({
+            data: new Date().toISOString().slice(0, 10), dept: dept,
+            titulo: (isNew ? 'Chamado aberto — ' : 'Chamado atualizado — ') + titulo,
+            desc: tipoLabel(dept, data.tipo) + ' · ' + STATUS_LABEL[status] + ' · via ' + (CANAL_LABEL[data.canal] || data.canal)
+          });
+        }
+      }
+
+      renderDashboard();
+      renderTicketRows();
+      if (activeClientId === clienteId) renderClient();
+      renderClientList(document.getElementById('clientSearch').value);
+
+      savingModal = false; btn.disabled = false; btn.textContent = 'Salvar';
+      closeModal();
+    }, 250);
+  });
+
+  renderDashboard();
   selectDeptTab('dac');
 
   /* ---------------- Empreendimentos ---------------- */
-  var EMPREENDIMENTOS = [
-    { nome:'EDITION', marca:'plaenge', cidade:'Porto Alegre, RS', regional:'Regional Porto Alegre Centro', disp:22, res:8, vend:65, bloq:5 },
-    { nome:'ORBITALE', marca:'plaenge', cidade:'Porto Alegre, RS', regional:'Regional Porto Alegre Centro', disp:41, res:12, vend:40, bloq:7 },
-    { nome:'TREND NANO', marca:'vanguard', cidade:'Porto Alegre, RS', regional:'Regional Porto Alegre Zona Sul', disp:15, res:10, vend:70, bloq:5 },
-    { nome:'WAVE', marca:'vanguard', cidade:'Porto Alegre, RS', regional:'Regional Porto Alegre Zona Sul', disp:58, res:9, vend:30, bloq:3 }
-  ];
   document.getElementById('empGrid').innerHTML = EMPREENDIMENTOS.map(function(e){
     return '<div class="emp-card">' +
       '<div class="top-row"><h3>' + e.nome + '</h3><span class="brand-tag ' + e.marca + '">' + (e.marca === 'plaenge' ? 'Plaenge' : 'Vanguard') + '</span></div>' +
       '<div class="city">' + e.cidade + ' · ' + e.regional + '</div>' +
+      '<div style="font-size:11.5px;color:var(--muted);margin-bottom:14px;">Orçamento de obra: ' + formatBRL(e.orcamentoObra) + '</div>' +
       '<div class="stack-bar">' +
         '<div class="stack-seg disp" style="width:' + e.disp + '%"></div>' +
         '<div class="stack-seg res" style="width:' + e.res + '%"></div>' +

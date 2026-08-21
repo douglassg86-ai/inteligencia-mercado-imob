@@ -469,6 +469,7 @@
           <h1>Cliente 360</h1>
           <p>Busque um cliente e veja a timeline cruzada de todas as áreas — cada evento carrega a cor de quem o registrou.</p>
         </div>
+        <button type="button" class="btn-primary" id="btnNovoCliente">+ Novo cliente</button>
       </div>
 
       <div class="c360-layout">
@@ -590,6 +591,47 @@
     <div class="modal-foot">
       <button type="button" class="btn-ghost" id="modalCancel">Cancelar</button>
       <button type="button" class="btn-primary" id="modalSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="clienteModalOverlay" style="display:none;">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="clienteModalTitle">
+    <div class="modal-head">
+      <h2 id="clienteModalTitle" class="serif">Novo cliente</h2>
+      <button type="button" class="modal-close" id="clienteModalClose" aria-label="Fechar">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0;font-size:12px;color:var(--muted);">Só nome e telefone são obrigatórios no primeiro contato — o resto (CPF/CNPJ, tipo, endereço) é preenchido na efetivação da compra.</p>
+      <div class="field-row">
+        <div class="field"><label for="fClienteNome">Nome *</label><input type="text" id="fClienteNome" placeholder="Nome completo ou razão social"></div>
+        <div class="field"><label for="fClienteTelefone">Telefone *</label><input type="text" id="fClienteTelefone" placeholder="(51) 90000-0000"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="fClienteTelefone2">Telefone 2</label><input type="text" id="fClienteTelefone2" placeholder="opcional"></div>
+        <div class="field"><label for="fClienteEmail">E-mail</label><input type="text" id="fClienteEmail" placeholder="opcional"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="fClienteTipo">Tipo</label>
+          <select id="fClienteTipo"><option value="">— ainda não definido —</option><option value="Pessoa física">Pessoa física</option><option value="Pessoa jurídica">Pessoa jurídica</option></select>
+        </div>
+        <div class="field"><label for="fClienteCpfCnpj">CPF/CNPJ</label><input type="text" id="fClienteCpfCnpj" placeholder="opcional — na efetivação da compra"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="fClienteEstadoCivil">Estado civil</label><input type="text" id="fClienteEstadoCivil" placeholder="opcional"></div>
+        <div class="field"><label for="fClienteProfissao">Profissão</label><input type="text" id="fClienteProfissao" placeholder="opcional"></div>
+      </div>
+      <div class="field"><label for="fClienteEndereco">Endereço</label><input type="text" id="fClienteEndereco" placeholder="opcional"></div>
+      <div class="field-row">
+        <div class="field"><label for="fClienteEmpreendimento">Empreendimento de interesse</label>
+          <select id="fClienteEmpreendimento"><option value="">— ainda não definido —</option></select>
+        </div>
+        <div class="field"><label for="fClienteUnidade">Unidade</label><input type="text" id="fClienteUnidade" placeholder="opcional"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn-ghost" id="clienteModalCancel">Cancelar</button>
+      <button type="button" class="btn-primary" id="clienteModalSave">Salvar</button>
     </div>
   </div>
 </div>
@@ -898,12 +940,12 @@
   function renderClientList(filter){
     filter = (filter || '').toLowerCase();
     var list = CLIENTS.filter(function(c){
-      return !filter || c.nome.toLowerCase().indexOf(filter) > -1 || c.telefone.indexOf(filter) > -1;
+      return !filter || c.nome.toLowerCase().indexOf(filter) > -1 || c.telefone.indexOf(filter) > -1 || (c.cpfCnpj || '').indexOf(filter) > -1;
     });
     document.getElementById('clientList').innerHTML = list.map(function(c){
       return '<button type="button" class="client-item' + (c.id === activeClientId ? ' active' : '') + '" data-id="' + c.id + '" aria-pressed="' + (c.id === activeClientId) + '">' +
         '<span class="nm">' + c.nome + '</span>' +
-        '<span class="meta">' + c.empreendimento + ' · ' + c.unidade + '</span></button>';
+        '<span class="meta">' + (c.empreendimento ? c.empreendimento + (c.unidade ? ' · ' + c.unidade : '') : 'Sem empreendimento definido') + '</span></button>';
     }).join('') || '<div style="padding:14px;color:var(--muted);font-size:12.5px;">Nenhum cliente encontrado.</div>';
     document.querySelectorAll('.client-item').forEach(function(el){
       el.addEventListener('click', function(){ activeClientId = parseInt(el.dataset.id, 10); renderClient(); renderClientList(document.getElementById('clientSearch').value); });
@@ -913,20 +955,28 @@
   function periodCutoff(period){
     if (period === 'all') return null;
     var days = period === '30' ? 30 : (period === '90' ? 90 : 365);
-    var d = new Date('2026-08-14'); d.setDate(d.getDate() - days);
+    var d = new Date(); d.setDate(d.getDate() - days);
     return d;
   }
 
   function renderClient(){
     var c = CLIENTS.find(function(x){ return x.id === activeClientId; });
+    var extra = [];
+    if (c.email) extra.push('<span>E-mail: <b>' + c.email + '</b></span>');
+    if (c.telefone2) extra.push('<span>Tel 2: <b>' + c.telefone2 + '</b></span>');
+    if (c.cpfCnpj) extra.push('<span>CPF/CNPJ: <b>' + c.cpfCnpj + '</b></span>');
+    if (c.profissao) extra.push('<span>Profissão: <b>' + c.profissao + '</b></span>');
+    if (c.estadoCivil) extra.push('<span>Estado civil: <b>' + c.estadoCivil + '</b></span>');
+    if (c.endereco) extra.push('<span>Endereço: <b>' + c.endereco + '</b></span>');
     document.getElementById('clientHeader').innerHTML =
       '<h2 class="name">' + c.nome + '<span class="role-badge">' + c.papel + '</span></h2>' +
       '<div class="row">' +
-        '<span><b>' + c.tipo + '</b></span>' +
+        '<span><b>' + (c.tipo || 'Tipo ainda não definido') + '</b></span>' +
         '<span>Tel: <b>' + c.telefone + '</b></span>' +
-        '<span>Empreendimento: <b>' + c.empreendimento + '</b></span>' +
-        '<span>Unidade: <b>' + c.unidade + '</b></span>' +
-      '</div>';
+        '<span>Empreendimento: <b>' + (c.empreendimento || '—') + '</b></span>' +
+        '<span>Unidade: <b>' + (c.unidade || '—') + '</b></span>' +
+      '</div>' +
+      (extra.length ? '<div class="row" style="margin-top:6px;">' + extra.join('') + '</div>' : '');
 
     document.getElementById('deptChips').innerHTML = DEPTS.map(function(d){
       var off = hiddenDepts[d.id] ? ' off' : '';
@@ -967,6 +1017,60 @@
   document.getElementById('clientSearch').addEventListener('input', function(e){ renderClientList(e.target.value); });
   renderClientList('');
   renderClient();
+
+  /* ---------------- Modal: novo cliente ---------------- */
+  var clienteSeq = 4;
+  var savingClienteModal = false;
+
+  function openClienteModal(){
+    document.getElementById('fClienteEmpreendimento').innerHTML = '<option value="">— ainda não definido —</option>' +
+      EMPREENDIMENTOS.map(function(e){ return '<option value="' + e.nome + '">' + e.nome + '</option>'; }).join('');
+    ['fClienteNome','fClienteTelefone','fClienteTelefone2','fClienteEmail','fClienteCpfCnpj','fClienteEstadoCivil','fClienteProfissao','fClienteEndereco','fClienteUnidade'].forEach(function(id){ document.getElementById(id).value = ''; });
+    document.getElementById('fClienteTipo').value = '';
+    document.getElementById('fClienteEmpreendimento').value = '';
+    document.getElementById('clienteModalOverlay').style.display = 'flex';
+    document.getElementById('fClienteNome').focus();
+  }
+  function closeClienteModal(){ document.getElementById('clienteModalOverlay').style.display = 'none'; }
+
+  document.getElementById('btnNovoCliente').addEventListener('click', openClienteModal);
+  document.getElementById('clienteModalClose').addEventListener('click', closeClienteModal);
+  document.getElementById('clienteModalCancel').addEventListener('click', closeClienteModal);
+  document.getElementById('clienteModalOverlay').addEventListener('click', function(e){ if (e.target.id === 'clienteModalOverlay') closeClienteModal(); });
+
+  document.getElementById('clienteModalSave').addEventListener('click', function(){
+    if (savingClienteModal) return; // mesmo guard de double-submit do modal de chamado
+    var nome = document.getElementById('fClienteNome').value.trim();
+    var telefone = document.getElementById('fClienteTelefone').value.trim();
+    if (!nome) { document.getElementById('fClienteNome').focus(); return; }
+    if (!telefone) { document.getElementById('fClienteTelefone').focus(); return; }
+    savingClienteModal = true;
+    var btn = document.getElementById('clienteModalSave'); btn.disabled = true; btn.textContent = 'Salvando…';
+
+    setTimeout(function(){
+      clienteSeq++;
+      var novo = {
+        id: clienteSeq, nome: nome, telefone: telefone, papel: 'Titular',
+        telefone2: document.getElementById('fClienteTelefone2').value.trim() || null,
+        tipo: document.getElementById('fClienteTipo').value || null,
+        email: document.getElementById('fClienteEmail').value.trim() || null,
+        cpfCnpj: document.getElementById('fClienteCpfCnpj').value.trim() || null,
+        estadoCivil: document.getElementById('fClienteEstadoCivil').value.trim() || null,
+        profissao: document.getElementById('fClienteProfissao').value.trim() || null,
+        endereco: document.getElementById('fClienteEndereco').value.trim() || null,
+        empreendimento: document.getElementById('fClienteEmpreendimento').value || null,
+        unidade: document.getElementById('fClienteUnidade').value.trim() || null,
+        eventos: [{ data: new Date().toISOString().slice(0,10), dept:'comercial', titulo:'Cadastro criado', desc:'Primeiro contato registrado — nome e telefone.' }]
+      };
+      CLIENTS.push(novo);
+      activeClientId = novo.id;
+      renderClientList('');
+      renderClient();
+
+      savingClienteModal = false; btn.disabled = false; btn.textContent = 'Salvar';
+      closeClienteModal();
+    }, 250);
+  });
 
   /* ---------------- Oportunidades kanban ---------------- */
   var STAGES = ['Interessado','Agendamento','Atendimento','Proposta','Venda'];

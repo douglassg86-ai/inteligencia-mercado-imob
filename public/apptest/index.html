@@ -353,6 +353,8 @@
   .emp-legend { display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color: var(--ink-2); }
   .emp-legend span { display:inline-flex; align-items:center; gap:5px; }
   .emp-legend i { width:7px; height:7px; border-radius:2px; display:inline-block; }
+  button.fornecedor-card { width:100%; text-align:left; font:inherit; color:inherit; cursor:pointer; }
+  button.fornecedor-card:hover { border-color: var(--accent); }
 
   .footnote { margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--muted); }
 </style>
@@ -403,6 +405,13 @@
       <button class="side-item" data-view="empreendimentos">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V6l8-3 8 3v15"/><path d="M9 21v-6h6v6M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></svg>
         Empreendimentos
+      </button>
+    </div>
+    <div class="side-group">
+      <div class="side-label">Cadastros</div>
+      <button class="side-item" data-view="fornecedores">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></svg>
+        Fornecedores
       </button>
     </div>
   </nav>
@@ -537,6 +546,18 @@
       <div class="emp-grid" id="empGrid"></div>
     </section>
 
+    <!-- ============ FORNECEDORES ============ -->
+    <section class="view" id="view-fornecedores">
+      <div class="view-head">
+        <div>
+          <h1>Fornecedores</h1>
+          <p>Cadastro simples — razão social, CNPJ e categoria, vinculado à área que usa. Alimenta o custo por chamado quando lançado pela DAC.</p>
+        </div>
+        <button type="button" class="btn-primary" id="btnNovoFornecedor">+ Novo fornecedor</button>
+      </div>
+      <div class="emp-grid" id="fornecedorGrid"></div>
+    </section>
+
   </main>
 </div>
 
@@ -632,6 +653,40 @@
     <div class="modal-foot">
       <button type="button" class="btn-ghost" id="clienteModalCancel">Cancelar</button>
       <button type="button" class="btn-primary" id="clienteModalSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="fornecedorModalOverlay" style="display:none;">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="fornecedorModalTitle">
+    <div class="modal-head">
+      <h2 id="fornecedorModalTitle" class="serif">Novo fornecedor</h2>
+      <button type="button" class="modal-close" id="fornecedorModalClose" aria-label="Fechar">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label for="fFornRazaoSocial">Razão social *</label><input type="text" id="fFornRazaoSocial" placeholder="Ex.: Impermeabilizações Sul LTDA"></div>
+        <div class="field"><label for="fFornNomeFantasia">Nome fantasia</label><input type="text" id="fFornNomeFantasia" placeholder="opcional"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="fFornCnpj">CNPJ *</label><input type="text" id="fFornCnpj" placeholder="00.000.000/0001-00"></div>
+        <div class="field"><label for="fFornCategoria">Categoria *</label>
+          <select id="fFornCategoria">
+            <option value="obra">Obra</option><option value="marketing">Marketing</option><option value="juridico">Jurídico</option>
+            <option value="servicos_gerais">Serviços gerais</option><option value="tecnologia">Tecnologia</option><option value="outro">Outro</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label for="fFornDepartamento">Departamento que usa</label><select id="fFornDepartamento"></select></div>
+      <div class="field-row">
+        <div class="field"><label for="fFornContatoNome">Contato — nome</label><input type="text" id="fFornContatoNome" placeholder="opcional"></div>
+        <div class="field"><label for="fFornContatoTelefone">Contato — telefone</label><input type="text" id="fFornContatoTelefone" placeholder="opcional"></div>
+      </div>
+      <div class="field"><label for="fFornContatoEmail">Contato — e-mail</label><input type="text" id="fFornContatoEmail" placeholder="opcional"></div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn-ghost" id="fornecedorModalCancel">Cancelar</button>
+      <button type="button" class="btn-primary" id="fornecedorModalSave">Salvar</button>
     </div>
   </div>
 </div>
@@ -1305,6 +1360,94 @@
         '<span><i style="background:var(--status-critical)"></i>Bloqueado ' + e.bloq + '%</span>' +
       '</div></div>';
   }).join('');
+
+  /* ---------------- Fornecedores ---------------- */
+  var CATEGORIA_LABEL = { obra:'Obra', marketing:'Marketing', juridico:'Jurídico', servicos_gerais:'Serviços gerais', tecnologia:'Tecnologia', outro:'Outro' };
+  var fornecedorSeq = 4;
+  var FORNECEDORES = [
+    { id:1, razaoSocial:'Impermeabilizações Sul LTDA', nomeFantasia:'ImperSul', cnpj:'12.345.678/0001-90', categoria:'obra', departamento:'dac', contatoNome:'Marcelo Souza', contatoTelefone:'(51) 3212-4455', contatoEmail:'contato@impersul.com.br', ativo:true },
+    { id:2, razaoSocial:'Estúdio Criativo Comunicação LTDA', nomeFantasia:'Estúdio Criativo', cnpj:'23.456.789/0001-01', categoria:'marketing', departamento:'marketing', contatoNome:'Bianca Prado', contatoTelefone:'(51) 99887-1122', contatoEmail:'bianca@estudiocriativo.com.br', ativo:true },
+    { id:3, razaoSocial:'Bastos & Kunz Advogados Associados', nomeFantasia:null, cnpj:'34.567.890/0001-12', categoria:'juridico', departamento:'incorporacao', contatoNome:'Dra. Renata Kunz', contatoTelefone:'(51) 3025-7788', contatoEmail:null, ativo:true },
+    { id:4, razaoSocial:'TechFlow Sistemas e Consultoria LTDA', nomeFantasia:'TechFlow', cnpj:'45.678.901/0001-23', categoria:'tecnologia', departamento:null, contatoNome:null, contatoTelefone:'(51) 3344-9900', contatoEmail:'suporte@techflow.com.br', ativo:true }
+  ];
+
+  function renderFornecedores(){
+    document.getElementById('fornecedorGrid').innerHTML = FORNECEDORES.map(function(f){
+      var d = f.departamento ? deptById(f.departamento) : null;
+      var contatoParts = [f.contatoNome, f.contatoTelefone, f.contatoEmail].filter(function(v){ return v; });
+      return '<button type="button" class="emp-card fornecedor-card" data-id="' + f.id + '">' +
+        '<div class="top-row"><h3>' + (f.nomeFantasia || f.razaoSocial) + '</h3><span class="pill prio-baixa">' + CATEGORIA_LABEL[f.categoria] + '</span></div>' +
+        '<div class="city">' + f.razaoSocial + '</div>' +
+        '<div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;">CNPJ: ' + f.cnpj + '</div>' +
+        (d ? '<span class="pill dept" style="background:' + d.color + ';margin-bottom:10px;display:inline-flex;">' + d.label + '</span>' : '<span class="pill prio-baixa" style="margin-bottom:10px;">Sem departamento vinculado</span>') +
+        '<div style="font-size:12px;color:var(--ink-2);margin-top:8px;">' + (contatoParts.join(' · ') || 'Sem contato cadastrado') + '</div>' +
+        '</button>';
+    }).join('') || '<div style="color:var(--muted);font-size:12.5px;">Nenhum fornecedor cadastrado.</div>';
+    document.querySelectorAll('#fornecedorGrid .fornecedor-card').forEach(function(card){
+      card.addEventListener('click', function(){ openFornecedorModal(parseInt(card.dataset.id, 10)); });
+    });
+  }
+
+  var editingFornecedorId = null;
+  var savingFornecedorModal = false;
+
+  function openFornecedorModal(id){
+    editingFornecedorId = id || null;
+    var f = id ? FORNECEDORES.find(function(x){ return x.id === id; }) : null;
+    document.getElementById('fornecedorModalTitle').textContent = f ? 'Editar fornecedor' : 'Novo fornecedor';
+    fillSelect(document.getElementById('fFornDepartamento'), [['', '— nenhum —']].concat(DEPTS.map(function(d){ return [d.id, d.label]; })), f ? f.departamento : '');
+    document.getElementById('fFornRazaoSocial').value = f ? f.razaoSocial : '';
+    document.getElementById('fFornNomeFantasia').value = (f && f.nomeFantasia) ? f.nomeFantasia : '';
+    document.getElementById('fFornCnpj').value = f ? f.cnpj : '';
+    document.getElementById('fFornCategoria').value = f ? f.categoria : 'obra';
+    document.getElementById('fFornContatoNome').value = (f && f.contatoNome) ? f.contatoNome : '';
+    document.getElementById('fFornContatoTelefone').value = (f && f.contatoTelefone) ? f.contatoTelefone : '';
+    document.getElementById('fFornContatoEmail').value = (f && f.contatoEmail) ? f.contatoEmail : '';
+    document.getElementById('fornecedorModalOverlay').style.display = 'flex';
+    document.getElementById('fFornRazaoSocial').focus();
+  }
+  function closeFornecedorModal(){ document.getElementById('fornecedorModalOverlay').style.display = 'none'; editingFornecedorId = null; }
+
+  document.getElementById('btnNovoFornecedor').addEventListener('click', function(){ openFornecedorModal(null); });
+  document.getElementById('fornecedorModalClose').addEventListener('click', closeFornecedorModal);
+  document.getElementById('fornecedorModalCancel').addEventListener('click', closeFornecedorModal);
+  document.getElementById('fornecedorModalOverlay').addEventListener('click', function(e){ if (e.target.id === 'fornecedorModalOverlay') closeFornecedorModal(); });
+
+  document.getElementById('fornecedorModalSave').addEventListener('click', function(){
+    if (savingFornecedorModal) return; // mesmo guard de double-submit dos outros dois modais
+    var razaoSocial = document.getElementById('fFornRazaoSocial').value.trim();
+    var cnpj = document.getElementById('fFornCnpj').value.trim();
+    if (!razaoSocial) { document.getElementById('fFornRazaoSocial').focus(); return; }
+    if (!cnpj) { document.getElementById('fFornCnpj').focus(); return; }
+    savingFornecedorModal = true;
+    var btn = document.getElementById('fornecedorModalSave'); btn.disabled = true; btn.textContent = 'Salvando…';
+
+    var data = {
+      razaoSocial: razaoSocial, cnpj: cnpj,
+      nomeFantasia: document.getElementById('fFornNomeFantasia').value.trim() || null,
+      categoria: document.getElementById('fFornCategoria').value,
+      departamento: document.getElementById('fFornDepartamento').value || null,
+      contatoNome: document.getElementById('fFornContatoNome').value.trim() || null,
+      contatoTelefone: document.getElementById('fFornContatoTelefone').value.trim() || null,
+      contatoEmail: document.getElementById('fFornContatoEmail').value.trim() || null,
+      ativo: true
+    };
+
+    setTimeout(function(){
+      if (editingFornecedorId) {
+        Object.assign(FORNECEDORES.find(function(x){ return x.id === editingFornecedorId; }), data);
+      } else {
+        fornecedorSeq++;
+        data.id = fornecedorSeq;
+        FORNECEDORES.push(data);
+      }
+      renderFornecedores();
+      savingFornecedorModal = false; btn.disabled = false; btn.textContent = 'Salvar';
+      closeFornecedorModal();
+    }, 250);
+  });
+
+  renderFornecedores();
 
 })();
 </script>

@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion as Motion, AnimatePresence } from 'framer-motion'
-import { Check, X, Minus, ArrowRightLeft } from 'lucide-react'
+import { Check, X, Minus, ArrowRightLeft, ZoomIn } from 'lucide-react'
 import SourceBadges from './SourceBadges'
 import { DEVELOPMENTS, SYNTHE, AMENITY_KEYS, DEPTH_LABEL, fmtMoney, fmtPct, fmtDate } from '../data'
 
@@ -81,7 +81,7 @@ function TextRow({ label, a, b }) {
   )
 }
 
-function PlantaImg({ id, kind, label }) {
+function PlantaImg({ id, kind, label, nome, onOpen }) {
   const [failed, setFailed] = useState(false)
   const src = `/pesquisa-concorrentes/plantas/${id}-${kind}.jpg`
   return (
@@ -92,15 +92,72 @@ function PlantaImg({ id, kind, label }) {
           Não disponível no material consultado
         </div>
       ) : (
-        <img
-          src={src}
-          alt={`${label} — ${id}`}
-          loading="lazy"
-          onError={() => setFailed(true)}
-          className="w-full rounded-lg border border-slate-200 object-cover bg-slate-50"
-        />
+        <button
+          type="button"
+          onClick={() => onOpen({ src, title: `${nome} — ${label}` })}
+          className="group relative w-full rounded-lg overflow-hidden border border-slate-200 bg-slate-50 cursor-zoom-in"
+        >
+          <img
+            src={src}
+            alt={`${label} — ${id}`}
+            loading="lazy"
+            onError={() => setFailed(true)}
+            className="w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+          <span className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors flex items-center justify-center">
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-2 shadow-sm">
+              <ZoomIn size={18} className="text-slate-700" />
+            </span>
+          </span>
+        </button>
       )}
     </div>
+  )
+}
+
+function Lightbox({ item, onClose }) {
+  useEffect(() => {
+    if (!item) return
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [item, onClose])
+
+  return (
+    <AnimatePresence>
+      {item && (
+        <Motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-6 cursor-zoom-out"
+          onClick={onClose}
+        >
+          <Motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-full flex items-center justify-between mb-2 px-1">
+              <span className="text-sm font-semibold text-white/90">{item.title}</span>
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                title="Fechar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <img src={item.src} alt={item.title} className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl cursor-default" onClick={(e) => e.stopPropagation()} />
+          </Motion.div>
+        </Motion.div>
+      )}
+    </AnimatePresence>
   )
 }
 
@@ -114,6 +171,7 @@ function AmenCell({ v }) {
 export default function CompareView() {
   const [idA, setIdA] = useState(SYNTHE.id)
   const [idB, setIdB] = useState('anita-green')
+  const [lightbox, setLightbox] = useState(null)
 
   const a = DEVELOPMENTS.find((d) => d.id === idA)
   const b = DEVELOPMENTS.find((d) => d.id === idB)
@@ -206,14 +264,14 @@ export default function CompareView() {
               Plantas &amp; implantação
             </h3>
             <p className="text-xs text-slate-400 mb-4">
-              Extraído dos books/apresentações oficiais de cada incorporadora (via Órulo, quando disponível). Metragens e layout podem variar por tipologia — a planta exibida é a do apartamento tipo mais representativo.
+              Extraído dos books/apresentações oficiais de cada incorporadora (via Órulo, quando disponível). Metragens e layout podem variar por tipologia — a planta exibida é a do apartamento tipo mais representativo. Clique numa imagem para ampliar.
             </p>
             <div className="grid grid-cols-2 gap-6">
               {[a, b].map((d) => (
                 <div key={d.id} className="space-y-4">
                   <div className={`text-sm font-semibold truncate ${d.isSynthe ? 'text-[#C1422A]' : 'text-blue-700'}`}>{d.nome}</div>
-                  <PlantaImg id={d.id} kind="planta" label="Planta" />
-                  <PlantaImg id={d.id} kind="implantacao" label="Implantação / localização" />
+                  <PlantaImg id={d.id} kind="planta" label="Planta" nome={d.nome} onOpen={setLightbox} />
+                  <PlantaImg id={d.id} kind="implantacao" label="Implantação / localização" nome={d.nome} onOpen={setLightbox} />
                 </div>
               ))}
             </div>
@@ -259,6 +317,8 @@ export default function CompareView() {
           </div>
         </Motion.div>
       </AnimatePresence>
+
+      <Lightbox item={lightbox} onClose={() => setLightbox(null)} />
     </div>
   )
 }

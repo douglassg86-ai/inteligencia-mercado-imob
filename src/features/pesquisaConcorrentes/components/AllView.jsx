@@ -68,7 +68,6 @@ export default function AllView() {
           <span className="inline-flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#2A78D6' }} /> Concorrentes
           </span>
-          <span>Galeria Jardim ainda sem preço de tabela consolidado — fora do gráfico.</span>
         </div>
       </Motion.section>
 

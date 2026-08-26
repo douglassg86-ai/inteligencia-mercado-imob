@@ -31,9 +31,9 @@ export default function PesquisaConcorrentes() {
             Onde o <span className="text-[#C1422A]">Synthè</span> está no mapa competitivo
           </h1>
           <p className="text-slate-500 mt-2 max-w-2xl text-sm md:text-base">
-            Synthè (Plaenge · TGD, Rua Pedro Ivo 550) comparado a 21 concorrentes diretos — mesma faixa de padrão e
-            tipologia de 3 suítes, majoritariamente em Bela Vista, Moinhos de Vento, Mont'Serrat e Auxiliadora (alguns
-            em bairros vizinhos, incluídos por faixa de preço/produto). Dados atualizados em {LAST_UPDATED}.
+            Synthè (Plaenge · TGD, Rua Pedro Ivo 550) comparado aos 11 concorrentes diretos — mesma faixa de padrão e
+            tipologia de 3 suítes, nos bairros Bela Vista, Moinhos de Vento, Mont'Serrat e Auxiliadora. Dados
+            atualizados em {LAST_UPDATED}.
           </p>
         </Motion.header>
 

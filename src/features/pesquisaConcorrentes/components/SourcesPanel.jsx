@@ -22,7 +22,7 @@ export default function SourcesPanel() {
       </h3>
       <p className="text-sm text-slate-500 mb-5">
         Última atualização: {LAST_UPDATED}. Cada dado nas páginas anteriores carrega um selo indicando de onde veio —
-        aqui está o que cada selo significa e quantos dos {DEVELOPMENTS.length} empreendimentos ele cobre.
+        aqui está o que cada selo significa e quantos dos 12 empreendimentos ele cobre.
       </p>
       <div className="grid sm:grid-cols-2 gap-4">
         {Object.entries(SOURCES).map(([key, s]) => {
@@ -32,7 +32,7 @@ export default function SourcesPanel() {
               <span className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${DOT[key]}`} />
               <div>
                 <div className="text-sm font-semibold text-slate-800">
-                  {s.label} <span className="text-slate-400 font-normal">· {count}/{DEVELOPMENTS.length}</span>
+                  {s.label} <span className="text-slate-400 font-normal">· {count}/12</span>
                 </div>
                 <div className="text-xs text-slate-500 mt-0.5">{s.detalhe}</div>
               </div>

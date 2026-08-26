@@ -68,7 +68,7 @@ export default function AllView() {
           <span className="inline-flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#2A78D6' }} /> Concorrentes
           </span>
-          <span>Galeria Jardim (sem preço de tabela consolidado) e SEEN Três Figueiras (total de unidades não confirmado) ficam fora do gráfico por falta de dado suficiente.</span>
+          <span>Galeria Jardim ainda sem preço de tabela consolidado — fora do gráfico.</span>
         </div>
       </Motion.section>
 
@@ -81,7 +81,7 @@ export default function AllView() {
       >
         <div className="p-6 pb-0">
           <h2 className="text-lg font-bold text-slate-900 mb-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-            Os 22 lado a lado
+            Os 12 lado a lado
           </h2>
           <p className="text-sm text-slate-500 mb-4">Clique num cabeçalho para ordenar.</p>
         </div>
@@ -119,7 +119,7 @@ export default function AllView() {
                         <Motion.div
                           className={`h-full rounded-full ${d.isSynthe ? 'bg-[#C1422A]' : 'bg-blue-500'}`}
                           initial={{ width: 0 }}
-                          whileInView={{ width: `${d.pctVendido ?? 0}%` }}
+                          whileInView={{ width: `${d.pctVendido}%` }}
                           viewport={{ once: true }}
                           transition={{ duration: 0.8 }}
                         />

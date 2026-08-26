@@ -23,10 +23,7 @@ const plotH = H - M.top - M.bottom
 export default function ScatterChart({ developments, highlightId }) {
   const [hoverId, setHoverId] = useState(null)
 
-  const priced = useMemo(
-    () => developments.filter((d) => d.precoM2 != null && d.pctVendido != null),
-    [developments]
-  )
+  const priced = useMemo(() => developments.filter((d) => d.precoM2 != null), [developments])
 
   const { xScale, yScale, yTicks, xTicks, medPct, medPrice } = useMemo(() => {
     const yVals = priced.map((d) => d.precoM2)

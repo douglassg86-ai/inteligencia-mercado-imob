@@ -81,6 +81,29 @@ function TextRow({ label, a, b }) {
   )
 }
 
+function PlantaImg({ id, kind, label }) {
+  const [failed, setFailed] = useState(false)
+  const src = `/pesquisa-concorrentes/plantas/${id}-${kind}.jpg`
+  return (
+    <div>
+      <div className="text-[11px] uppercase tracking-wide font-semibold text-slate-400 mb-1.5">{label}</div>
+      {failed ? (
+        <div className="aspect-[4/3] rounded-lg bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center text-xs text-slate-300 text-center px-4">
+          Não disponível no material consultado
+        </div>
+      ) : (
+        <img
+          src={src}
+          alt={`${label} — ${id}`}
+          loading="lazy"
+          onError={() => setFailed(true)}
+          className="w-full rounded-lg border border-slate-200 object-cover bg-slate-50"
+        />
+      )}
+    </div>
+  )
+}
+
 function AmenCell({ v }) {
   if (v === true) return <Check size={16} className="text-emerald-600 mx-auto" />
   if (v === false) return <X size={16} className="text-slate-300 mx-auto" />
@@ -155,6 +178,9 @@ export default function CompareView() {
               Números
             </h3>
             <NumberBar label="Preço/m²" a={a.precoM2} b={b.precoM2} format={fmtMoney} />
+            <p className="text-[11px] text-slate-400 -mt-1 mb-1.5 text-center">
+              VGV disponível ÷ área privativa disponível (só unidades em estoque)
+            </p>
             <NumberBar label="% vendido" a={a.pctVendido} b={b.pctVendido} format={fmtPct} />
             <NumberBar label="Total de unidades" a={a.totalUnidades} b={b.totalUnidades} />
             <NumberBar label="Em estoque" a={a.unidadesEstoque} b={b.unidadesEstoque} />
@@ -171,6 +197,25 @@ export default function CompareView() {
                 <br />
                 <span className="text-slate-400">Entrega:</span> {fmtDate(b.dataEntrega)}
               </div>
+            </div>
+          </div>
+
+          {/* Plantas & Implantação */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6">
+            <h3 className="text-sm font-bold text-slate-900 mb-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+              Plantas &amp; implantação
+            </h3>
+            <p className="text-xs text-slate-400 mb-4">
+              Extraído dos books/apresentações oficiais de cada incorporadora (via Órulo, quando disponível). Metragens e layout podem variar por tipologia — a planta exibida é a do apartamento tipo mais representativo.
+            </p>
+            <div className="grid grid-cols-2 gap-6">
+              {[a, b].map((d) => (
+                <div key={d.id} className="space-y-4">
+                  <div className={`text-sm font-semibold truncate ${d.isSynthe ? 'text-[#C1422A]' : 'text-blue-700'}`}>{d.nome}</div>
+                  <PlantaImg id={d.id} kind="planta" label="Planta" />
+                  <PlantaImg id={d.id} kind="implantacao" label="Implantação / localização" />
+                </div>
+              ))}
             </div>
           </div>
 

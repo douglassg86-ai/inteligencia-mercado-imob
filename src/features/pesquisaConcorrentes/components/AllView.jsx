@@ -82,7 +82,8 @@ export default function AllView() {
           <h2 className="text-lg font-bold text-slate-900 mb-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
             Os 12 lado a lado
           </h2>
-          <p className="text-sm text-slate-500 mb-4">Clique num cabeçalho para ordenar.</p>
+          <p className="text-sm text-slate-500 mb-1">Clique num cabeçalho para ordenar.</p>
+          <p className="text-xs text-slate-400 mb-4">Preço/m² = VGV disponível ÷ área privativa disponível (só unidades em estoque).</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] border-collapse text-sm">

@@ -47,25 +47,30 @@ export default function KpiStrip() {
   ]
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-slate-200 rounded-2xl overflow-hidden shadow-sm border border-slate-200">
-      {tiles.map((t, i) => (
-        <Motion.div
-          key={t.label}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.08 }}
-          className={t.accent ? 'p-5' : 'p-5 bg-white'}
-          style={t.accent ? { background: '#C1422A', color: '#fff' } : undefined}
-        >
-          <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${t.accent ? 'text-white/70' : 'text-slate-400'}`}>
-            {t.label}
-          </div>
-          <div className={`text-2xl font-bold tabular-nums ${t.accent ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-            <AnimatedNumber value={t.value} format={t.format} />
-          </div>
-          <div className={`text-xs mt-1.5 ${t.accent ? 'text-white/80' : 'text-slate-500'}`}>{t.sub}</div>
-        </Motion.div>
-      ))}
+    <div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-slate-200 rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+        {tiles.map((t, i) => (
+          <Motion.div
+            key={t.label}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.08 }}
+            className={t.accent ? 'p-5' : 'p-5 bg-white'}
+            style={t.accent ? { background: '#C1422A', color: '#fff' } : undefined}
+          >
+            <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${t.accent ? 'text-white/70' : 'text-slate-400'}`}>
+              {t.label}
+            </div>
+            <div className={`text-2xl font-bold tabular-nums ${t.accent ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+              <AnimatedNumber value={t.value} format={t.format} />
+            </div>
+            <div className={`text-xs mt-1.5 ${t.accent ? 'text-white/80' : 'text-slate-500'}`}>{t.sub}</div>
+          </Motion.div>
+        ))}
+      </div>
+      <p className="text-[11px] text-slate-400 mt-2 px-0.5">
+        Preço/m² = VGV disponível ÷ área privativa disponível (só unidades em estoque, nunca vendidas).
+      </p>
     </div>
   )
 }

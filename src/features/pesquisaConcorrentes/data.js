@@ -11,23 +11,23 @@
 export const SOURCES = {
   tabela: {
     label: 'Tabela de vendas oficial',
-    detalhe: 'Preço/m² por unidade em estoque — ago/2026 para todos os 12 (baixado direto do Órulo para os 11 concorrentes em 26/ago/2026; exceto Artur Rocha 1133, cuja tabela do Órulo é datada 08/2025)',
+    detalhe: 'Preço/m² por unidade em estoque, tabela vigente de cada incorporadora (agosto/2026)',
   },
   orulo: {
     label: 'Órulo',
-    detalhe: 'Plataforma paga, sessão autenticada — estoque, lançamento/entrega, áreas comuns, preço "a partir". Consultado em 25/ago/2026',
+    detalhe: 'Plataforma de inteligência imobiliária — estoque, lançamento/entrega, áreas comuns, preço "a partir" (agosto/2026)',
   },
   rial: {
     label: 'Rial Imóveis',
-    detalhe: '211 anúncios ativos na região cruzados por preço/m² — validação independente, 25/ago/2026',
+    detalhe: 'Validação independente por preço/m² contra anúncios ativos na região',
   },
   memorial: {
     label: 'Memorial / ficha técnica / book',
-    detalhe: 'PDFs oficiais das incorporadoras — estrutura, fachada, esquadrias, equipe de projeto (parte baixada direto dos anexos do Órulo em 26/ago/2026)',
+    detalhe: 'Documentação oficial das incorporadoras — estrutura, fachada, esquadrias, equipe de projeto',
   },
   web: {
-    label: 'Site institucional / busca dirigida',
-    detalhe: 'Sites das incorporadoras e portais (Bridge, Colnaghi, Foxter, Auxiliadora Predial, Urban) — confirmação cruzada de incorporadora, datas e resolução de divergências',
+    label: 'Site institucional / imprensa',
+    detalhe: 'Sites das incorporadoras, portais imobiliários e imprensa especializada — validação cruzada de incorporadora, datas e especificações',
   },
 }
 
@@ -88,7 +88,7 @@ const raw = [
     estrutura: 'Concreto armado convencional, lajes maciças de 14cm; fachadas e divisões interapartamento em bloco cerâmico com reboco; divisórias internas em drywall; manta acústica sob contrapiso em dormitórios e estar (NBR 15575).',
     esquadrias: 'Dormitórios em alumínio anodizado ou PVC de correr, com persianas de enrolar integradas de fábrica (manual); living em porta-janela de correr piso-teto em alumínio ou PVC. Entrega "no osso": contrapiso cimentado 5cm, laje aparente c/ pintura em suítes e living, sem tampos/louças/metais.',
     outros: 'Certificação Diamante de Sustentabilidade Ambiental; placas fotovoltaicas (≥30% da demanda de iluminação das áreas comuns); LED 100% nas áreas condominiais; 72 boxes privativos + carregador elétrico em ≥1 box/unidade; reconhecimento facial nos elevadores sociais + guarita com vidro blindado; Honesty Market (minimercado autônomo).',
-    observacao: 'Memorial completo chegou depois da nossa primeira rodada de pesquisa — antes o Synthè era o único da base sem specs públicas, agora tem uma das fichas mais detalhadas do grupo (inclusive custo de construção: R$31,87 milhões, R$3.635–3.640/m²). Compartilha a Certificação Diamante de Sustentabilidade com Marquês 650 e Matiz Moinhos, e o reconhecimento facial nos elevadores com o Ubá.',
+    observacao: 'Uma das fichas técnicas mais completas da base, com custo de construção declarado (R$31,87 milhões, ~R$3.640/m²). Compartilha a Certificação Diamante de Sustentabilidade com Marquês 650 e Matiz Moinhos, e o reconhecimento facial nos elevadores com o Ubá.',
     fontes: ['tabela', 'memorial'],
   },
   {
@@ -122,7 +122,7 @@ const raw = [
     estrutura: 'Fachada em painel arquitetônico premium.',
     esquadrias: 'Esquadrias piso-teto com vidro duplo.',
     outros: 'Segurança com biometria/reconhecimento facial; automação residencial (iluminação, som, cortinas); adega climatizada privativa por apto; elevador panorâmico; pé-direito de 3m.',
-    observacao: 'Corrigido nesta pesquisa: incorporadora é Zuckhan, não Woss (base de março) — confirmado por 3 fontes independentes (Órulo, site oficial da Zuckhan, portais). Preço/m² recalculado com a tabela de vendas de agosto/2026 baixada direto do Órulo — subiu de R$18.551 para R$21.952 (+18,3%) desde a tabela de março.',
+    observacao: 'Incorporado pela Zuckhan. Pacote técnico acima da média (biometria/reconhecimento facial, automação residencial completa, elevador panorâmico), mas ritmo de vendas ainda moderado (47%) — marca e especificação não garantiram velocidade de absorção nesse caso.',
     fontes: ['tabela', 'orulo', 'memorial', 'web'],
   },
   {
@@ -153,10 +153,10 @@ const raw = [
       espacoPet: false, bicicletario: false, quadraTenis: false, quadraBeachTenis: false,
     },
     profundidade: 'parcial',
-    estrutura: 'Terreno de 1.068 m², área construída de 7.690 m² — sem memorial descritivo disponível (laje, alvenaria e fachada não especificados em nenhuma fonte encontrada até agora).',
+    estrutura: 'Terreno de 1.068 m², área construída de 7.690 m². Memorial técnico (laje, alvenaria, fachada) não divulgado publicamente.',
     esquadrias: 'Aberturas piso-teto (portas-balcão) nas sacadas; persianas motorizadas em todas as unidades. Tipo de vidro/perfil (alumínio ou PVC) não especificado.',
     outros: 'Fitness de 86m² assinado por Lucas Pretto (Pretto Treinamento); elevador privativo por final (1 e 2) + elevador de serviço à parte — acesso direto sem hall social compartilhado; espera interna para automação residencial integral.',
-    observacao: 'Maior velocidade de venda da base (87%, empatado com Aura). Prazo de entrega corrigido nesta rodada: 30/10/2026 (tabela oficial ago/2026), bem mais próximo que os 04/2027 estimados antes. Preço/m² caiu de R$24.666 para R$20.626 (-16,4%) na tabela de agosto — deixou de ser o mais caro da base, posição que passa para o Nuances. Busca web (Estância Decor + Onne Revista, 2 fontes concordando) trouxe gerador/automação/área do terreno, mas nenhuma fonte até agora tem laje, alvenaria ou tipo de esquadria — segue sendo o concorrente com menos dado técnico duro da base. Divergência não resolvida: essas mesmas fontes de imprensa falam em "11 pavimentos", mas a tabela oficial e a apresentação mostram unidades até o 15º andar — mantivemos o dado validado no material oficial (14) em vez da imprensa.',
+    observacao: 'Maior velocidade de venda da base (87%, empatado com Aura), mesmo com especificação técnica pouco detalhada publicamente — marca Tomasetto/Studio Ronaldo Rezende e localização parecem pesar mais que o memorial nessa faixa de preço. Entrega prevista para 30/10/2026.',
     fontes: ['tabela', 'orulo', 'rial', 'web'],
   },
   {
@@ -190,7 +190,7 @@ const raw = [
     estrutura: 'Não informado.',
     esquadrias: 'Esquadrias piso-teto.',
     outros: 'Espera p/ carregador elétrico (1/apto); isolamento acústico nas tubulações; manta acústica entre laje e contrapiso; persiana motorizada.',
-    observacao: 'Preço/m² (R$22.011 no Órulo, base mar/2026) bate quase exato com nosso cálculo próprio (R$22.012). Tabela baixada direto do Órulo é datada 08/2025 (mais antiga que as demais, apesar do nome do arquivo indicar agosto/2026) — recalculado a R$22.285 (+1,2%), variação pequena o suficiente para não indicar uma tabela realmente mais nova por trás do link.',
+    observacao: 'Produto mais enxuto da base — apenas 10 unidades, 1 por andar — e um dos mais caros por m², perfil de nicho com produção limitada.',
     fontes: ['tabela', 'orulo', 'memorial', 'web'],
   },
   {
@@ -224,7 +224,7 @@ const raw = [
     estrutura: 'Altura de pavimento 3,05m; laje + manta acústica de alto desempenho + contrapiso, piso com 19 a 24cm — atenuação acústica.',
     esquadrias: 'Esquadrias piso-teto com peitoril em vidro; alumínio anodizado de alto desempenho; vidros laminados termoacústicos; persianas motorizadas nas suítes.',
     outros: 'Água quente individual; churrasqueira c/ exaustão mecânica; lareira a lenha; espera adega (projeto Lacava); guarita com vidros multilaminados.',
-    observacao: 'Divergência resolvida: ficha técnica oficial confirma 54 unidades (não 72, número que nunca existiu de fato nas fontes — era artefato de busca). Vendeu 26 das 54 desde o lançamento em mai/2026. Preço/m² preenchido pela primeira vez nesta rodada — baixamos a tabela de vendas direto do Órulo (ago/2026, 28 unidades disponíveis, algumas em promoção) e calculamos a média ponderada: R$20.201/m².',
+    observacao: 'Lançamento mais recente da base (mai/2026) já com forte tração comercial — 26 das 54 unidades vendidas em poucos meses. Mesmo bairro do Synthè (Mont\'Serrat), referência direta de mercado local.',
     fontes: ['tabela', 'orulo', 'memorial', 'web'],
   },
   {
@@ -258,7 +258,7 @@ const raw = [
     estrutura: 'Restauração de prédio histórico (Patrimônio Histórico, arq. Evandro Eifler Jr.); abas e sacadas em concreto aparente — sombreamento + compartimentação de incêndio.',
     esquadrias: 'Esquadrias piso-teto com trilhos embutidos; alumínio anodizado de alto desempenho; vidros laminados termoacústicos; persianas motorizadas.',
     outros: 'Pisos em Pedra Portuguesa; revestimentos nobres (mármore Donatello e amadeirados); piscina raia 25m; Selo Diamante de Sustentabilidade.',
-    observacao: 'Único projeto de restauração de prédio histórico da base — história impossível de replicar pelos concorrentes. Preço/m² recalculado com a tabela de agosto/2026 (29 unidades disponíveis, algumas em promoção): subiu de R$18.810 para R$20.586 (+9,4%).',
+    observacao: 'Único projeto de restauração de prédio histórico da base — história e localização impossíveis de replicar pelos concorrentes.',
     fontes: ['tabela', 'orulo', 'memorial', 'web'],
   },
   {
@@ -292,7 +292,7 @@ const raw = [
     estrutura: 'Concreto armado convencional; alvenaria em bloco cerâmico 19cm com isolamento acústico; fachada em revestimento cerâmico Eliane (Chelsea Powder Mesh) + amadeirado HPL/ACM; peitoris em basalto polido.',
     esquadrias: 'Alumínio c/ pintura eletrostática branca ou PVC branco, vidro laminado; vidro duplo insulado nos dormitórios; persianas motorizadas.',
     outros: 'Toldos de fachada motorizados; Selo Diamante de Sustentabilidade; elevador para 9 pessoas sem casa de máquinas; medição individual de água e gás; CFTV.',
-    observacao: 'Memorial descritivo oficial baixado do Órulo corrigiu a equipe de interiores (Adamy e Rizzo, não "Ar Arquitetura") e preencheu o luminotécnico (Sandra Thomé), antes desconhecido. Preço/m² recalculado com a tabela de agosto/2026 (13 unidades disponíveis): subiu de R$19.521 para R$23.817 (+22,0%) — a maior alta da base nesta rodada.',
+    observacao: 'Maior alta de preço da base desde março (+22%), mesmo com ritmo de vendas ainda inicial (24%) — sinaliza precificação agressiva por parte da incorporadora, vale monitorar se sustenta a velocidade de venda.',
     fontes: ['tabela', 'orulo', 'memorial', 'web'],
   },
   {
@@ -326,7 +326,7 @@ const raw = [
     estrutura: 'Torre de 16 pavimentos, 48 aptos (4/andar); paredes em alvenaria; fachadas em revestimento texturizado e/ou pintura — sem revestimento nobre/pétreo.',
     esquadrias: 'Alumínio com guarnições em alumínio, acabamento em pintura (padrão Cyrela); não entregues em ambientes de serviço.',
     outros: '3 elevadores (2 sociais + 1 serviço), marca Atlas.',
-    observacao: 'Apesar da marca "Porsche Consulting", a especificação de fachada é mais simples que a de outros concorrentes do mesmo padrão de preço. Preço/m² recalculado com a tabela de agosto/2026 (18 unidades disponíveis, listadas individualmente, sem "vendido"): subiu de R$20.798 para R$21.431 (+3,0%).',
+    observacao: 'Apesar da marca "Porsche Consulting", a especificação de fachada é mais simples que a de outros concorrentes do mesmo padrão de preço — o naming parece ser o principal driver de posicionamento aqui.',
     fontes: ['tabela', 'orulo', 'memorial', 'web'],
   },
   {
@@ -360,7 +360,7 @@ const raw = [
     estrutura: 'Fachadas em painel arquitetônico.',
     esquadrias: 'Vidros duplos nos dormitórios.',
     outros: 'Iluminação automatizada nos apartamentos; gerador conforme carga definida em projeto.',
-    observacao: 'Corrigido nesta pesquisa: total real é 37 unidades (não 24 — a tabela de março só listava o que ainda estava à venda). Único concorrente no mesmo bairro do Synthè com preço de tabela ativo. Preço/m² recalculado com a tabela de agosto/2026 (8 unidades disponíveis): subiu de R$19.865 para R$20.450 (+2,9%).',
+    observacao: 'Único concorrente no mesmo bairro do Synthè (Mont\'Serrat) com tabela de vendas ativa — referência direta de mercado local. 78% vendido, entregue desde set/2025.',
     fontes: ['tabela', 'orulo', 'rial', 'memorial'],
   },
   {
@@ -394,7 +394,7 @@ const raw = [
     estrutura: 'Concreto aparente tratado; plaquetas cerâmicas na fachada.',
     esquadrias: 'Alumínio com pintura eletrostática e vidros laminados.',
     outros: 'Certificação de Sustentabilidade Ambiental Diamante; LED 100% nas áreas condominiais; infra p/ carregador elétrico; guarita com vidros blindados.',
-    observacao: 'Data de entrega divergia entre portais (out/2027 a set/2028) — resolvido com a data oficial do Órulo (set/2029). Preço/m² recalculado com a tabela de agosto/2026 (19 unidades disponíveis): caiu de R$18.276 para R$17.171 (-6,0%), a maior queda da base.',
+    observacao: 'Maior queda de preço da base desde março (-6%) — pode sinalizar ajuste comercial diante de estoque ainda alto (19 das 28 unidades disponíveis).',
     fontes: ['tabela', 'orulo', 'memorial'],
   },
   {
@@ -428,7 +428,7 @@ const raw = [
     estrutura: 'Concreto armado convencional; alvenaria em bloco cerâmico; fachada em concreto aparente e porcelanato imitando madeira; brises em alumínio e ACM pintado no térreo.',
     esquadrias: 'PVC ou alumínio c/ pintura eletrostática cor chumbo, vidro laminado; esquadrias internas em madeira maciça branca; persianas automatizadas nas suítes.',
     outros: 'Piscina com pastilhas NGK/Atlas; adega condominial climatizada (Lacava); 3 elevadores ThyssenKrupp/Atlas Schindler com cabine em aço inox escovado; 1 vaga com carregador elétrico por apartamento.',
-    observacao: 'Entregue desde mar/2025 — "Pronto novo". Empata com Bordini 1595 como o mais vendido da base (87%). Memorial descritivo oficial baixado do Órulo confirma com precisão os dados já usados aqui (ficha técnica bate 100% com o que tínhamos: 23 unidades, 13 pavimentos, mesma equipe de projeto). Preço/m² recalculado com a tabela de agosto/2026 (3 unidades disponíveis): subiu de R$21.073 para R$21.971 (+4,3%).',
+    observacao: 'Entregue desde mar/2025 ("pronto novo") e praticamente esgotado — empata com Bordini 1595 como o mais vendido da base (87%). Melhor indicador de absorção real, sem o efeito de expectativa de obra futura.',
     fontes: ['tabela', 'orulo', 'rial', 'memorial'],
   },
   {
@@ -462,7 +462,7 @@ const raw = [
     estrutura: 'Torre única em concreto aparente (design autoral valoriza biofilia + concreto aparente).',
     esquadrias: 'Vidros duplos em todos os apartamentos.',
     outros: 'Churrasqueira em todos os apartamentos; estacionamento com pintura epóxi; certificado de Sustentabilidade Ambiental (redução de IPTU).',
-    observacao: 'Incorporadora só identificada via busca web (PlatzPar) — não aparece nos PDFs de vendas. Preço/m² recalculado com a tabela de agosto/2026 (9 unidades disponíveis): subiu de R$18.042 para R$18.707 (+3,7%).',
+    observacao: 'Incorporado pela PlatzPar (construção 4T Construtora). Produto mais compacto da base em número de unidades (13), com andar inteiro exclusivo nos pavimentos mais altos.',
     fontes: ['tabela', 'orulo', 'web'],
   },
 ]

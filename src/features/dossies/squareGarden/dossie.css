@@ -1,0 +1,127 @@
+/* Dossiê — "instrumentação editorial": papel, tinta, numerais monoespaçados.
+   Escopo restrito a .dossie para não vazar para as outras rotas do app. */
+
+.dossie {
+  --ink: #15171c;
+  --ink-2: #45474f;
+  --muted: #7b7770;
+  --paper: #f4f2ec;
+  --card: #ffffff;
+  --line: #e3dfd5;
+  --line-strong: #cfc9bb;
+  --accent: #5a2d82;
+  --accent-soft: #f0e9f7;
+  --stock: #c07a12;
+  --stock-soft: #fbf0dc;
+  --sold: #0f6e63;
+  --sold-soft: #e2f0ee;
+
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Manrope, system-ui, sans-serif;
+  min-height: 100vh;
+  /* grão sutil: dá textura de papel sem imagem externa */
+  background-image: radial-gradient(rgba(0, 0, 0, 0.022) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+.dossie h1,
+.dossie h2,
+.dossie h3,
+.dossie .display {
+  font-family: 'Space Grotesk', Manrope, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.dossie .mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Rótulo de seção: filete + versalete espaçado. Repetido em todo o dossiê. */
+.dossie .eyebrow {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dossie .eyebrow::before {
+  content: '';
+  width: 22px;
+  height: 1px;
+  background: var(--line-strong);
+  flex: none;
+}
+
+.dossie .card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.dossie .rule {
+  height: 1px;
+  background: var(--line);
+}
+
+/* Célula do stacking plan */
+.sg-cell {
+  border-radius: 3px;
+  border: 1px solid transparent;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  cursor: default;
+}
+.sg-cell[data-state='sold'] {
+  background: var(--sold);
+  border-color: var(--sold);
+}
+.sg-cell[data-state='free'] {
+  background: var(--stock-soft);
+  border-color: #e6c894;
+}
+.sg-cell[data-state='void'] {
+  background: transparent;
+  border-color: transparent;
+}
+.sg-cell[data-state='sold']:hover,
+.sg-cell[data-state='free']:hover {
+  transform: scale(1.28);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+  z-index: 5;
+  position: relative;
+}
+
+/* Rail de navegação */
+.sg-rail a {
+  display: block;
+  padding: 5px 0 5px 14px;
+  border-left: 2px solid var(--line);
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s, border-color 0.15s;
+}
+.sg-rail a:hover {
+  color: var(--ink);
+}
+.sg-rail a[data-active='true'] {
+  color: var(--accent);
+  border-left-color: var(--accent);
+}
+
+.dossie ::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+@media print {
+  .sg-rail,
+  .sg-nofprint {
+    display: none !important;
+  }
+}

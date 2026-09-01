@@ -105,3 +105,28 @@ Apresentação visual e animada comparando o **Synthè** (Plaenge · TGD, Rua Pe
 - **Plantas & implantação**: imagens em `public/pesquisa-concorrentes/plantas/{id}-planta.jpg` e `{id}-implantacao.jpg` (24 arquivos, 1 par por empreendimento) — extraídas dos books/apresentações oficiais de cada incorporadora (via Órulo ou pasta de pesquisa manual) e redimensionadas para web. Casa Gardel só tinha material completo numa pasta de pesquisa manual fora do Órulo — se for necessário adicionar imagens de um novo empreendimento, procurar em ambos os lugares antes de marcar como indisponível.
 - **Tom do texto — importante**: o campo `observacao` de cada empreendimento (e as descrições em `SOURCES`) são lidos pela diretoria. **Nunca narrar o processo de pesquisa** (correções feitas, "antes achávamos X", tabela recalculada, divergência resolvida, fonte trocada) — escrever sempre como leitura direta e conclusiva do mercado, com o dado já correto, sem explicar como chegamos nele. Esse cuidado já foi aplicado uma vez retroativamente (26/08/2026) depois que o texto começou a soar como changelog de analista em vez de inteligência de mercado.
 - **Artifact irmão**: existe uma versão em Claude Artifact ("Synthè no Mapa Competitivo") com o mesmo conteúdo em HTML autocontido, mantida manualmente em sincronia com `data.js` (não é gerada a partir dele) — ao atualizar dados/tom aqui, replicar lá também se o pedido for sobre a apresentação como um todo.
+
+---
+
+## `/dossies` — Dossiês de Empreendimento (Adicionado em 01/09/2026)
+
+Repartição de **inteligência de mercado por empreendimento**: um dossiê por lançamento, consolidando tabela de disponibilidade, condições comerciais, produto e posição competitiva. Escalável — cada novo empreendimento entra como uma pasta em `src/features/dossies/` e uma linha no array `DOSSIES` de `DossiesIndex.jsx`.
+
+- **Rotas**: `/dossies` (índice) e `/dossies/square-garden` (primeiro dossiê). Registradas em `main.jsx`.
+- **Produção**: `https://inteligencia-mercado-imob.vercel.app/dossies`
+
+### Square Garden (Melnick · Santa Cecília)
+
+Fontes na pasta `Square Garden/` (fora do repo): tabela oficial de disponibilidade em PDF **escaneado** (15 páginas, sem camada de texto — foi lida por OCR visual, página a página), apresentação interna de 82 slides, book digital de 83 páginas, política comercial de agosto/2026 (print de WhatsApp) e prints de portais.
+
+- **`squareGarden/data.js`** — as 204 unidades disponíveis em 07/08/2026 como tuplas `[unidade, área, valor]` por torre, mais ficha, política comercial, concorrentes, timeline, lazer, comercial e contexto urbano.
+- **`squareGarden/metrics.js`** — **todo KPI é derivado, nenhum digitado**: estoque, VSO, VGV, R$/m², ticket, tipologias, stacking plan e gradiente por pavimento saem de `UNIDADES`. Ao atualizar a tabela, mexer só em `data.js`.
+- **`components/StackingPlan.jsx`** — a peça central: grade de 19 pavimentos × 4 finais por torre, célula = unidade real, verde vendido / âmbar em estoque. Torna visível o achado do dossiê (a coluna de sacadas do poente da Sunset está 89% vendida contra 16% da mesma coluna na Sunrise).
+- **`components/Charts.jsx`** — SVG inline, sem lib de gráficos: barras de R$/m², dispersão competitiva e linha de preço por pavimento.
+- **`dossie.css`** — tokens de cor e tipografia escopados em `.dossie` para não vazar para as outras rotas. Space Grotesk (títulos) + Manrope (texto) + JetBrains Mono (números), já carregadas no `index.html`.
+
+**Inferências declaradas na própria página** (seção "Metodologia e fontes"): as unidades vendidas são deduzidas por diferença contra a matriz de projeto (a tabela só lista as disponíveis); o total de 359 unidades do Multistay é inferido (507 divulgadas − 148 do Residence, e bate com a numeração da tabela); o VGV de R$ 450 mi é o de lançamento, a valores de 2025, não comparável linha a linha com a tabela reajustada.
+
+**Atenção — a seção "Política comercial" é material reservado da incorporadora** (perda de VPL e desconto nominal autorizado por torre). Está marcada como uso interno na página, mas a rota é pública, sem autenticação, como todo o resto do app. Se o app for compartilhado fora da equipe, remover esse bloco.
+
+**Tom do texto**: mesma regra do `/pesquisa_concorrentes` — leitura conclusiva de mercado, nunca narrativa do processo de pesquisa.

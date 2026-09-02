@@ -4,6 +4,7 @@ import { Building2, Lock, ExternalLink } from 'lucide-react'
 import './dossie.css'
 import {
   SNAPSHOT, SNAPSHOT_LONG, FICHA, POLITICA, POLITICA_VALIDADE, POLITICA_BENCH,
+  POLITICA_HORIZONTE, PARES_2029,
   CONCORRENTES, TIMELINE, LAZER, COMERCIAL, SEGURANCA, PROJETISTAS, CONTEXTO, FONTES,
 } from './data'
 import {
@@ -12,7 +13,7 @@ import {
 } from './metrics'
 import { Section, Kpi, VsoBar, Tag, Insight, Legend } from './components/Ui'
 import StackingPlan from './components/StackingPlan'
-import { BarsM2, ScatterCompetitivo, LinhaPavimento } from './components/Charts'
+import { BarsM2, ScatterCompetitivo, LinhaPavimento, GapHorizonte } from './components/Charts'
 
 const NAV = [
   ['sumario', 'Sumário'],
@@ -136,7 +137,7 @@ export default function SquareGarden() {
                 ['A Sunset vendeu o dobro da Sunrise.', `62,2% contra 31,1%. A Sunset foi a Fase 1 e saiu primeiro, mas o desconto que a Melnick concede nela é a metade do da Sunrise — sinal de que a diferença não é só de calendário.`],
                 ['O Multistay é o motor de giro.', `234 das 359 unidades colocadas (65,2%), a R$ ${fmtNum(multistay.m2Medio)}/m² — o maior preço por metro do empreendimento e o menor ticket, R$ ${fmtNum(multistay.ticketMedio / 1000)} mil.`],
                 ['O estoque residual está desbalanceado.', 'O que sobrou na Sunset são os finais 01 de 93,2 m² e dois gardens gigantes de baixo R$/m². O produto de maior liquidez já saiu; a torre entra na etapa difícil da curva.'],
-                ['O desconto praticado está acima do portfólio.', `Sunrise 28,2%, Multistay 26,6% e Sunset 25,4% de desconto nominal, contra uma média de ${fmtNum(POLITICA_BENCH.descontoMedioResidencial, 1)}% nos ${POLITICA_BENCH.amostra} demais produtos residenciais da mesma política. As três frentes ocupam a 3ª, a 4ª e a 6ª posição no ranking de desconto das ${POLITICA_BENCH.totalLinhas} linhas residenciais.`],
+                ['O desconto grande é efeito do prazo, não de generosidade.', `Os 28,2% da Sunrise assustam menos quando se olha a perda de VPL: 10%. O desconto nominal cresce com o horizonte de entrega — nos produtos entregues do portfólio ele é praticamente igual à perda de VPL, e nos de 2029 abre 17 p.p. Medido por VPL, o Square Garden concede ${fmtNum(POLITICA_BENCH.vplSquareGarden, 1)}% contra ${fmtNum(POLITICA_BENCH.vplDemais, 1)}% dos demais residenciais.`],
               ].map(([t, d], i) => (
                 <div key={t} className="card px-5 py-4 flex gap-4">
                   <span className="mono text-[12px] font-bold flex-none pt-[3px]" style={{ color: 'var(--accent)' }}>
@@ -414,20 +415,40 @@ export default function SquareGarden() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-3 mb-5">
-              <Kpi label="Média dos demais residenciais" value={fmtNum(POLITICA_BENCH.descontoMedioResidencial, 1)} unit="%" sub={`${POLITICA_BENCH.amostra} produtos, mediana de ${fmtNum(POLITICA_BENCH.medianaResidencial, 1)}%`} />
-              <Kpi label="Square Garden — média" value={fmtNum(DESCONTO_SG, 1)} unit="%" tone="accent" sub={`${fmtNum(DESCONTO_SG - POLITICA_BENCH.descontoMedioResidencial, 1)} p.p. acima do portfólio`} />
-              <Kpi label="Teto do portfólio" value={fmtNum(POLITICA_BENCH.maiorDesconto.valor, 1)} unit="%" sub={POLITICA_BENCH.maiorDesconto.nome} />
+              <Kpi label="Perda de VPL — Square Garden" value={fmtNum(POLITICA_BENCH.vplSquareGarden, 1)} unit="%" tone="accent" sub="média das três frentes" />
+              <Kpi label="Perda de VPL — demais residenciais" value={fmtNum(POLITICA_BENCH.vplDemais, 1)} unit="%" sub={`${POLITICA_BENCH.amostra} produtos, mediana de ${fmtNum(POLITICA_BENCH.vplMedianaDemais, 1)}%`} />
+              <Kpi label="Desconto nominal médio" value={fmtNum(DESCONTO_SG, 1)} unit="%" tone="stock" sub={`contra ${fmtNum(POLITICA_BENCH.nominalDemais, 1)}% do portfólio — ver o porquê abaixo`} />
+            </div>
+
+            <div className="card p-5 mb-5">
+              <p className="eyebrow mb-1">Por que o nominal é tão maior que o VPL</p>
+              <p className="text-[13px] text-[var(--ink-2)] mb-5 max-w-2xl">
+                Desconto nominal e perda de VPL médios das {POLITICA_BENCH.totalLinhas} linhas residenciais da
+                política, agrupadas pelo prazo de entrega. O desconto nominal incide sobre um preço pago ao longo do
+                fluxo: quanto mais distante a entrega, mais desconto de tabela é preciso dar para produzir a mesma
+                perda de valor presente.
+              </p>
+              <GapHorizonte linhas={POLITICA_HORIZONTE} />
             </div>
 
             <Insight>
-              As três frentes do Square Garden ocupam a 3ª, a 4ª e a 6ª posição no ranking de desconto das{' '}
-              {POLITICA_BENCH.totalLinhas} linhas residenciais da política de agosto — e apenas{' '}
-              {POLITICA_BENCH.acimaDoMenorSG} dos {POLITICA_BENCH.amostra} demais produtos são mais descontados que a
-              frente menos descontada do empreendimento. É um lançamento recente sendo tratado como estoque maduro. A
-              hierarquia interna, porém, é coerente com o
-              estoque: a Sunset, que vende sozinha, tem a menor perda de VPL autorizada (−5%); a Sunrise, que travou,
-              tem o dobro (−10%). Em negociação, o piso realista de uma unidade da Sunrise é o preço de tabela menos
-              cerca de 28% — informação que muda o comparativo de preço efetivo contra qualquer concorrente do entorno.
+              Os 28,22% da Sunrise não são uma concessão fora da curva — são a tradução nominal de uma perda de VPL de
+              10% num fluxo que vai até setembro de 2029. A prova está no próprio portfólio: nos produtos já entregues,
+              nominal e VPL praticamente coincidem; nos de 2029, a diferença média é de 17 p.p. Medido pela métrica que
+              a incorporadora de fato controla, o Square Garden concede{' '}
+              {fmtNum(POLITICA_BENCH.vplSquareGarden, 1)}% de VPL contra {fmtNum(POLITICA_BENCH.vplDemais, 1)}% dos
+              demais residenciais, e {POLITICA_BENCH.piorQueSG} dos {POLITICA_BENCH.amostra} produtos do portfólio têm
+              concessão maior. A comparação justa é contra os outros {PARES_2029.qtd} produtos com entrega em 2029, que
+              estão em {fmtNum(PARES_2029.nominalMedio, 1)}% nominais a −{PARES_2029.vpl}% de VPL: aí sim o Square
+              Garden aparece acima, e a Sunrise concede o dobro de VPL deles.
+            </Insight>
+
+            <Insight title="Para a mesa">
+              A hierarquia interna entre as três frentes é coerente com o estoque: a Sunset, que vende sozinha, tem a
+              menor perda de VPL autorizada (−5%); a Sunrise, que travou, tem o dobro (−10%). Na prática, o piso
+              realista de uma unidade da Sunrise é o preço de tabela menos cerca de 28% — informação que muda o
+              comparativo de preço efetivo contra qualquer concorrente do entorno, e que precisa ser lida junto com o
+              prazo: o comprador que aceita esperar até 2029 é quem paga esse preço.
             </Insight>
           </Section>
 

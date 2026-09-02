@@ -64,7 +64,7 @@ const raw = [
     endereco: 'Rua Pedro Ivo, 542/554/564',
     dataLancamento: '2026-03-20',
     dataLancamentoObs: 'confirmado — registro de incorporação R.1/222.853',
-    dataEntrega: null,
+    dataEntrega: '2029-07-31',
     totalUnidades: 32,
     unidadesEstoque: 19,
     tipologia: '3 suítes (1 master + 2 comuns)',
@@ -88,7 +88,7 @@ const raw = [
     estrutura: 'Concreto armado convencional, lajes maciças de 14cm; fachadas e divisões interapartamento em bloco cerâmico com reboco; divisórias internas em drywall; manta acústica sob contrapiso em dormitórios e estar (NBR 15575).',
     esquadrias: 'Dormitórios em alumínio anodizado ou PVC de correr, com persianas de enrolar integradas de fábrica (manual); living em porta-janela de correr piso-teto em alumínio ou PVC. Entrega "no osso": contrapiso cimentado 5cm, laje aparente c/ pintura em suítes e living, sem tampos/louças/metais.',
     outros: 'Certificação Diamante de Sustentabilidade Ambiental; placas fotovoltaicas (≥30% da demanda de iluminação das áreas comuns); LED 100% nas áreas condominiais; 72 boxes privativos + carregador elétrico em ≥1 box/unidade; reconhecimento facial nos elevadores sociais + guarita com vidro blindado; Honesty Market (minimercado autônomo).',
-    observacao: 'Uma das fichas técnicas mais completas da base, com custo de construção declarado (R$31,87 milhões, ~R$3.640/m²). Compartilha a Certificação Diamante de Sustentabilidade com Marquês 650 e Matiz Moinhos, e o reconhecimento facial nos elevadores com o Ubá.',
+    observacao: 'Uma das fichas técnicas mais completas da base. Compartilha a Certificação Diamante de Sustentabilidade com Marquês 650 e Matiz Moinhos, e o reconhecimento facial nos elevadores com o Ubá.',
     fontes: ['tabela', 'memorial'],
   },
   {

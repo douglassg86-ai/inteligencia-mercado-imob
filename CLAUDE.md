@@ -127,6 +127,8 @@ Fontes na pasta `Square Garden/` (fora do repo): tabela oficial de disponibilida
 
 **Inferências declaradas na própria página** (seção "Metodologia e fontes"): as unidades vendidas são deduzidas por diferença contra a matriz de projeto (a tabela só lista as disponíveis); o total de 359 unidades do Multistay é inferido (507 divulgadas − 148 do Residence, e bate com a numeração da tabela); o VGV de R$ 450 mi é o de lançamento, a valores de 2025, não comparável linha a linha com a tabela reajustada.
 
+**Calibragem do desconto**: `POLITICA_BENCH` em `data.js` guarda só os agregados da seção RESIDENCIAL da política (35 linhas, das quais 3 são o Square Garden; média dos 32 demais = 13,82%, mediana 13,72%, teto 34,00% no Supreme Altos do Central Parque). A política produto a produto do portfólio Melnick **não** entra no bundle — só o agregado. Se a política de outro mês for usada, recalcular os quatro campos a partir da tabela, não estimar.
+
 **Atenção — a seção "Política comercial" é material reservado da incorporadora** (perda de VPL e desconto nominal autorizado por torre). Está marcada como uso interno na página, mas a rota é pública, sem autenticação, como todo o resto do app. Se o app for compartilhado fora da equipe, remover esse bloco.
 
 **Tom do texto**: mesma regra do `/pesquisa_concorrentes` — leitura conclusiva de mercado, nunca narrativa do processo de pesquisa.

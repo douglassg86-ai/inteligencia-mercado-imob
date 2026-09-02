@@ -8,7 +8,7 @@ import {
 } from './data'
 import {
   TOTAIS, porTorre, porTipologia, faixasMultistay, precoPorPavimento,
-  fmtBRL, fmtMi, fmtNum, fmtM2, fmtCompact,
+  fmtBRL, fmtMi, fmtNum, fmtM2, fmtCompact, DESCONTO_SG,
 } from './metrics'
 import { Section, Kpi, VsoBar, Tag, Insight, Legend } from './components/Ui'
 import StackingPlan from './components/StackingPlan'
@@ -136,7 +136,7 @@ export default function SquareGarden() {
                 ['A Sunset vendeu o dobro da Sunrise.', `62,2% contra 31,1%. A Sunset foi a Fase 1 e saiu primeiro, mas o desconto que a Melnick concede nela é a metade do da Sunrise — sinal de que a diferença não é só de calendário.`],
                 ['O Multistay é o motor de giro.', `234 das 359 unidades colocadas (65,2%), a R$ ${fmtNum(multistay.m2Medio)}/m² — o maior preço por metro do empreendimento e o menor ticket, R$ ${fmtNum(multistay.ticketMedio / 1000)} mil.`],
                 ['O estoque residual está desbalanceado.', 'O que sobrou na Sunset são os finais 01 de 93,2 m² e dois gardens gigantes de baixo R$/m². O produto de maior liquidez já saiu; a torre entra na etapa difícil da curva.'],
-                ['O desconto praticado está acima do portfólio.', `Sunrise 28,2%, Multistay 26,6% e Sunset 25,4% de desconto nominal, contra uma média de ${fmtNum(POLITICA_BENCH.descontoMedioResidencial, 1)}% nos ${POLITICA_BENCH.amostra} produtos residenciais da mesma política.`],
+                ['O desconto praticado está acima do portfólio.', `Sunrise 28,2%, Multistay 26,6% e Sunset 25,4% de desconto nominal, contra uma média de ${fmtNum(POLITICA_BENCH.descontoMedioResidencial, 1)}% nos ${POLITICA_BENCH.amostra} demais produtos residenciais da mesma política. As três frentes ocupam a 3ª, a 4ª e a 6ª posição no ranking de desconto das ${POLITICA_BENCH.totalLinhas} linhas residenciais.`],
               ].map(([t, d], i) => (
                 <div key={t} className="card px-5 py-4 flex gap-4">
                   <span className="mono text-[12px] font-bold flex-none pt-[3px]" style={{ color: 'var(--accent)' }}>
@@ -414,14 +414,17 @@ export default function SquareGarden() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-3 mb-5">
-              <Kpi label="Média residencial Melnick" value={fmtNum(POLITICA_BENCH.descontoMedioResidencial, 1)} unit="%" sub={`${POLITICA_BENCH.amostra} produtos na mesma política`} />
-              <Kpi label="Square Garden — média" value="26,7" unit="%" tone="accent" sub="10,8 p.p. acima do portfólio" />
+              <Kpi label="Média dos demais residenciais" value={fmtNum(POLITICA_BENCH.descontoMedioResidencial, 1)} unit="%" sub={`${POLITICA_BENCH.amostra} produtos, mediana de ${fmtNum(POLITICA_BENCH.medianaResidencial, 1)}%`} />
+              <Kpi label="Square Garden — média" value={fmtNum(DESCONTO_SG, 1)} unit="%" tone="accent" sub={`${fmtNum(DESCONTO_SG - POLITICA_BENCH.descontoMedioResidencial, 1)} p.p. acima do portfólio`} />
               <Kpi label="Teto do portfólio" value={fmtNum(POLITICA_BENCH.maiorDesconto.valor, 1)} unit="%" sub={POLITICA_BENCH.maiorDesconto.nome} />
             </div>
 
             <Insight>
-              As três frentes do Square Garden estão entre as mais descontadas do portfólio residencial da Melnick em
-              agosto, apesar de ser um lançamento recente e não estoque velho. A hierarquia interna é coerente com o
+              As três frentes do Square Garden ocupam a 3ª, a 4ª e a 6ª posição no ranking de desconto das{' '}
+              {POLITICA_BENCH.totalLinhas} linhas residenciais da política de agosto — e apenas{' '}
+              {POLITICA_BENCH.acimaDoMenorSG} dos {POLITICA_BENCH.amostra} demais produtos são mais descontados que a
+              frente menos descontada do empreendimento. É um lançamento recente sendo tratado como estoque maduro. A
+              hierarquia interna, porém, é coerente com o
               estoque: a Sunset, que vende sozinha, tem a menor perda de VPL autorizada (−5%); a Sunrise, que travou,
               tem o dobro (−10%). Em negociação, o piso realista de uma unidade da Sunrise é o preço de tabela menos
               cerca de 28% — informação que muda o comparativo de preço efetivo contra qualquer concorrente do entorno.

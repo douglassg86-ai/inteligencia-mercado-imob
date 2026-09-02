@@ -1,5 +1,5 @@
 // Tudo aqui é derivado de data.js. Nenhum KPI da página é digitado à mão.
-import { UNIDADES, PRODUTOS, FICHA } from './data'
+import { UNIDADES, PRODUTOS, FICHA, POLITICA } from './data'
 
 export const fmtBRL = (v, d = 0) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: d, maximumFractionDigits: d })
@@ -154,3 +154,6 @@ export function precoPorPavimento(torreId, areaAlvo) {
     .map((e) => ({ pav: e.pav, m2: e.soma / e.qtd, un: e.uns.join(' / ') }))
     .sort((a, b) => a.pav - b.pav)
 }
+
+/** Desconto nominal médio das três frentes do Square Garden, derivado da política. */
+export const DESCONTO_SG = POLITICA.reduce((a, p) => a + p.descontoNominal, 0) / POLITICA.length

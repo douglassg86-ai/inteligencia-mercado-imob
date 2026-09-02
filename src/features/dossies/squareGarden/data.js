@@ -177,11 +177,24 @@ export const POLITICA = [
 
 export const POLITICA_VALIDADE = '31/08/2026'
 
-// Média do portfólio residencial Melnick na mesma política, para calibrar o desvio.
+/**
+ * Calibragem contra o portfólio, apurada sobre a seção RESIDENCIAL da mesma
+ * política: 35 linhas, das quais 3 são o Square Garden e 32 são os demais
+ * produtos. Média simples dos descontos nominais dos 32 = 13,82%; mediana
+ * 13,72%; média das 3 linhas do Square Garden = 26,74%.
+ * Só os agregados ficam aqui — a política produto a produto do portfólio
+ * Melnick não entra no bundle da página.
+ */
 export const POLITICA_BENCH = {
-  descontoMedioResidencial: 15.9,
-  amostra: 33,
+  descontoMedioResidencial: 13.82,
+  medianaResidencial: 13.72,
+  amostra: 32,
+  totalLinhas: 35,
   maiorDesconto: { nome: 'Supreme Altos do Central Parque', valor: 34.0 },
+  // Posição das 3 frentes no ranking de desconto das 35 linhas residenciais.
+  posicoesSquareGarden: [3, 4, 6],
+  // Produtos do portfólio com desconto maior que o da frente menos descontada do SG.
+  acimaDoMenorSG: 3,
 }
 
 /* ---------------------------------------------------------------------------

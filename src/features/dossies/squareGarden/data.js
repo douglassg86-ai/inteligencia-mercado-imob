@@ -179,23 +179,45 @@ export const POLITICA_VALIDADE = '31/08/2026'
 
 /**
  * Calibragem contra o portfólio, apurada sobre a seção RESIDENCIAL da mesma
- * política: 35 linhas, das quais 3 são o Square Garden e 32 são os demais
- * produtos. Média simples dos descontos nominais dos 32 = 13,82%; mediana
- * 13,72%; média das 3 linhas do Square Garden = 26,74%.
+ * política: 35 linhas, das quais 3 são o Square Garden e 32 são os demais.
+ *
+ * A leitura correta é pela PERDA DE VPL, não pelo desconto nominal: o desconto
+ * nominal cresce mecanicamente com o horizonte de entrega, porque incide sobre
+ * um preço pago num fluxo longo. Nos produtos entregues ou com entrega em 2026
+ * o nominal é praticamente igual à perda de VPL; nos de 2029 a diferença abre
+ * 17 p.p. Comparar o nominal do Square Garden (entrega 2029) com a média do
+ * portfólio compara horizontes diferentes.
+ *
  * Só os agregados ficam aqui — a política produto a produto do portfólio
  * Melnick não entra no bundle da página.
  */
 export const POLITICA_BENCH = {
-  descontoMedioResidencial: 13.82,
-  medianaResidencial: 13.72,
+  // perda de VPL — a métrica comparável
+  vplSquareGarden: 8.67,
+  vplDemais: 10.5,
+  vplMedianaDemais: 10.0,
   amostra: 32,
   totalLinhas: 35,
-  maiorDesconto: { nome: 'Supreme Altos do Central Parque', valor: 34.0 },
-  // Posição das 3 frentes no ranking de desconto das 35 linhas residenciais.
-  posicoesSquareGarden: [3, 4, 6],
-  // Produtos do portfólio com desconto maior que o da frente menos descontada do SG.
-  acimaDoMenorSG: 3,
+  piorQueSG: 17, // produtos do portfólio com perda de VPL maior que a média do SG
+  // desconto nominal — o número que aparece na mesa
+  nominalSquareGarden: 26.74,
+  nominalDemais: 13.82,
+  maiorNominal: { nome: 'Supreme Altos do Central Parque', valor: 34.0, entrega: 'Entregue' },
 }
+
+/**
+ * Desconto nominal médio × perda de VPL média, por horizonte de entrega,
+ * nas 35 linhas residenciais. É a prova de que o nominal é função do prazo.
+ */
+export const POLITICA_HORIZONTE = [
+  { faixa: 'Entregue e 2026', n: 19, vpl: 12.7, nominal: 13.44 },
+  { faixa: '2027', n: 9, vpl: 7.0, nominal: 11.02 },
+  { faixa: '2028', n: 2, vpl: 11.0, nominal: 22.58 },
+  { faixa: '2029', n: 5, vpl: 7.2, nominal: 24.56 },
+]
+
+// Comparáveis diretos: os outros dois produtos do portfólio com entrega em 2029.
+export const PARES_2029 = { qtd: 2, nominalMedio: 21.28, vpl: 5 }
 
 /* ---------------------------------------------------------------------------
    Concorrência — raio de 1,6 km, verticais residenciais em oferta.

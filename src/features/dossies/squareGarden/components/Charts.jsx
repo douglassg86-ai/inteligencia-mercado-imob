@@ -194,3 +194,41 @@ export function LinhaPavimento({ series, w = 700, h = 260 }) {
     </div>
   )
 }
+
+/* ---------- desconto nominal × perda de VPL, por horizonte de entrega ---------- */
+
+export function GapHorizonte({ linhas }) {
+  const max = Math.max(...linhas.map((l) => Math.max(l.nominal, l.vpl))) * 1.08
+  return (
+    <div className="space-y-3">
+      {linhas.map((l, i) => (
+        <div key={l.faixa}>
+          <div className="flex items-baseline justify-between mb-1.5">
+            <span className="text-[12px] font-bold">{l.faixa}</span>
+            <span className="mono text-[10.5px] text-[var(--muted)]">
+              {l.n} produto{l.n > 1 ? 's' : ''} · gap {fmtNum(l.nominal - l.vpl, 1)} p.p.
+            </span>
+          </div>
+          {[
+            ['perda de VPL', l.vpl, 'var(--sold)'],
+            ['desconto nominal', l.nominal, 'var(--accent)'],
+          ].map(([rot, v, cor]) => (
+            <div key={rot} className="flex items-center gap-2.5 mb-[3px]">
+              <span className="text-[10px] w-[92px] flex-none text-right text-[var(--muted)]">{rot}</span>
+              <div className="flex-1 h-[13px] rounded-[3px] overflow-hidden" style={{ background: '#f2efe8' }}>
+                <Motion.div
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${(v / max) * 100}%` }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.08, ease: 'easeOut' }}
+                  style={{ height: '100%', background: cor }}
+                />
+              </div>
+              <span className="mono text-[11px] font-bold w-[46px] flex-none text-right">{fmtNum(v, 1)}%</span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}

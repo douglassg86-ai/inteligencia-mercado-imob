@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Fluxo Jornada 360</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --surface-alt: #f0efec;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --border: rgba(11,11,11,0.10);
+    --status-good: #0ca30c;
+    --status-warning: #fab219;
+    --status-critical: #d03b3b;
+    --accent: #9a6a2f;
+    --accent-ink: #ffffff;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 1px 2px rgba(11,11,11,0.04), 0 8px 24px -12px rgba(11,11,11,0.12);
+    --serif: "Fraunces", ui-serif, Georgia, serif;
+    --sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page:#0d0d0d; --surface:#1a1a19; --surface-alt:#232322;
+      --ink:#ffffff; --ink-2:#c3c2b7; --muted:#8f8d86;
+      --grid:#2c2c2a; --border: rgba(255,255,255,0.12);
+      --status-good:#26c95f; --status-warning:#fab219; --status-critical:#e66767;
+      --accent:#c99257; --accent-ink:#0b0b0b;
+      --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 8px 24px -12px rgba(0,0,0,0.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19; --surface-alt:#232322;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#8f8d86;
+    --grid:#2c2c2a; --border: rgba(255,255,255,0.12);
+    --status-good:#26c95f; --status-warning:#fab219; --status-critical:#e66767;
+    --accent:#c99257; --accent-ink:#0b0b0b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 8px 24px -12px rgba(0,0,0,0.55);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    background: var(--page); color: var(--ink); font-family: var(--sans);
+    -webkit-font-smoothing: antialiased; line-height: 1.55;
+  }
+  h1, .serif { font-family: var(--serif); letter-spacing: -0.01em; text-wrap: balance; }
+  code { font-family: var(--sans); background: var(--surface-alt); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: 0.9em; }
+
+  .banner { background: var(--surface); border-bottom: 1px solid var(--border); }
+  .banner-inner { max-width: 1240px; margin: 0 auto; padding: 44px 28px 30px; }
+  .eyebrow { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 0 0 8px; }
+  .banner h1 { font-size: clamp(26px, 3.6vw, 34px); font-weight: 600; margin: 0 0 12px; }
+  .banner p.lede { max-width: 72ch; color: var(--ink-2); font-size: 15px; margin: 0; }
+
+  .shell { max-width: 1240px; margin: 0 auto; padding: 26px 28px 80px; }
+
+  .legend {
+    display: flex; gap: 22px; flex-wrap: wrap; align-items: center;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 12px 18px; margin-bottom: 20px; font-size: 12px; color: var(--ink-2);
+  }
+  .legend .grp { display: flex; align-items: center; gap: 8px; }
+  .legend b { color: var(--ink); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+  .legend .sw { width: 22px; height: 12px; border-radius: 4px; flex-shrink: 0; }
+  .legend .sw.main { background: var(--surface); border: 1.5px solid var(--ink-2); }
+  .legend .sw.wait { background: var(--surface-alt); border: 1.5px solid var(--status-warning); }
+  .legend .sw.risk { background: var(--surface-alt); border: 1.5px dashed var(--status-critical); }
+  .legend .sw.good { background: color-mix(in srgb, var(--status-good) 15%, var(--surface)); border: 1.5px solid var(--status-good); }
+  .legend .sw.bad { background: var(--surface-alt); border: 1.5px dashed var(--muted); }
+
+  figure { margin: 0 0 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+  .diagram-scroll { overflow-x: auto; }
+  svg { display: block; margin: 0 auto; min-width: 1100px; }
+  figcaption { font-size: 12.5px; color: var(--muted); padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--grid); max-width: 90ch; }
+
+  .node { stroke-width: 1.6px; }
+  .node-main { fill: var(--surface); stroke: var(--ink-2); }
+  .node-wait { fill: var(--surface-alt); stroke: var(--status-warning); }
+  .node-risk { fill: var(--surface-alt); stroke: var(--status-critical); stroke-dasharray: 5 3; }
+  .node-end-good { fill: color-mix(in srgb, var(--status-good) 14%, var(--surface)); stroke: var(--status-good); }
+  .node-end-bad { fill: var(--surface-alt); stroke: var(--muted); stroke-dasharray: 4 3; }
+  .node-end-neutral { fill: var(--surface-alt); stroke: var(--muted); stroke-dasharray: 4 3; }
+
+  .node-label { font-family: var(--sans); font-size: 11px; fill: var(--ink-2); }
+  text tspan[class$="-strong"] { font-weight: 700; fill: var(--ink); font-family: var(--serif); font-size: 12.5px; }
+  .node-label-risk tspan[class$="-strong"] { fill: var(--status-critical); }
+  .node-label-wait tspan[class$="-strong"] { fill: #9a6a13; }
+  .node-label-end-good tspan[class$="-strong"] { fill: var(--status-good); }
+
+  .edge { fill: none; stroke-width: 1.8px; }
+  .edge-main { stroke: var(--ink-2); }
+  .edge-wait { stroke: var(--status-warning); }
+  .edge-risk { stroke: var(--status-critical); }
+  .edge-end-good { stroke: var(--status-good); }
+  .edge-end-bad { stroke: var(--muted); }
+
+  .marker-main path { fill: var(--ink-2); }
+  .marker-wait path { fill: var(--status-warning); }
+  .marker-risk path { fill: var(--status-critical); }
+  .marker-end-good path { fill: var(--status-good); }
+  .marker-end-bad path { fill: var(--muted); }
+
+  .edge-label-bg { fill: var(--surface); opacity: .94; }
+  .edge-label { font-family: var(--sans); font-size: 9.5px; fill: var(--ink-2); }
+  .edge-label-risk { fill: var(--status-critical); font-weight: 600; }
+  .edge-label-wait { fill: #9a6a13; }
+  .edge-label-end-bad { fill: var(--muted); }
+  :root[data-theme="dark"] .edge-label-wait, :root:where(:not([data-theme="light"])) .edge-label-wait { fill: #f0c675; }
+
+  .closing { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 720px) { .closing { grid-template-columns: 1fr; } }
+  .closing .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; }
+  .closing h3 { font-size: 13.5px; margin: 0 0 10px; font-family: var(--serif); font-weight: 600; }
+  .closing p { font-size: 13px; color: var(--ink-2); margin: 0; }
+  .closing code { display: block; margin-top: 8px; }
+
+  footer.page { max-width: 1240px; margin: 0 auto; padding: 0 28px 50px; color: var(--muted); font-size: 12px; }
+</style>
+
+
+</head>
+<body>
+<div class="banner">
+  <div class="banner-inner">
+    <div class="eyebrow">Jornada 360 · Fluxo real</div>
+    <h1>Fluxo Jornada 360</h1>
+    <p class="lede">Do primeiro contato ao encerramento de um chamado — cada etapa com todas as ramificações que ela realmente pode tomar, incluindo espera, escalonamento por risco, reabertura e o encerramento com confirmação de entendimento. Leia de cima para baixo: a raia central é o caminho principal, a da esquerda é risco/escalonamento, a da direita é espera/bloqueio.</p>
+  </div>
+</div>
+
+<div class="shell">
+  <div class="legend">
+    <div class="grp"><b>Legenda</b></div>
+    <div class="grp"><span class="sw main"></span>Fluxo principal</div>
+    <div class="grp"><span class="sw wait"></span>Espera / bloqueio</div>
+    <div class="grp"><span class="sw risk"></span>Risco / escalonamento / reabertura</div>
+    <div class="grp"><span class="sw good"></span>Encerramento bom</div>
+    <div class="grp"><span class="sw bad"></span>Encerramento neutro (perdido/cancelado)</div>
+  </div>
+
+  <figure>
+    <div class="diagram-scroll">
+<svg viewBox="5.0 -10 1180 1873.0" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fluxograma da jornada do cliente, do cadastro à conclusão de um chamado, com ramificações de escalonamento por risco, esperas e reabertura.">
+<defs><marker id="arrow-main" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" class="marker-main"><path d="M 0 0 L 10 5 L 0 10 z"/></marker>
+<marker id="arrow-wait" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" class="marker-wait"><path d="M 0 0 L 10 5 L 0 10 z"/></marker>
+<marker id="arrow-risk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" class="marker-risk"><path d="M 0 0 L 10 5 L 0 10 z"/></marker>
+<marker id="arrow-end-good" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" class="marker-end-good"><path d="M 0 0 L 10 5 L 0 10 z"/></marker>
+<marker id="arrow-end-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" class="marker-end-bad"><path d="M 0 0 L 10 5 L 0 10 z"/></marker>
+<marker id="arrow-end-neutral" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" class="marker-end-neutral"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs>
+<path d="M 560 76 C 560 103.0 330 103.0 330 130" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<rect x="405.55" y="94.0" width="78.89999999999999" height="16" rx="4" class="edge-label-bg"/>
+<text x="445.0" y="106.0" text-anchor="middle" class="edge-label edge-label-main">já cadastrado</text>
+<path d="M 560 76 C 560 103.0 790 103.0 790 130" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<rect x="638.2" y="94.0" width="73.6" height="16" rx="4" class="edge-label-bg"/>
+<text x="675.0" y="106.0" text-anchor="middle" class="edge-label edge-label-main">cliente novo</text>
+<path d="M 330 183.0 C 330 216.5 560 216.5 560 250" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<path d="M 790 197.5 C 790 223.75 560 223.75 560 250" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<path d="M 560 317.5 L 560 360" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<path d="M 350.0 383.625 C 350.0 391.125 265.0 391.125 265.0 398.625" class="edge edge-end-bad" marker-end="url(#arrow-end-bad)" stroke-dasharray="6 4"/>
+<rect x="283.95" y="382.125" width="47.1" height="16" rx="4" class="edge-label-bg"/>
+<text x="307.5" y="394.125" text-anchor="middle" class="edge-label edge-label-end-bad">perdido</text>
+<path d="M 560 427.5 L 560 500" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<rect x="480.8" y="454.75" width="158.4" height="16" rx="4" class="edge-label-bg"/>
+<text x="560" y="466.75" text-anchor="middle" class="edge-label edge-label-main">durante o funil ou pós-venda</text>
+<path d="M 330.0 533.775 C 330.0 536.3125 275.0 536.3125 275.0 538.85" class="edge edge-risk" marker-end="url(#arrow-risk)" stroke-dasharray="6 4"/>
+<rect x="278.95" y="527.3125" width="47.1" height="16" rx="4" class="edge-label-bg"/>
+<text x="302.5" y="539.3125" text-anchor="middle" class="edge-label edge-label-risk">crítica</text>
+<path d="M 150 611.0 C 150 695.5 503.0 695.5 503.0 780" class="edge edge-risk" marker-end="url(#arrow-risk)" stroke-dasharray="6 4"/>
+<rect x="297.65" y="686.5" width="57.699999999999996" height="16" rx="4" class="edge-label-bg"/>
+<text x="326.5" y="698.5" text-anchor="middle" class="edge-label edge-label-risk">acompanha</text>
+<path d="M 560 596.5 L 560 660" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<path d="M 560 713.0 L 560 780" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<rect x="496.7" y="737.5" width="126.6" height="16" rx="4" class="edge-label-bg"/>
+<text x="560" y="749.5" text-anchor="middle" class="edge-label edge-label-main">resposta dentro do SLA</text>
+<path d="M 750.0 678.55 C 750.0 849.275 895.0 849.275 895.0 1020" class="edge edge-end-bad" marker-end="url(#arrow-end-bad)" stroke-dasharray="6 4"/>
+<rect x="742.6" y="751" width="94.8" height="16" rx="4" class="edge-label-bg"/>
+<text x="790" y="763" text-anchor="middle" class="edge-label edge-label-end-bad">antes de iniciar</text>
+<path d="M 750.0 803.625 C 750.0 803.625 830.0 803.625 830.0 803.625" class="edge edge-wait" marker-end="url(#arrow-wait)"/>
+<rect x="758.5" y="794.625" width="63.0" height="16" rx="4" class="edge-label-bg"/>
+<text x="790.0" y="806.625" text-anchor="middle" class="edge-label edge-label-wait">falta info</text>
+<path d="M 960 780 C 960 790.125 750.0 790.125 750.0 800.25" class="edge edge-wait" marker-end="url(#arrow-wait)"/>
+<rect x="873.8" y="756" width="52.4" height="16" rx="4" class="edge-label-bg"/>
+<text x="900" y="768" text-anchor="middle" class="edge-label edge-label-wait">responde</text>
+<path d="M 750.0 803.625 C 750.0 873.75 830.0 873.75 830.0 943.875" class="edge edge-wait" marker-end="url(#arrow-wait)"/>
+<rect x="705.5" y="864.75" width="169.0" height="16" rx="4" class="edge-label-bg"/>
+<text x="790.0" y="876.75" text-anchor="middle" class="edge-label edge-label-wait">precisa de terceiro/outra área</text>
+<path d="M 960 900 C 680.0 900 680.0 827.25 750.0 827.25" class="edge edge-wait" marker-end="url(#arrow-wait)"/>
+<rect x="600.8" y="854.625" width="158.4" height="16" rx="4" class="edge-label-bg"/>
+<text x="680.0" y="866.625" text-anchor="middle" class="edge-label edge-label-wait">terceiro responde / reassume</text>
+<path d="M 750.0 803.625 C 750.0 935.6625 830.0 935.6625 830.0 1067.7" class="edge edge-end-bad" marker-end="url(#arrow-end-bad)" stroke-dasharray="6 4"/>
+<rect x="753.2" y="926.6625" width="73.6" height="16" rx="4" class="edge-label-bg"/>
+<text x="790.0" y="938.6625" text-anchor="middle" class="edge-label edge-label-end-bad">em andamento</text>
+<path d="M 560 847.5 L 560 1010" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<path d="M 446.0 1063.0 C 446.0 1096.5 300 1096.5 300 1130" class="edge edge-end-good" marker-end="url(#arrow-end-good)"/>
+<path d="M 560 1063.0 L 560 1130" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<path d="M 674.0 1063.0 C 674.0 1096.5 830 1096.5 830 1130" class="edge edge-risk" marker-end="url(#arrow-risk)" stroke-dasharray="6 4"/>
+<path d="M 830 1176 C 830 1208.0 1060 1208.0 1060 1240" class="edge edge-risk" marker-end="url(#arrow-risk)" stroke-dasharray="6 4"/>
+<rect x="897.6" y="1199.0" width="94.8" height="16" rx="4" class="edge-label-bg"/>
+<text x="945.0" y="1211.0" text-anchor="middle" class="edge-label edge-label-risk">cliente contesta</text>
+<path d="M 955.0 1258.55 C 150.0 1258.55 150.0 813.75 750.0 813.75" class="edge edge-risk" marker-end="url(#arrow-risk)" stroke-dasharray="6 4"/>
+<rect x="118.5" y="1027.15" width="63.0" height="16" rx="4" class="edge-label-bg"/>
+<text x="150.0" y="1039.15" text-anchor="middle" class="edge-label edge-label-risk">reabertura</text>
+<path d="M 300 1176 C 300 1238.0 465.0 1238.0 465.0 1300" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<path d="M 560 1176 L 560 1300" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<path d="M 830 1176 C 830 1238.0 655.0 1238.0 655.0 1300" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<rect x="700.4" y="1229.0" width="84.2" height="16" rx="4" class="edge-label-bg"/>
+<text x="742.5" y="1241.0" text-anchor="middle" class="edge-label edge-label-main">não contestado</text>
+<path d="M 1060 1293.0 C 1060 1323.0 674.0 1323.0 674.0 1353.0" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<rect x="822.25" y="1314.0" width="89.5" height="16" rx="4" class="edge-label-bg"/>
+<text x="867.0" y="1326.0" text-anchor="middle" class="edge-label edge-label-main">mantém negativa</text>
+<path d="M 446.0 1353.0 C 446.0 1386.5 250 1386.5 250 1420" class="edge edge-wait" marker-end="url(#arrow-wait)"/>
+<path d="M 560 1353.0 L 560 1420" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<path d="M 674.0 1353.0 C 674.0 1386.5 870 1386.5 870 1420" class="edge edge-wait" marker-end="url(#arrow-wait)"/>
+<path d="M 420.0 1438.55 C 100.0 1438.55 100.0 813.75 370.0 813.75" class="edge edge-risk" marker-end="url(#arrow-risk)" stroke-dasharray="6 4"/>
+<rect x="63.2" y="1117.15" width="73.6" height="16" rx="4" class="edge-label-bg"/>
+<text x="100.0" y="1129.15" text-anchor="middle" class="edge-label edge-label-risk">não confirma</text>
+<path d="M 250 1473.0 C 250 1516.5 465.0 1516.5 465.0 1560" class="edge edge-wait" marker-end="url(#arrow-wait)"/>
+<path d="M 560 1473.0 L 560 1560" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<rect x="533.8" y="1507.5" width="52.4" height="16" rx="4" class="edge-label-bg"/>
+<text x="560" y="1519.5" text-anchor="middle" class="edge-label edge-label-main">confirma</text>
+<path d="M 870 1473.0 C 870 1516.5 655.0 1516.5 655.0 1560" class="edge edge-wait" marker-end="url(#arrow-wait)"/>
+<path d="M 750.0 1576.1 C 750.0 1623.05 900 1623.05 900 1670" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<rect x="764.35" y="1614.05" width="121.3" height="16" rx="4" class="edge-label-bg"/>
+<text x="825.0" y="1626.05" text-anchor="middle" class="edge-label edge-label-main">causa-raiz recorrente</text>
+<path d="M 560 1606 L 560 1780" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<rect x="528.5" y="1684.0" width="63.0" height="16" rx="4" class="edge-label-bg"/>
+<text x="560" y="1696.0" text-anchor="middle" class="edge-label edge-label-main">caso único</text>
+<path d="M 900 1737.5 C 900 1768.025 710.0 1768.025 710.0 1798.55" class="edge edge-main" marker-end="url(#arrow-main)"/>
+<rect x="430.0" y="30" width="260" height="46" rx="12" class="node node-main"/>
+<text x="560" y="53.0" text-anchor="middle" class="node-label node-label-main"><tspan x="560" dy="4.5">Contato do cliente</tspan></text>
+<rect x="190.0" y="130" width="280" height="53.0" rx="12" class="node node-main"/>
+<text x="330" y="156.5" text-anchor="middle" class="node-label node-label-main"><tspan x="330" dy="-2.75" class="node-label node-label-main-strong">Busca e vincula</tspan><tspan x="330" dy="14.5">cliente existente</tspan></text>
+<rect x="640.0" y="130" width="300" height="67.5" rx="12" class="node node-main"/>
+<text x="790" y="163.75" text-anchor="middle" class="node-label node-label-main"><tspan x="790" dy="-10.0" class="node-label node-label-main-strong">Cadastro novo</tspan><tspan x="790" dy="14.5">(nome + telefone, únicos</tspan><tspan x="790" dy="14.5">campos obrigatórios)</tspan></text>
+<rect x="400.0" y="250" width="320" height="67.5" rx="12" class="node node-main"/>
+<text x="560" y="283.75" text-anchor="middle" class="node-label node-label-main"><tspan x="560" dy="-10.0" class="node-label node-label-main-strong">Cliente identificado</tspan><tspan x="560" dy="14.5">resto do cadastro (CPF/CNPJ, tipo,</tspan><tspan x="560" dy="14.5">endereço...) completa na venda</tspan></text>
+<rect x="350.0" y="360" width="420" height="67.5" rx="12" class="node node-main"/>
+<text x="560" y="393.75" text-anchor="middle" class="node-label node-label-main"><tspan x="560" dy="-10.0" class="node-label node-label-main-strong">Oportunidade aberta — status: interessado</tspan><tspan x="560" dy="14.5">funil: agendamento → atendimento → proposta</tspan><tspan x="560" dy="14.5">→ venda  |  perdido (a qualquer etapa)</tspan></text>
+<rect x="35.0" y="375" width="230" height="67.5" rx="12" class="node node-end-neutral"/>
+<text x="150" y="408.75" text-anchor="middle" class="node-label node-label-end-neutral"><tspan x="150" dy="-10.0" class="node-label node-label-end-neutral-strong">Perdido</tspan><tspan x="150" dy="14.5">jornada comercial encerrada,</tspan><tspan x="150" dy="14.5">sem chamado</tspan></text>
+<rect x="330.0" y="500" width="460" height="96.5" rx="12" class="node node-main"/>
+<text x="560" y="548.25" text-anchor="middle" class="node-label node-label-main"><tspan x="560" dy="-24.5" class="node-label node-label-main-strong">Abrir chamado</tspan><tspan x="560" dy="14.5"> </tspan><tspan x="560" dy="14.5">Departamento (6 opções) · Tipo (por depto)</tspan><tspan x="560" dy="14.5">Prioridade → define SLA · Canal de origem</tspan><tspan x="560" dy="14.5">Criticidade/Risco · se DAC: Equipe + Ambiente + Componente</tspan></text>
+<rect x="25.0" y="500" width="250" height="111.0" rx="12" class="node node-risk"/>
+<text x="150" y="555.5" text-anchor="middle" class="node-label node-label-risk"><tspan x="150" dy="-31.75" class="node-label node-label-risk-strong">Escalonamento por risco</tspan><tspan x="150" dy="14.5"> </tspan><tspan x="150" dy="14.5">jurídico · reputacional</tspan><tspan x="150" dy="14.5">segurança · emocional</tspan><tspan x="150" dy="14.5">→ aciona coordenação/gerência/</tspan><tspan x="150" dy="14.5">superintendência/jurídico</tspan></text>
+<rect x="370.0" y="660" width="380" height="53.0" rx="12" class="node node-main"/>
+<text x="560" y="686.5" text-anchor="middle" class="node-label node-label-main"><tspan x="560" dy="-2.75" class="node-label node-label-main-strong">Chamado criado — status: Aberto</tspan><tspan x="560" dy="14.5">SLA de resposta e resolução gravados</tspan></text>
+<rect x="370.0" y="780" width="380" height="67.5" rx="12" class="node node-main"/>
+<text x="560" y="813.75" text-anchor="middle" class="node-label node-label-main"><tspan x="560" dy="-10.0" class="node-label node-label-main-strong">Em andamento</tspan><tspan x="560" dy="14.5">primeira resposta registrada ·</tspan><tspan x="560" dy="14.5">risco pode ser marcado a qualquer momento</tspan></text>
+<rect x="830.0" y="780" width="260" height="67.5" rx="12" class="node node-wait"/>
+<text x="960" y="813.75" text-anchor="middle" class="node-label node-label-wait"><tspan x="960" dy="-10.0" class="node-label node-label-wait-strong">Aguardando cliente</tspan><tspan x="960" dy="14.5">sem resposta → alerta de</tspan><tspan x="960" dy="14.5">"sem atualização" (SLA vence)</tspan></text>
+<rect x="830.0" y="900" width="260" height="67.5" rx="12" class="node node-wait"/>
+<text x="960" y="933.75" text-anchor="middle" class="node-label node-label-wait"><tspan x="960" dy="-10.0" class="node-label node-label-wait-strong">Aguardando terceiro</tspan><tspan x="960" dy="14.5">ou outra área</tspan><tspan x="960" dy="14.5">escalado → muda departamento</tspan></text>
+<rect x="830.0" y="1020" width="260" height="53.0" rx="12" class="node node-end-bad"/>
+<text x="960" y="1046.5" text-anchor="middle" class="node-label node-label-end-bad"><tspan x="960" dy="-2.75" class="node-label node-label-end-bad-strong">Cancelado</tspan><tspan x="960" dy="14.5">aberto por engano ou duplicado</tspan></text>
+<rect x="370.0" y="1010" width="380" height="53.0" rx="12" class="node node-main"/>
+<text x="560" y="1036.5" text-anchor="middle" class="node-label node-label-main"><tspan x="560" dy="-2.75" class="node-label node-label-main-strong">Pronto para encerrar</tspan><tspan x="560" dy="14.5">equipe define o desfecho</tspan></text>
+<rect x="190.0" y="1130" width="220" height="46" rx="12" class="node node-end-good"/>
+<text x="300" y="1153.0" text-anchor="middle" class="node-label node-label-end-good"><tspan x="300" dy="4.5">Atendido</tspan></text>
+<rect x="450.0" y="1130" width="220" height="46" rx="12" class="node node-main"/>
+<text x="560" y="1153.0" text-anchor="middle" class="node-label node-label-main"><tspan x="560" dy="4.5">Parcial</tspan></text>
+<rect x="720.0" y="1130" width="220" height="46" rx="12" class="node node-risk"/>
+<text x="830" y="1153.0" text-anchor="middle" class="node-label node-label-risk"><tspan x="830" dy="4.5">Negado</tspan></text>
+<rect x="955.0" y="1240" width="210" height="53.0" rx="12" class="node node-risk"/>
+<text x="1060" y="1266.5" text-anchor="middle" class="node-label node-label-risk"><tspan x="1060" dy="-2.75" class="node-label node-label-risk-strong">Cliente contesta</tspan><tspan x="1060" dy="14.5">a negativa</tspan></text>
+<rect x="370.0" y="1300" width="380" height="53.0" rx="12" class="node node-main"/>
+<text x="560" y="1326.5" text-anchor="middle" class="node-label node-label-main"><tspan x="560" dy="-2.75" class="node-label node-label-main-strong">Marca Resolvido</tspan><tspan x="560" dy="14.5">resolvido_em registrado</tspan></text>
+<rect x="120.0" y="1420" width="260" height="53.0" rx="12" class="node node-wait"/>
+<text x="250" y="1446.5" text-anchor="middle" class="node-label node-label-wait"><tspan x="250" dy="-2.75" class="node-label node-label-wait-strong">CSAT solicitado</tspan><tspan x="250" dy="14.5">nota 1–5 sobre o resultado</tspan></text>
+<rect x="420.0" y="1420" width="280" height="53.0" rx="12" class="node node-main"/>
+<text x="560" y="1446.5" text-anchor="middle" class="node-label node-label-main"><tspan x="560" dy="-2.75" class="node-label node-label-main-strong">Confirmação de</tspan><tspan x="560" dy="14.5">entendimento solicitada</tspan></text>
+<rect x="730.0" y="1420" width="280" height="53.0" rx="12" class="node node-wait"/>
+<text x="870" y="1446.5" text-anchor="middle" class="node-label node-label-wait"><tspan x="870" dy="-2.75" class="node-label node-label-wait-strong">Percepção de acompanhamento</tspan><tspan x="870" dy="14.5">solicitada — "sentiu-se acompanhado?"</tspan></text>
+<rect x="370.0" y="1560" width="380" height="46" rx="12" class="node node-end-good"/>
+<text x="560" y="1583.0" text-anchor="middle" class="node-label node-label-end-good"><tspan x="560" dy="4.5">Chamado encerrado</tspan></text>
+<rect x="760.0" y="1670" width="280" height="67.5" rx="12" class="node node-main"/>
+<text x="900" y="1703.75" text-anchor="middle" class="node-label node-label-main"><tspan x="900" dy="-10.0" class="node-label node-label-main-strong">Causa-raiz recorrente →</tspan><tspan x="900" dy="14.5">vira Plano de Ação</tspan><tspan x="900" dy="14.5">(Governança, com responsável e prazo)</tspan></text>
+<rect x="410.0" y="1780" width="300" height="53.0" rx="12" class="node node-end-good"/>
+<text x="560" y="1806.5" text-anchor="middle" class="node-label node-label-end-good"><tspan x="560" dy="-2.75" class="node-label node-label-end-good-strong">FIM — jornada deste</tspan><tspan x="560" dy="14.5">chamado concluída</tspan></text>
+</svg>
+
+
+    </div>
+    <figcaption>Setas tracejadas em vermelho marcam os pontos de risco: escalonamento por criticidade, contestação de negativa e as duas formas de reabertura (contestação que reabre, ou cliente que não confirma entendimento) — ambas voltam para "Em andamento", incrementando o contador de reaberturas. As raias de espera (amarelo) sempre retornam ao fluxo principal quando o bloqueio se resolve; se não se resolve a tempo, é isso que os indicadores "sem atualização" do painel (ver Mapa Jornada 360) capturam.</figcaption>
+  </figure>
+
+  <div class="closing">
+    <div class="card">
+      <h3>De onde vieram os estados e campos</h3>
+      <p>Cada caixa deste fluxo corresponde a um campo ou transição real de <code>chamados</code> — status, criticidade, desfecho, confirmação de entendimento, reabertura:</p>
+      <code>jornada-cliente-360/PLANO_BANCO_DE_DADOS.md</code>
+    </div>
+    <div class="card">
+      <h3>Por que estes pontos de risco existem</h3>
+      <p>Escalonamento por criticidade, contestação e confirmação de entendimento vieram da auditoria contra o manual de gestão da Jornada:</p>
+      <code>jornada-cliente-360/AUDITORIA_MANUAL_CORPORATIVO.md</code>
+    </div>
+  </div>
+</div>
+
+<footer class="page">Fluxo Jornada 360 — Inteligência de Mercado, Grupo Plaenge / Vanguard. Gerado a partir do PLANO_BANCO_DE_DADOS.md, Revisão 6.</footer>
+
+</body>
+</html>
